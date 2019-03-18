@@ -31,6 +31,12 @@ Cocos is a package for numeric and scientific computing on GPUs for Python with 
         pip3 install cocos 
     </pre>
     on Python 3 if not using Anaconda.
+    
+    To get the latest version, clone the repository from github, 
+    open a terminal/command prompt, navigate to the root folder and install via
+    <pre>
+    pip install .
+    </pre>
 
 ## Getting Started
 
@@ -58,12 +64,14 @@ Cocos is a package for numeric and scientific computing on GPUs for Python with 
 
 ### Packaged examples:
 
-1.  Computing Pi via Monte Carlo
+1.  Estimating Pi via Monte Carlo
 2.  Option Pricing in a Stochastic Volatility Model
+3.  Numeric evaluation of SymPy array expressions on the GPU
 
 ### Estimating Pi via Monte-Carlo
 
-The following code estimates Pi via Monte-Carlo simulation. Since Cocos offers a NumPy-like API, the same code works on the both the GPU and the CPU via NumPy.
+The following code estimates Pi via Monte-Carlo simulation. 
+Since Cocos offers a NumPy-like API, the same code works on the both the GPU and the CPU via NumPy.
 
 <pre>    import time
     import cocos.device as cd
@@ -127,6 +135,74 @@ The following code estimates Pi via Monte-Carlo simulation. Since Cocos offers a
 
     # compute and print the speedup factor
     print(f'speedup factor on gpu: {time_on_cpu/time_on_gpu}')
+</pre>
+
+### Numeric evaluation of SymPy array expressions on the GPU
+<pre>
+import cocos.numerics as cn
+import cocos.device as cd
+import cocos.symbolic as cs
+import numpy as np
+import sympy as sym
+import time
+
+sym.init_printing()
+
+# define symbolic arguments to the function
+x1, x2, x3, t = sym.symbols('x1, x2, x3, t')
+argument_symbols = [x1, x2, x3]
+
+# define a function f: R^3 -> R^3
+f = sym.Matrix([[x1 + x2], [(x1+x3)**2], [sym.exp(x1 + x2)]])
+print("defining the vector valued function f(x1, x2, x3) as")
+print(f)
+print()
+
+# Compute the Jacobian symbolically
+jacobian_f = f.jacobian([x1, x2, x3])
+print("symbolically derived Jacobian:")
+print(jacobian_f)
+print()
+
+# Convert the symbolic array expression to an object that can evaluated
+# numerically on the cpu or gpu.
+jacobian_f_lambdified \
+    = cs.LambdifiedVectorExpression(argument_symbols=argument_symbols,
+                                    time_symbol=t,
+                                    symbolic_vector_expression=jacobian_f)
+
+# Define a 3 dimensional vector X = (x1, x2, x3) = (1, 2, 3)
+X_gpu = cn.array([[1], [2], [3]])
+
+# Numerically evaluate the Jacobian at X = (1, 2, 3)
+print("numerical Jacobian at X = (1, 2, 3)")
+jacobian_f_lambdified.evaluate(X_gpu.transpose(), t=0)
+
+# Compare the performance on cpu and gpu by numerically evaluating the Jacobian
+# at n different vectors (x1, x2, x3)
+n = 10000000
+print(f'evaluating Jacobian at {n} vectors\n')
+
+X_gpu = cn.random.rand(n, 3)
+X_cpu = np.array(X_gpu)
+
+tic = time.time()
+jacobian_f_numeric_gpu = jacobian_f_lambdified.evaluate(X_gpu, t=0)
+cd.sync()
+time_gpu = time.time() - tic
+print(f'time on gpu: {time_gpu}')
+
+tic = time.time()
+jacobian_f_numeric_cpu = jacobian_f_lambdified.evaluate(X_cpu, t=0)
+time_cpu = time.time() - tic
+print(f'time on cpu: {time_cpu}')
+
+print(f'speedup on gpu vs cpu: {time_cpu / time_gpu}\n')
+
+# Verify that the results match
+print(f'numerical results from cpu and gpu match: '
+      f'{np.allclose(jacobian_f_numeric_gpu, jacobian_f_numeric_cpu)}')
+
 </pre>
 
 ## Functionality
