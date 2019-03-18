@@ -1,4 +1,4 @@
-# ![coconut](./docs/images/coconut-isolated-tiny.jpg) Cocos (Core Computational System) - Scientific GPU Computing in Python
+# ![coconut](./images/coconut-isolated-tiny.jpg) Cocos (Core Computational System) - Scientific GPU Computing in Python
 
 
 ## Overview
