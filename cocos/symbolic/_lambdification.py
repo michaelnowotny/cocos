@@ -147,7 +147,7 @@ def _compute_result_internal(R: int,
 class LambdifiedArrayExpressions(object):
     def __init__(
         self,
-        state_variable_symbols: tp.Sequence[sym.Symbol],
+        argument_symbols: tp.Sequence[sym.Symbol],
         time_symbol: sym.Symbol,
         symbolic_array_expressions: tp.Sequence[tp.Union[sym.Array,
                                                          sym.Matrix]],
@@ -179,12 +179,12 @@ class LambdifiedArrayExpressions(object):
                              "squeeze_column_vectors must have the same number "
                              "of elements")
 
-        self._state_variable_symbols = state_variable_symbols
+        self._argument_symbols = argument_symbols
         self._time_symbol = time_symbol
         self._symbolic_array_expressions = symbolic_array_expressions
         self._numeric_time_functions = numeric_time_functions
         self._squeeze_column_vectors = squeeze_column_vectors
-        self._symbols = [time_symbol] + state_variable_symbols
+        self._symbols = [time_symbol] + argument_symbols
 
         self._perform_cse = perform_cse
         self._pre_attach = pre_attach
@@ -208,7 +208,7 @@ class LambdifiedArrayExpressions(object):
 
             self._replacement_functions_cpu = []
             self._replacement_functions_gpu = []
-            syms = [self._time_symbol] + self._state_variable_symbols
+            syms = [self._time_symbol] + self._argument_symbols
             for i, v in enumerate(repl):
                 self._replacement_functions_cpu.append(
                     sym.lambdify(syms,
@@ -265,12 +265,12 @@ class LambdifiedArrayExpressions(object):
                          in shape[2:]]))
 
     @property
-    def state_variable_symbols(self) -> tp.Sequence[sym.Symbol]:
-        return self._state_variable_symbols
+    def argument_symbols(self) -> tp.Sequence[sym.Symbol]:
+        return self._argument_symbols
 
     @property
     def number_of_state_variables(self) -> int:
-        return len(self._state_variable_symbols)
+        return len(self._argument_symbols)
 
     @property
     def time_symbol(self) -> sym.Symbol:
@@ -373,7 +373,7 @@ class LambdifiedArrayExpressions(object):
 class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
     def __init__(
          self,
-         state_variable_symbols: tp.Sequence[sym.Symbol],
+         argument_symbols: tp.Sequence[sym.Symbol],
          time_symbol: sym.Symbol,
          symbolic_matrix_expressions: tp.Sequence[sym.Matrix],
          numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
@@ -386,7 +386,7 @@ class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
         if numeric_time_functions is None:
             numeric_time_functions = dict()
 
-        super().__init__(state_variable_symbols,
+        super().__init__(argument_symbols,
                          time_symbol,
                          symbolic_matrix_expressions,
                          numeric_time_functions,
@@ -423,7 +423,7 @@ class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
 class LambdifiedArrayExpression(object):
     def __init__(
          self,
-         state_variable_symbols: tp.Sequence[sym.Symbol],
+         argument_symbols: tp.Sequence[sym.Symbol],
          time_symbol: sym.Symbol,
          symbolic_array_expression: tp.Union[sym.Matrix, sym.Array],
          numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
@@ -435,7 +435,7 @@ class LambdifiedArrayExpression(object):
 
         self._lambdified_array_expressions = \
             LambdifiedArrayExpressions(
-                state_variable_symbols=state_variable_symbols,
+                argument_symbols=argument_symbols,
                 time_symbol=time_symbol,
                 symbolic_array_expressions=[symbolic_array_expression],
                 numeric_time_functions=numeric_time_functions,
@@ -454,8 +454,8 @@ class LambdifiedArrayExpression(object):
         return self._lambdified_array_expressions.is_row_vector(0)
 
     @property
-    def state_variable_symbols(self) -> tp.Sequence[sym.Symbol]:
-        return self._lambdified_array_expressions.state_variable_symbols
+    def argument_symbols(self) -> tp.Sequence[sym.Symbol]:
+        return self._lambdified_array_expressions.argument_symbols
 
     @property
     def number_of_state_variables(self) -> int:
@@ -503,7 +503,7 @@ class LambdifiedArrayExpression(object):
 class LambdifiedMatrixExpression(LambdifiedArrayExpression):
     def __init__(
          self,
-         state_variable_symbols: tp.Sequence[sym.Symbol],
+         argument_symbols: tp.Sequence[sym.Symbol],
          time_symbol: sym.Symbol,
          symbolic_matrix_expression: sym.Matrix,
          numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
@@ -513,7 +513,7 @@ class LambdifiedMatrixExpression(LambdifiedArrayExpression):
          pre_attach: bool = True,
          dtype: np.generic = np.float32):
 
-        super().__init__(state_variable_symbols,
+        super().__init__(argument_symbols,
                          time_symbol,
                          symbolic_matrix_expression,
                          numeric_time_functions,
@@ -540,7 +540,7 @@ class LambdifiedMatrixExpression(LambdifiedArrayExpression):
 class LambdifiedVectorExpression(LambdifiedMatrixExpression):
     def __init__(
          self,
-         state_variable_symbols: tp.Sequence[sym.Symbol],
+         argument_symbols: tp.Sequence[sym.Symbol],
          time_symbol: sym.Symbol,
          symbolic_vector_expression: sym.Matrix,
          numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
@@ -549,7 +549,7 @@ class LambdifiedVectorExpression(LambdifiedMatrixExpression):
          pre_attach: bool = True,
          dtype: np.generic = np.float32):
 
-        super().__init__(state_variable_symbols,
+        super().__init__(argument_symbols,
                          time_symbol,
                          symbolic_vector_expression,
                          numeric_time_functions,
@@ -570,7 +570,8 @@ def lambdify(args,
         modules = []
 
     return sym.lambdify(args,
-                        expr, modules=list(modules) + [COCOS_TRANSLATIONS],
+                        expr,
+                        modules=list(modules) + [COCOS_TRANSLATIONS],
                         printer=printer,
                         use_imps=use_imps,
                         dummify=dummify)
