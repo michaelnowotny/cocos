@@ -78,10 +78,14 @@ def lambdify_array_with_modules(
     return result
 
 
-def lambdify_array(symbols: tp.Sequence[sym.Symbol],
-                   array_expression: tp.Union[sym.Array, sym.MatrixBase],
-                   numeric_time_functions: tp.Dict[str, tp.Callable]) \
+def lambdify_array(
+        symbols: tp.Sequence[sym.Symbol],
+        array_expression: tp.Union[sym.Array, sym.MatrixBase],
+        numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None) \
         -> tp.Tuple[tp.List[tp.Callable], tp.List[tp.Callable]]:
+
+    if numeric_time_functions is None:
+        numeric_time_functions = dict()
 
     functions_cpu = lambdify_array_with_modules(symbols,
                                                 array_expression,
@@ -142,17 +146,20 @@ def _compute_result_internal(R: int,
 ################################################################################
 class LambdifiedArrayExpressions(object):
     def __init__(
-            self,
-            state_variable_symbols: tp.Sequence[sym.Symbol],
-            time_symbol: sym.Symbol,
-            symbolic_array_expressions: tp.Sequence[tp.Union[sym.Array,
-                                                             sym.Matrix]],
-            numeric_time_functions: tp.Dict[str, tp.Callable],
-            squeeze_column_vectors: tp.Optional[tp.Sequence[bool]] = None,
-            perform_cse: bool = True,
-            lazy_initialization: bool = False,
-            pre_attach: tp.Optional[tp.Sequence[bool]] = None,
-            dtype: np.generic = np.float32):
+        self,
+        state_variable_symbols: tp.Sequence[sym.Symbol],
+        time_symbol: sym.Symbol,
+        symbolic_array_expressions: tp.Sequence[tp.Union[sym.Array,
+                                                         sym.Matrix]],
+        numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
+        squeeze_column_vectors: tp.Optional[tp.Sequence[bool]] = None,
+        perform_cse: bool = True,
+        lazy_initialization: bool = False,
+        pre_attach: tp.Optional[tp.Sequence[bool]] = None,
+        dtype: np.generic = np.float32):
+
+        if numeric_time_functions is None:
+            numeric_time_functions = dict()
 
         symbolic_array_expressions \
             = check_and_make_sequence(symbolic_array_expressions, sym.Matrix)
@@ -364,16 +371,20 @@ class LambdifiedArrayExpressions(object):
 
 
 class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
-    def __init__(self,
-                 state_variable_symbols: tp.Sequence[sym.Symbol],
-                 time_symbol: sym.Symbol,
-                 symbolic_matrix_expressions: tp.Sequence[sym.Matrix],
-                 numeric_time_functions: tp.Dict[str, tp.Callable],
-                 squeeze_column_vectors: tp.Optional[tp.Sequence[bool]] = None,
-                 perform_cse: bool = True,
-                 lazy_initialization: bool = False,
-                 pre_attach: tp.Optional[tp.Sequence[bool]] = None,
-                 dtype: np.generic = np.float32):
+    def __init__(
+         self,
+         state_variable_symbols: tp.Sequence[sym.Symbol],
+         time_symbol: sym.Symbol,
+         symbolic_matrix_expressions: tp.Sequence[sym.Matrix],
+         numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
+         squeeze_column_vectors: tp.Optional[tp.Sequence[bool]] = None,
+         perform_cse: bool = True,
+         lazy_initialization: bool = False,
+         pre_attach: tp.Optional[tp.Sequence[bool]] = None,
+         dtype: np.generic = np.float32):
+
+        if numeric_time_functions is None:
+            numeric_time_functions = dict()
 
         super().__init__(state_variable_symbols,
                          time_symbol,
@@ -410,16 +421,17 @@ class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
 # Single Lambdified Array, Matrix, and Vector-Expressions
 ################################################################################
 class LambdifiedArrayExpression(object):
-    def __init__(self,
-                 state_variable_symbols: tp.Sequence[sym.Symbol],
-                 time_symbol: sym.Symbol,
-                 symbolic_array_expression: tp.Union[sym.Matrix, sym.Array],
-                 numeric_time_functions: tp.Dict[str, tp.Callable],
-                 squeeze_column_vector: bool = False,
-                 perform_cse: bool = True,
-                 lazy_initialization: bool = False,
-                 pre_attach: bool = True,
-                 dtype: np.generic = np.float32):
+    def __init__(
+         self,
+         state_variable_symbols: tp.Sequence[sym.Symbol],
+         time_symbol: sym.Symbol,
+         symbolic_array_expression: tp.Union[sym.Matrix, sym.Array],
+         numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
+         squeeze_column_vector: bool = False,
+         perform_cse: bool = True,
+         lazy_initialization: bool = False,
+         pre_attach: bool = True,
+         dtype: np.generic = np.float32):
 
         self._lambdified_array_expressions = \
             LambdifiedArrayExpressions(
@@ -489,15 +501,17 @@ class LambdifiedArrayExpression(object):
 
 
 class LambdifiedMatrixExpression(LambdifiedArrayExpression):
-    def __init__(self, state_variable_symbols: tp.Sequence[sym.Symbol],
-                 time_symbol: sym.Symbol,
-                 symbolic_matrix_expression: sym.Matrix,
-                 numeric_time_functions: tp.Dict[str, tp.Callable],
-                 squeeze_column_vector: bool = False,
-                 perform_cse: bool = True,
-                 lazy_initialization: bool = False,
-                 pre_attach: bool = True,
-                 dtype: np.generic = np.float32):
+    def __init__(
+         self,
+         state_variable_symbols: tp.Sequence[sym.Symbol],
+         time_symbol: sym.Symbol,
+         symbolic_matrix_expression: sym.Matrix,
+         numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
+         squeeze_column_vector: bool = False,
+         perform_cse: bool = True,
+         lazy_initialization: bool = False,
+         pre_attach: bool = True,
+         dtype: np.generic = np.float32):
 
         super().__init__(state_variable_symbols,
                          time_symbol,
@@ -508,6 +522,7 @@ class LambdifiedMatrixExpression(LambdifiedArrayExpression):
                          lazy_initialization,
                          pre_attach,
                          dtype)
+
     @property
     def rows(self) -> int:
         return (self
@@ -523,15 +538,16 @@ class LambdifiedMatrixExpression(LambdifiedArrayExpression):
 
 
 class LambdifiedVectorExpression(LambdifiedMatrixExpression):
-    def __init__(self,
-                 state_variable_symbols: tp.Sequence[sym.Symbol],
-                 time_symbol: sym.Symbol,
-                 symbolic_vector_expression: sym.Matrix,
-                 numeric_time_functions: tp.Dict[str, tp.Callable],
-                 perform_cse: bool = True,
-                 lazy_initialization: bool = False,
-                 pre_attach: bool = True,
-                 dtype: np.generic = np.float32):
+    def __init__(
+         self,
+         state_variable_symbols: tp.Sequence[sym.Symbol],
+         time_symbol: sym.Symbol,
+         symbolic_vector_expression: sym.Matrix,
+         numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
+         perform_cse: bool = True,
+         lazy_initialization: bool = False,
+         pre_attach: bool = True,
+         dtype: np.generic = np.float32):
 
         super().__init__(state_variable_symbols,
                          time_symbol,
