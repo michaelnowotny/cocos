@@ -76,9 +76,9 @@ print(d)
 </pre>
 
 ### Packaged examples:
-1.  [Estimating Pi via Monte Carlo](#monte_carlo_pi)
-2.  [Option Pricing in a Stochastic Volatility Model via Monte Carlo](#heston_model)
-3.  [Numeric evaluation of SymPy array expressions on the GPU](#sympy_lambdify)
+1.  [Estimating Pi via Monte Carlo](#estimating-pi-via-monte-carlo)
+2.  [Option Pricing in a Stochastic Volatility Model via Monte Carlo](#option-pricing-in-a-stochastic-volatility-model-via-monte-carlo)
+3.  [Numeric evaluation of SymPy array expressions on the GPU](#numeric-evaluation-of-sympy-array-expressions-on-the-gpu)
 
 ### 1. Estimating Pi via Monte-Carlo
 
