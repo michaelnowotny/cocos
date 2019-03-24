@@ -80,7 +80,7 @@ print(d)
 2.  [Option Pricing in a Stochastic Volatility Model via Monte Carlo](#option-pricing-in-a-stochastic-volatility-model-via-monte-carlo)
 3.  [Numeric evaluation of SymPy array expressions on the GPU](#numeric-evaluation-of-sympy-array-expressions-on-the-gpu)
 
-### 1. Estimating Pi via Monte-Carlo
+### Estimating Pi via Monte-Carlo
 
 The following code estimates Pi via Monte-Carlo simulation. 
 Since Cocos offers a NumPy-like API, the same code works on the both the GPU and the CPU via NumPy.
@@ -151,7 +151,7 @@ print(f'speedup factor on gpu: {time_on_cpu/time_on_gpu}')
 </pre>
 
 
-### 2. Option Pricing in a Stochastic Volatility Model via Monte Carlo
+### Option Pricing in a Stochastic Volatility Model via Monte Carlo
 In this example, we are simulating sample paths of the logarithmic price of an 
 underlying security under the risk-neutral probability measure via the 
 Euler–Maruyama discretization method.
@@ -274,7 +274,7 @@ def compute_option_price(r: float,
 </pre>
 
 
-### 3. Numeric evaluation of SymPy array expressions on the GPU
+### Numeric evaluation of SymPy array expressions on the GPU
 <pre>
 import cocos.numerics as cn
 import cocos.device as cd
