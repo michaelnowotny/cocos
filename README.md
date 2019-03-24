@@ -24,19 +24,24 @@ Cocos is a package for numeric and scientific computing on GPUs for Python with 
 1.  Download and install [ArrayFire 3.5.1](http://arrayfire.s3.amazonaws.com/index.html#!/3.5.1%2F)
 2.  Install Cocos via PIP: 
     <pre>
-        pip install cocos 
+    pip install cocos 
     </pre>
     or 
     <pre>
-        pip3 install cocos 
+    pip3 install cocos 
     </pre>
-    on Python 3 if not using Anaconda.
+    if not using Anaconda.
     
     To get the latest version, clone the repository from github, 
     open a terminal/command prompt, navigate to the root folder and install via
     <pre>
     pip install .
     </pre>
+    or 
+    <pre>
+    pip3 install . 
+    </pre>
+    if not using Anaconda.
 
 ## Getting Started
 
