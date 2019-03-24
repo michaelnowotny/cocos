@@ -41,100 +41,113 @@ Cocos is a package for numeric and scientific computing on GPUs for Python with 
 ## Getting Started
 
 ### Using Cocos is as easy as using NumPy
+#### Platform Information:
+Print available devices
+<pre>
+import cocos.device as cd
+cd.info()
+</pre>
+
+Select a device
+<pre>
+cd.ComputeDeviceManager.set_compute_device(0)
+</pre>
+
+#### First Steps:
 <pre>    
-        # begin by importing the numerics package
-        import cocos.numerics as cn
-    
-        # create two arrays from lists
-        a = cn.array([[1.0, 2.0], [3.0, 4.0]])
-        b = cn.array([[5.0], [6.0]])
-    
-        # print their contents
-        print(a)
-        print(b)
-    
-        # matrix product of b and a
-        c = a @ b
-        print(c)
-    
-        # create an array of normally distributed random numbers
-        d = cn.random.randn(2, 2)
-        print(d)
+# begin by importing the numerics package
+import cocos.numerics as cn
+
+# create two arrays from lists
+a = cn.array([[1.0, 2.0], [3.0, 4.0]])
+b = cn.array([[5.0], [6.0]])
+
+# print their contents
+print(a)
+print(b)
+
+# matrix product of b and a
+c = a @ b
+print(c)
+
+# create an array of normally distributed random numbers
+d = cn.random.randn(2, 2)
+print(d)
 </pre>
 
 ### Packaged examples:
-
-1.  Estimating Pi via Monte Carlo
-2.  Option Pricing in a Stochastic Volatility Model via Monte Carlo
-3.  Numeric evaluation of SymPy array expressions on the GPU
+1.  [Estimating Pi via Monte Carlo](#monte_carlo_pi)
+2.  [Option Pricing in a Stochastic Volatility Model via Monte Carlo](#heston_model)
+3.  [Numeric evaluation of SymPy array expressions on the GPU](#sympy_lambdify)
 
 ### 1. Estimating Pi via Monte-Carlo
 
 The following code estimates Pi via Monte-Carlo simulation. 
 Since Cocos offers a NumPy-like API, the same code works on the both the GPU and the CPU via NumPy.
 
-<pre>    import time
-    import cocos.device as cd
+<pre>    
+import time
+import cocos.device as cd
 
-    def estimate_pi(n: int, gpu: bool = True) -> float:
-        if gpu:
-            import cocos.numerics as np
-            import cocos.numerics.random as random
-        else:
-            import numpy as np
-            import numpy.random as random
+def estimate_pi(n: int, gpu: bool = True) -> float:
+    if gpu:
+        import cocos.numerics as np
+        import cocos.numerics.random as random
+    else:
+        import numpy as np
+        import numpy.random as random
 
-        x = np.random.rand(n)
-        y = np.random.rand(n)
-        in_quarter_circle = (x * x + y * y) <= 1.0
-        estimate = int(np.sum(in_quarter_circle))
+    x = np.random.rand(n)
+    y = np.random.rand(n)
+    in_quarter_circle = (x * x + y * y) <= 1.0
+    estimate = int(np.sum(in_quarter_circle))
 
-        return estimate / n * 4
+    return estimate / n * 4
 
-    # initialize cocos device - the architecture is selected automatically
-    # the architecture can be specified explitly by providing one of
-    #   'cpu', 'cuda', and 'opencl'
-    cd.init()
+# initialize cocos device - the architecture is selected automatically
+# the architecture can be specified explitly by providing one of
+#   'cpu', 'cuda', and 'opencl'
+cd.init()
 
-    # print information regarding the available devices in the machine
-    cd.info()
+# print information regarding the available devices in the machine
+cd.info()
 
-    # number of draws
-    n = 100000000
-    print(f'simulating {n} draws')
+# number of draws
+n = 100000000
+print(f'simulating {n} draws')
 
-    # run estimation of Pi on the cpu via numpy
-    pi_cpu = estimate_pi(n, gpu=False)
-    print(f'Estimate of Pi on cpu: {pi_cpu}')
+# run estimation of Pi on the cpu via numpy
+pi_cpu = estimate_pi(n, gpu=False)
+print(f'Estimate of Pi on cpu: {pi_cpu}')
 
-    # run estimation of Pi on the cpu via numpy
+# run estimation of Pi on the cpu via numpy
+pi_gpu = estimate_pi(n, gpu=True)
+print(f'Estimate of Pi on gpu: {pi_gpu}')
+
+# run a benchmark - repeating the simulation R times on both cpu and gpu
+R = 10
+
+# on gpu
+tic = time.time()
+for r in range(R):
     pi_gpu = estimate_pi(n, gpu=True)
-    print(f'Estimate of Pi on gpu: {pi_gpu}')
+    cd.sync()
 
-    # run a benchmark - repeating the simulation R times on both cpu and gpu
-    R = 10
+time_on_gpu = time.time() - tic
 
-    # on gpu
-    tic = time.time()
-    for r in range(R):
-        pi_gpu = estimate_pi(n, gpu=True)
-        cd.sync()
+print(f'time elapsed on gpu: {time_on_gpu}')
 
-    time_on_gpu = time.time() - tic
+# on cpu
+tic = time.time()
+for r in range(R):
+    pi_cpu = estimate_pi(n, gpu=False)
 
-    print(f'time elapsed on gpu: {time_on_gpu}')
+time_on_cpu = time.time() - tic
 
-    # on cpu
-    tic = time.time()
-    for r in range(R):
-        pi_cpu = estimate_pi(n, gpu=False)
+print(f'time elapsed on cpu: {time_on_cpu}')
 
-    time_on_cpu = time.time() - tic
-
-    print(f'time elapsed on cpu: {time_on_cpu}')
-
-    # compute and print the speedup factor
-    print(f'speedup factor on gpu: {time_on_cpu/time_on_gpu}')
+# compute and print the speedup factor
+print(f'speedup factor on gpu: {time_on_cpu/time_on_gpu}')
 </pre>
 
 
@@ -258,7 +271,6 @@ def compute_option_price(r: float,
 
     return math.exp(-r * T) \
            * num_pack.mean(num_pack.maximum(num_pack.exp(x_simulated) - K, 0))
-
 </pre>
 
 
