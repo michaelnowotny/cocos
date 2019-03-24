@@ -65,10 +65,10 @@ Cocos is a package for numeric and scientific computing on GPUs for Python with 
 ### Packaged examples:
 
 1.  Estimating Pi via Monte Carlo
-2.  Option Pricing in a Stochastic Volatility Model
+2.  Option Pricing in a Stochastic Volatility Model via Monte Carlo
 3.  Numeric evaluation of SymPy array expressions on the GPU
 
-### Estimating Pi via Monte-Carlo
+### 1. Estimating Pi via Monte-Carlo
 
 The following code estimates Pi via Monte-Carlo simulation. 
 Since Cocos offers a NumPy-like API, the same code works on the both the GPU and the CPU via NumPy.
@@ -137,7 +137,101 @@ Since Cocos offers a NumPy-like API, the same code works on the both the GPU and
     print(f'speedup factor on gpu: {time_on_cpu/time_on_gpu}')
 </pre>
 
-### Numeric evaluation of SymPy array expressions on the GPU
+### 2. Option Pricing in a Stochastic Volatility Model via Monte Carlo
+In this example, we are simulating sample paths of the logarithmic price of an 
+underlying security under the risk-neutral probability measure via the 
+Euler–Maruyama discretization method.
+
+The stochastic process is Heston's classical 1992 setup of a security price 
+subject to stochastic volatility. The log price and its instantanous variance 
+are governed by the following system of stochastic differential equations (SDE):
+
+![log price sde](https://raw.githubusercontent.com/michaelnowotny/cocos/master/images/security_price_sde.png)
+
+![volatility sde](https://raw.githubusercontent.com/michaelnowotny/cocos/master/images/volatility_sde.png)
+
+The simulation code below demonstrates how to write code that supports both CPU 
+and CPU computing. The complete code that includes the option pricing and a main 
+function is available under examples.
+
+<pre>
+def simulate_heston_model(T: float,
+                          N: int,
+                          R: int,
+                          mu: float,
+                          kappa: float,
+                          v_bar: float,
+                          sigma_v: float,
+                          rho: float,
+                          x0: float,
+                          v0: float,
+                          gpu: bool = False) -> tp.Tuple:
+    """
+    This function simulates R paths from the Heston stochastic volatility model
+    over a time horizon of length T divided into N steps.
+
+    :param T: time horizon of the simulation
+    :param N: number of steps
+    :param R: number of paths to simulate
+    :param mu: expected return
+    :param kappa: mean-reversion speed of volatility
+    :param v_bar: long-run mean of volatility
+    :param sigma_v: volatility of volatility
+    :param rho: instantaneous correlation of shocks to price and to volatility
+    :param x0: initial log price
+    :param v0: initial volatility
+    :param gpu: whether to compute on the GPU
+    :return: a tuple of two R-dimensional numeric arrays for log price and
+             volatility
+    """
+    if gpu:
+        import cocos.numerics as np
+        import cocos.numerics.random as random
+    else:
+        import numpy as np
+        import numpy.random as random
+
+    Delta_t = T / float(N - 1)
+
+    x = [np.full((R,), x0, dtype=numpy.float32),
+         np.zeros((R,), dtype=numpy.float32)]
+
+    v = [np.full((R,), v0, dtype=numpy.float32),
+         np.zeros((R,), dtype=numpy.float32)]
+
+    sqrt_delta_t = math.sqrt(Delta_t)
+    sqrt_one_minus_rho_square = math.sqrt(1 - rho ** 2)
+
+    # m = np.array([[rho, sqrt_one_minus_rho_square]])
+    m = np.zeros((2,), dtype=numpy.float32)
+    m[0] = rho
+    m[1] = sqrt_one_minus_rho_square
+    zero_array = np.zeros((R,), dtype=numpy.float32)
+
+    t_current = 0
+    for t in range(1, N):
+        t_previous = (t + 1) % 2
+        t_current = t % 2
+
+        # generate antithetic standard normal random variables
+        dBt = random.randn(R, 2) * sqrt_delta_t
+
+        sqrt_v_lag = np.sqrt(v[t_previous])
+        x[t_current] = x[t_previous] \
+                     + (mu - 0.5 * v[t_previous]) * Delta_t \
+                     + np.multiply(sqrt_v_lag, dBt[:, 0])
+        v[t_current] = v[t_previous] \
+                     + kappa * (v_bar - v[t_previous]) * Delta_t \
+                     + sigma_v * np.multiply(sqrt_v_lag, np.dot(dBt, m))
+        v[t_current] = np.maximum(v[t_current], 0.0)
+
+    x = x[t_current]
+    v = np.maximum(v[t_current], 0.0)
+
+    return x, v
+</pre>
+
+### 3. Numeric evaluation of SymPy array expressions on the GPU
 <pre>
 import cocos.numerics as cn
 import cocos.device as cd
