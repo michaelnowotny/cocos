@@ -7,7 +7,7 @@ from cocos.numerics.data_types import NumericArray
 import cocos.numerics as cn
 
 
-def select_num_pack(gpu: bool=True) -> ModuleType:
+def select_num_pack(gpu: bool = True) -> ModuleType:
     if gpu:
         return cn
     else:

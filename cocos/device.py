@@ -142,9 +142,10 @@ class ComputeDeviceManager:
     def get_number_of_compute_devices() -> int:
         return len(ComputeDeviceManager.get_compute_devices())
 
-    @staticmethod
-    def get_compute_devices() -> tp.Sequence[ComputeDevice]:
+    @classmethod
+    def get_compute_devices(cls) -> tp.Sequence[ComputeDevice]:
         if ComputeDeviceManager._compute_devices is None:
+            saved_device_id = cls.get_current_compute_device_id()
             n = af.get_device_count()
             ComputeDeviceManager._compute_devices = []
 
@@ -152,6 +153,8 @@ class ComputeDeviceManager:
                 (ComputeDeviceManager
                  ._compute_devices
                  .append(ComputeDeviceManager._get_compute_device_internal(id)))
+
+            af.set_device(saved_device_id)
 
         return ComputeDeviceManager._compute_devices
 
@@ -165,6 +168,14 @@ class ComputeDeviceManager:
     @staticmethod
     def get_compute_device(id: int) -> ComputeDevice:
         return ComputeDeviceManager.get_compute_devices()[id]
+
+    @classmethod
+    def get_current_compute_device_id(cls) -> int:
+        return af.get_device()
+
+    @classmethod
+    def get_current_compute_device(cls) -> ComputeDevice:
+        return cls.get_compute_device(cls.get_current_compute_device_id())
 
     @staticmethod
     def set_compute_device(compute_device: tp.Union[int, ComputeDevice]) \
@@ -190,7 +201,23 @@ def init(backend: tp.Optional[str] = None):
 
 
 def info():
-    af.info()
+    print(build_and_backend())
+    selected_device_id = ComputeDeviceManager.get_current_compute_device_id()
+    for compute_device in ComputeDeviceManager.get_compute_devices():
+        device_id = compute_device.id
+        if device_id == selected_device_id:
+            device_string = "[" + str(device_id) + "]"
+        else:
+            device_string = "-" + str(device_id) + "-"
+        device_name = compute_device.name.replace('_', ' ')
+        print(
+            f'{device_string} {compute_device.toolkit_version}: {device_name} '
+            f'| {compute_device.backend} '
+            f'| compute version {compute_device.compute_version}')
+
+
+def build_and_backend() -> str:
+    return af.info_str().split('\n')[0]
 
 
 def sync(compute_device: tp.Optional[tp.Union[int, ComputeDevice]] = None):

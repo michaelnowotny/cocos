@@ -137,6 +137,7 @@ Since Cocos offers a NumPy-like API, the same code works on the both the GPU and
     print(f'speedup factor on gpu: {time_on_cpu/time_on_gpu}')
 </pre>
 
+
 ### 2. Option Pricing in a Stochastic Volatility Model via Monte Carlo
 In this example, we are simulating sample paths of the logarithmic price of an 
 underlying security under the risk-neutral probability measure via the 
@@ -151,8 +152,7 @@ are governed by the following system of stochastic differential equations (SDE):
 ![volatility sde](https://raw.githubusercontent.com/michaelnowotny/cocos/master/images/volatility_sde.png)
 
 The simulation code below demonstrates how to write code that supports both CPU 
-and CPU computing. The complete code that includes the option pricing and a main 
-function is available under examples.
+and CPU computing. The complete is available under examples.
 
 <pre>
 def simulate_heston_model(T: float,
@@ -230,6 +230,37 @@ def simulate_heston_model(T: float,
 
     return x, v
 </pre>
+
+The following computes the option price from simulated price paths of the 
+underlying. It demonstrates how to dynamically choose between Cocos and NumPy 
+based on the type input array.
+
+<pre>
+def compute_option_price(r: float,
+                         T: float,
+                         K: float,
+                         x_simulated,
+                         num_pack: tp.Optional[types.ModuleType] = None):
+    """
+    Compute the function of a plain-vanilla call option from simulated
+    log-returns.
+
+    :param r: the risk-free rate
+    :param T: the time to expiration
+    :param K: the strike price
+    :param x_simulated: a numeric array of simulated log prices of the underlying
+    :param num_pack: a module - either numpy or cocos.numerics
+    :return: option price
+    """
+
+    if not num_pack:
+        use_gpu, num_pack = get_gpu_and_num_pack_by_dtype(x_simulated)
+
+    return math.exp(-r * T) \
+           * num_pack.mean(num_pack.maximum(num_pack.exp(x_simulated) - K, 0))
+
+</pre>
+
 
 ### 3. Numeric evaluation of SymPy array expressions on the GPU
 <pre>

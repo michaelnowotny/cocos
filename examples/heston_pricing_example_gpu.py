@@ -1,9 +1,12 @@
 import math
 import numpy
 import time
+import types
 import typing as tp
 
 import cocos.device as cd
+from cocos.numerics.numerical_package_selector import \
+    get_gpu_and_num_pack_by_dtype
 
 
 def simulate_heston_model(T: float,
@@ -86,7 +89,7 @@ def compute_option_price(r: float,
                          T: float,
                          K: float,
                          x_simulated,
-                         num_pack):
+                         num_pack: tp.Optional[types.ModuleType] = None):
     """
     Compute the function of a plain-vanilla call option from simulated
     log-returns.
@@ -98,6 +101,10 @@ def compute_option_price(r: float,
     :param num_pack: a module - either numpy or cocos.numerics
     :return: option price
     """
+
+    if not num_pack:
+        use_gpu, num_pack = get_gpu_and_num_pack_by_dtype(x_simulated)
+
     return math.exp(-r * T) \
            * num_pack.mean(num_pack.maximum(num_pack.exp(x_simulated) - K, 0))
 
@@ -156,7 +163,7 @@ def run_benchmark(x0: float,
     tic = time.time()
 
     # compute option price
-    option_price = compute_option_price(r, T, K, x_simulated, num_pack=np)
+    option_price = compute_option_price(r, T, K, x_simulated, num_pack=None)
 
     time_in_option_price_calculation = time.time() - tic
 
