@@ -104,7 +104,7 @@ setup(
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
     url=URL,
-    packages=find_packages(exclude=('examples')),
+    packages=find_packages(exclude=('examples', )),
     # If your package is a single module, use this instead of 'packages':
     # py_modules=['mypackage'],
 
