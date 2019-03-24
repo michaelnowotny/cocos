@@ -16,7 +16,7 @@ Cocos is a package for numeric and scientific computing on GPUs for Python with 
 1.  [Installation](#installation)
 2.  [Getting Started](#getting-started)
 3.  [Functionality](#functionality)
-4.  [Limitations and Differences with NumPy](#limitations)
+4.  [Limitations and Differences with NumPy](#limitations-and-differences-with-numpy)
 5.  [License](#license)
 
 ## Installation
