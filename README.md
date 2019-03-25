@@ -170,7 +170,7 @@ are governed by the following system of stochastic differential equations (SDE):
 ![volatility sde](https://raw.githubusercontent.com/michaelnowotny/cocos/master/images/volatility_sde.png)
 
 The simulation code below demonstrates how to write code that supports both CPU 
-and CPU computing. The complete is available under examples.
+and GPU computing. The complete is available under examples.
 
 <pre>
 def simulate_heston_model(T: float,
