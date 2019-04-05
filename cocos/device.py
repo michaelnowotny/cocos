@@ -201,7 +201,7 @@ def init(backend: tp.Optional[str] = None):
 
 
 def info():
-    print(build_and_backend())
+    print("Cocos running on " + build_and_backend())
     selected_device_id = ComputeDeviceManager.get_current_compute_device_id()
     for compute_device in ComputeDeviceManager.get_compute_devices():
         device_id = compute_device.id
