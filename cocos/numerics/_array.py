@@ -96,7 +96,7 @@ class ndarray(object):
 
     def __init__(self,
                  af_array: af.Array,
-                 shape: tp.Optional[tp.Tuple[int]]=None):
+                 shape: tp.Optional[tp.Tuple[int]] = None):
         self._af_array = af_array
         self._label = 'array'
         self._shape = shape
@@ -1303,7 +1303,7 @@ def cumsum(a: ndarray,
     return ndarray(new_af_array)
 
 
-def prod(a: ndarray, axis: int = None) -> tp.Union[float, ndarray]:
+def prod(a: ndarray, axis: tp.Optional[int] = None) -> tp.Union[float, ndarray]:
     """
     Return the product of array elements over a given axis.
     """
@@ -1331,7 +1331,8 @@ def sort_argsort(a: ndarray, axis: int = -1, ascending: bool = True) \
     return ndarray(af_out_array), ndarray(af_idx_array)
 
 
-def sum(a: ndarray, axis: int = None) -> tp.Union[numbers.Number, ndarray]:
+def sum(a: ndarray, axis: tp.Optional[int] = None) \
+        -> tp.Union[numbers.Number, ndarray]:
     """
     Sum of array elements over a given axis.
     """
@@ -1358,7 +1359,7 @@ def full(shape: tp.Tuple[int], fill_value, dtype: np.generic = np.float32) \
     return ndarray(_full_internal(shape, fill_value, dtype))
 
 
-def full_like(a, fill_value, dtype: tp.Optional[np.generic]=None) -> ndarray:
+def full_like(a, fill_value, dtype: tp.Optional[np.generic] = None) -> ndarray:
     """
     Return a full array with the same shape and type as a given array.
     """
