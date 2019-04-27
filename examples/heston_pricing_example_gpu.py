@@ -9,6 +9,16 @@ from cocos.numerics.numerical_package_selector import \
     get_gpu_and_num_pack_by_dtype
 
 
+def randn_antithetic(shape: tp.Sequence[int],
+                     num_pack=numpy):
+    draw_shape = list(shape)
+    draw_shape[0] = math.ceil(shape[0]/2)
+    z = num_pack.random.randn(*draw_shape)
+    z = num_pack.concatenate((z, -z[0:math.floor(shape[0]/2)]), axis=0)
+
+    return z
+
+
 def simulate_heston_model(T: float,
                           N: int,
                           R: int,
@@ -68,7 +78,7 @@ def simulate_heston_model(T: float,
         t_current = t % 2
 
         # generate antithetic standard normal random variables
-        dBt = random.randn(R, 2) * sqrt_delta_t
+        dBt = randn_antithetic(shape=(R, 2), num_pack=np) * sqrt_delta_t
 
         sqrt_v_lag = np.sqrt(v[t_previous])
         x[t_current] = x[t_previous] \
@@ -77,10 +87,10 @@ def simulate_heston_model(T: float,
         v[t_current] = v[t_previous] \
                      + kappa * (v_bar - v[t_previous]) * Delta_t \
                      + sigma_v * np.multiply(sqrt_v_lag, np.dot(dBt, m))
-        v[t_current] = np.maximum(v[t_current], 0.0)
+        v[t_current] = np.maximum(v[t_current], numpy.finfo(numpy.float32).eps)
 
     x = x[t_current]
-    v = np.maximum(v[t_current], 0.0)
+    v = np.maximum(v[t_current], numpy.finfo(numpy.float32).eps)
 
     return x, v
 
@@ -89,7 +99,7 @@ def compute_option_price(r: float,
                          T: float,
                          K: float,
                          x_simulated,
-                         num_pack: tp.Optional[types.ModuleType] = None):
+                         num_pack: tp.Optional = None):
     """
     Compute the function of a plain-vanilla call option from simulated
     log-returns.
@@ -102,7 +112,7 @@ def compute_option_price(r: float,
     :return: option price
     """
 
-    if not num_pack:
+    if num_pack is None:
         use_gpu, num_pack = get_gpu_and_num_pack_by_dtype(x_simulated)
 
     return math.exp(-r * T) \
@@ -192,7 +202,7 @@ def main():
     K = 0.95  # strike price
 
     # simulation parameters
-    nT = int(math.ceil(20 * T))  # number of time-steps to simulate
+    nT = int(math.ceil(500 * T))  # number of time-steps to simulate
     R = 2000000  # actual number of paths to simulate for pricing
 
     # run benchmark on gpu
