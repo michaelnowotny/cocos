@@ -208,14 +208,14 @@ class ndarray(object):
         The real part of the array.
         """
 
-        return imag(self)
+        return real(self)
 
     def astype(self,
                dtype: np.generic,
-               order: str='K',
-               casting: str='unsafe',
-               subok: bool=True,
-               copy: bool=True) \
+               order: str = 'K',
+               casting: str = 'unsafe',
+               subok: bool = True,
+               copy: bool = True) \
             -> 'ndarray':
         """
         Copy of the array, cast to a specified type.
@@ -541,7 +541,7 @@ class ndarray(object):
     def min(self,
             axis: tp.Optional[int] = None):
         """
-        Returns the average of the array elements along given axis.
+        Returns the minimum along given axis.
         """
 
         new_array = af.min(self._af_array, dim=axis)
@@ -678,7 +678,7 @@ class ndarray(object):
                 raise ValueError(f"axis must be between 0 and {self.ndim-1}")
             new_shape = list(self.shape)
             new_shape[axis] *= repeats
-            return tile(self.flatten(), repeats).reshape(new_shape)
+            return tile(self.flatten(), repeats).reshape(tuple(new_shape))
             # reps = [1, 1, 1, 1]
             # reps[axis] = repeats
             # return tile(self, tuple(reps))
@@ -712,7 +712,7 @@ class ndarray(object):
 
     def var(self,
             axis: tp.Optional[int] = None,
-            ddof: int=0) \
+            ddof: int = 0) \
             -> tp.Union[numbers.Number, 'ndarray']:
         """
         Returns the variance of the array elements, along given axis.
@@ -802,7 +802,7 @@ def array(object: tp.Union[tp.Sequence,
 
 
 def transpose(a: ndarray,
-              axes: tp.Optional= None):
+              axes: tp.Optional = None):
     """
     Permute the dimensions of an array.
     """
