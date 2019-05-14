@@ -196,10 +196,6 @@ def mod(x1: ndarray,
     return ndarray(new_af_array)
 
 
-# def absolute(source: ndarray):
-#     return abs(source)
-
-
 def angle(z: ndarray):
     """
     Return the angle of the complex argument.

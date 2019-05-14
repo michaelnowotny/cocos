@@ -1,7 +1,9 @@
 import arrayfire as af
 from arrayfire.library import Dtype
 
+import math
 import numpy as np
+from types import ModuleType
 import typing as tp
 from ._arith import \
     exp, \
@@ -47,6 +49,79 @@ random_engine \
         engine_type=map_rng_to_random_engine(GPUOptions.default_rng))
 
 
+################################################################################
+# functions to get and set the seed
+################################################################################
+
+def seed(seed: tp.Optional[int] = None):
+    """
+    Seed the generator.
+    """
+
+    if seed is None:
+        seed = 0
+    af.set_seed(seed)
+
+
+def get_seed() -> int:
+    """
+    Returns the current seed of the generator.
+    """
+
+    return af.get_seed()
+
+
+################################################################################
+# supporting functions for antithetic random numbers
+################################################################################
+
+def get_antithetic_slices(shape: tp.Sequence[int],
+                          antithetic_dimension: int) \
+        -> tp.Tuple[slice, ...]:
+    """
+    This function generates a tuple of slices to index the original array of
+    random numbers to take either half or one less than half of the the original
+    random numbers along the antithetic dimension and all of the random numbers
+    along the other dimensions.
+    """
+
+    slices = []
+
+    for axis, dimension in enumerate(shape):
+        if axis == antithetic_dimension:
+            s = slice(0, math.floor(dimension / 2), 1)
+        else:
+            s = slice(0, dimension, 1)
+
+        slices.append(s)
+
+    return tuple(slices)
+
+
+def verify_shape_and_antithetic_dimension(shape: tp.Sequence[int],
+                                          antithetic_dimension: tp.Optional[
+                                              int] = None):
+    """
+    This function makes sure that the length shape argument is between 1 and 4
+    and checks that the antithetic dimension is one of the dimensions in the
+    shape argument.
+    """
+
+    if len(shape) > 4:
+        raise ValueError('arrays with more than 4 axes are not supported')
+
+    if len(shape) < 1:
+        raise ValueError('array must have at least one axis')
+
+    if antithetic_dimension < 0 or antithetic_dimension > len(shape) - 1:
+        raise ValueError(
+            f'antithetic dimension must be None or between 0 and {len(shape)}')
+
+
+################################################################################
+# Basic continuous random number generators
+################################################################################
+
 def rand(d0: int,
          d1: tp.Optional[int] = None,
          d2: tp.Optional[int] = None,
@@ -66,7 +141,7 @@ def randn(d0: int,
           d1: tp.Optional[int] = None,
           d2: tp.Optional[int] = None,
           d3: tp.Optional[int] = None,
-          dtype: np.generic=np.float32):
+          dtype: np.generic = np.float32):
     """
     Return a sample (or samples) from the “standard normal” distribution.
     """
@@ -75,6 +150,64 @@ def randn(d0: int,
     af_array = af.data.randn(d0, d1, d2, d3, dtype=af_type)
     return ndarray(af_array)
 
+
+def randn_antithetic(shape: tp.Sequence[int],
+                     antithetic_dimension: tp.Optional[int] = None,
+                     dtype: np.generic = np.float32,
+                     num_pack: ModuleType = np):
+    verify_shape_and_antithetic_dimension(shape, antithetic_dimension)
+    draw_shape = list(shape)
+
+    if antithetic_dimension is not None:
+        # adjust dimension over which antithetic random numbers are to be drawn
+        draw_shape[antithetic_dimension] \
+            = math.ceil(shape[antithetic_dimension] / 2)
+
+    # draw original random numbers
+    if num_pack == np:
+        z = num_pack.random.randn(*draw_shape)
+    else:
+        z = num_pack.random.randn(*draw_shape, dtype=dtype)
+
+    if antithetic_dimension is not None:
+        # reflect random numbers at 0 and concatenate to original random numbers
+        slices = get_antithetic_slices(shape, antithetic_dimension)
+        z = num_pack.concatenate((z, -z[slices]),
+                                 axis=antithetic_dimension)
+
+    return z
+
+
+def rand_antithetic(shape: tp.Sequence[int],
+                    antithetic_dimension: tp.Optional[int] = None,
+                    dtype: np.generic = np.float32,
+                    num_pack: ModuleType = np):
+    verify_shape_and_antithetic_dimension(shape, antithetic_dimension)
+    draw_shape = list(shape)
+
+    if antithetic_dimension is not None:
+        # adjust dimension over which antithetic random numbers are to be drawn
+        draw_shape[antithetic_dimension] \
+            = math.ceil(shape[antithetic_dimension] / 2)
+
+    # draw original random numbers
+    if num_pack == np:
+        u = num_pack.random.rand(*draw_shape)
+    else:
+        u = num_pack.random.rand(*draw_shape, dtype=dtype)
+
+    if antithetic_dimension is not None:
+        # reflect random numbers at 0 and concatenate to original random numbers
+        slices = get_antithetic_slices(shape, antithetic_dimension)
+        u = num_pack.concatenate((u, 1.0 - u[slices]),
+                                 axis=antithetic_dimension)
+
+    return u
+
+
+################################################################################
+# Basic discrete random number generators
+################################################################################
 
 def randint(low: int,
             high: tp.Optional[int] = None,
@@ -88,6 +221,7 @@ def randint(low: int,
     :param low: lowest number to draw
     :param high: highest integer to draw (excluding)
     :param size: shape of output array
+    :param dtype: data type of integer to be generated
     :return: an ndarray of random integers
     """
     if not high:
@@ -131,24 +265,6 @@ def choice(a: ndarray,
         return a[i]
 
 
-def seed(seed: tp.Optional[int] = None):
-    """
-    Seed the generator.
-    """
-
-    if seed is None:
-        seed = 0
-    af.set_seed(seed)
-
-
-def get_seed() -> int:
-    """
-    Returns the current seed of the generator.
-    """
-
-    return af.get_seed()
-
-
 def _draw_and_reshape(size: SIZE_TYPE,
                       rng_func: tp.Callable[[int], ndarray]) \
         -> ndarray:
@@ -186,7 +302,8 @@ def uniform(low: float = 0.0,
 
 
 def _exponential_internal(scale: float,
-                          n: int) -> ndarray:
+                          n: int,
+                          antithetic: bool = False) -> ndarray:
     u = rand(n)
     u = minimum(u, 1.0 - np.finfo(np.float32).eps)
     x: ndarray = log(1.0 - u) * (-scale)
@@ -194,8 +311,13 @@ def _exponential_internal(scale: float,
 
 
 def exponential(scale: float=1.0,
-                size: tp.Optional[SIZE_TYPE] = None) -> ndarray:
-    return _draw_and_reshape(size, lambda n: _exponential_internal(scale, n))
+                size: tp.Optional[SIZE_TYPE] = None,
+                antithethic: bool = False) -> ndarray:
+    return _draw_and_reshape(size,
+                             lambda n: _exponential_internal(
+                                            scale=scale,
+                                            n=n,
+                                            antithetic=antithethic))
 
 
 def standard_exponential(size: tp.Optional[SIZE_TYPE] = None) -> ndarray:

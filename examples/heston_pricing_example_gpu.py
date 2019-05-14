@@ -8,15 +8,17 @@ import cocos.device as cd
 from cocos.numerics.numerical_package_selector import \
     get_gpu_and_num_pack_by_dtype
 
+from cocos.numerics.random import randn_antithetic
 
-def randn_antithetic(shape: tp.Sequence[int],
-                     num_pack=numpy):
-    draw_shape = list(shape)
-    draw_shape[0] = math.ceil(shape[0]/2)
-    z = num_pack.random.randn(*draw_shape)
-    z = num_pack.concatenate((z, -z[0:math.floor(shape[0]/2)]), axis=0)
 
-    return z
+# def randn_antithetic(shape: tp.Sequence[int],
+#                      num_pack=numpy):
+#     draw_shape = list(shape)
+#     draw_shape[0] = math.ceil(shape[0]/2)
+#     z = num_pack.random.randn(*draw_shape)
+#     z = num_pack.concatenate((z, -z[0:math.floor(shape[0]/2)]), axis=0)
+#
+#     return z
 
 
 def simulate_heston_model(T: float,
@@ -78,7 +80,9 @@ def simulate_heston_model(T: float,
         t_current = t % 2
 
         # generate antithetic standard normal random variables
-        dBt = randn_antithetic(shape=(R, 2), num_pack=np) * sqrt_delta_t
+        dBt = randn_antithetic(shape=(R, 2),
+                               antithetic_dimension=0,
+                               num_pack=np) * sqrt_delta_t
 
         sqrt_v_lag = np.sqrt(v[t_previous])
         x[t_current] = x[t_previous] \

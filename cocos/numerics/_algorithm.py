@@ -5,14 +5,14 @@ from ._array import ndarray, _wrap_af_array
 
 
 def count_nonzero(a: ndarray,
-                  axis: tp.Optional[int]=None) \
+                  axis: tp.Optional[int] = None) \
         -> tp.Union[int, ndarray]:
     return _wrap_af_array(af.count(a._af_array, dim=axis))
 
 
 def diff(a: ndarray,
-         n: int=1,
-         axis: int=-1) -> ndarray:
+         n: int = 1,
+         axis: int = -1) -> ndarray:
     """Calculate the n-th discrete difference along given axis."""
 
     if axis == -1:
@@ -59,8 +59,8 @@ def flatnonzero(a: ndarray) -> ndarray:
 
 def sort_by_keys(keys: ndarray,
                  values: ndarray,
-                 axis: int=-1,
-                 ascending: bool=True) -> tp.Tuple[ndarray, ndarray]:
+                 axis: int = -1,
+                 ascending: bool = True) -> tp.Tuple[ndarray, ndarray]:
     if keys.shape != values.shape:
         raise ValueError("Keys and values must have the same dimensions.")
     elif axis is None:
@@ -81,9 +81,9 @@ def sort_by_keys(keys: ndarray,
 
 
 def unique(ar: ndarray,
-           return_index: bool=False,
-           return_inverse: bool=False,
-           return_counts: bool=False) -> ndarray:
+           return_index: bool = False,
+           return_inverse: bool = False,
+           return_counts: bool = False) -> ndarray:
     if return_index:
         raise ValueError("return_index=True is not supported")
     if return_inverse:

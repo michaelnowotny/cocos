@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import cocos.numerics as cn
-from tests.test_numerics.test_statistics.utilities import perform_ks_test
+from cocos.tests.test_numerics.test_statistics.utilities import perform_ks_test
 
 
 n_kolmogorov_smirnov = 1000000

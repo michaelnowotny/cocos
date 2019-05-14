@@ -153,7 +153,7 @@ def concatenate(arrays: tp.Tuple[ndarray, ...],
     return ndarray(af_array)
 
 
-def vstack(tup:tp.Tuple[ndarray, ...]) -> ndarray:
+def vstack(tup: tp.Tuple[ndarray, ...]) -> ndarray:
     return concatenate(tup, 0)
 
 

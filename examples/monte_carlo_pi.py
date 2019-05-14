@@ -44,7 +44,7 @@ R = 10
 # on gpu
 tic = time.time()
 for r in range(R):
-    pi_gpu = estimate_pi(n, gpu=True)
+    pi_gpu = float(estimate_pi(n, gpu=True))
     cd.sync()
 
 time_on_gpu = time.time() - tic
@@ -55,7 +55,7 @@ print(f'time elapsed on gpu: {time_on_gpu}')
 # on cpu
 tic = time.time()
 for r in range(R):
-    pi_cpu = estimate_pi(n, gpu=False)
+    pi_cpu = float(estimate_pi(n, gpu=False))
 
 time_on_cpu = time.time() - tic
 
