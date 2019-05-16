@@ -8,16 +8,17 @@ Cocos is a package for numeric and scientific computing on GPUs for Python with 
 ## Highlights
 
 *   Fast vectorized computation on GPUs with a NumPy-like API.
-*   High-performance random number generators for beta, chi-square, exponential, gamma, logistic, lognormal, normal, uniform, and Wald distributions.
-*   Provides a GPU equivalent of SymPy's lambdify, which enables numeric evaluation of symbolic SymPy (multi-dimensional array) expressions on the GPU for vectors of input parameters in parallel.
+*   High-performance random number generators for beta, chi-square, exponential, gamma, logistic, lognormal, normal, uniform, and Wald distributions. Antithetic random numbers for uniform and normal distributions.
+*   Provides a GPU equivalent to SymPy's lambdify, which enables numeric evaluation of symbolic SymPy (multi-dimensional array) expressions on the GPU for vectors of input parameters in parallel.
 
 ## Table of Contents
 
 1.  [Installation](#installation)
 2.  [Getting Started](#getting-started)
-3.  [Functionality](#functionality)
-4.  [Limitations and Differences with NumPy](#limitations-and-differences-with-numpy)
-5.  [License](#license)
+3.  [Benchmark](#benchmark)
+4.  [Functionality](#functionality)
+5.  [Limitations and Differences with NumPy](#limitations-and-differences-with-numpy)
+6.  [License](#license)
 
 ## Installation
 
@@ -346,6 +347,43 @@ print(f'numerical results from cpu and gpu match: '
       f'{np.allclose(jacobian_f_numeric_gpu, jacobian_f_numeric_cpu)}')
 
 </pre>
+
+## Benchmark
+This benchmark compares the runtime performance of the option pricing example 
+under a Heston stochastic volatility model on the CPU using NumPy and the GPU 
+using Cocos and CuPy. CuPy is another package that provides a NumPy-like API for 
+GPU computing.
+
+The results were produced on a machine with an Intel Core i7 3770K with 32GB of 
+RAM and a NVidia GeForce GTX 1070. Two Million paths are being simulated with 
+500 time steps per year.
+
+<table>
+<tbody>
+<tr>
+<th></th>
+<th>Total Time in Seconds</th>
+<th>Speedup Compared to NumPy</th>
+</tr>
+<tr>
+<td>NumPy</td>
+<td>145.63899517059326</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>Cocos</td>
+<td>0.995002269744873</td>
+<td>146.37051552448852</td>
+</tr>
+<tr>
+<td>CuPy</td>
+<td>2.4080007076263428</td>
+<td>60.4812925134707</td>
+</tr>
+</table>
+
+![benchmark_results](https://raw.githubusercontent.com/michaelnowotny/cocos/master/images/benchmark_results.png)
+
 
 ## Functionality
 
