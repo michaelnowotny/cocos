@@ -233,6 +233,12 @@ def sync(compute_device: tp.Optional[tp.Union[int, ComputeDevice]] = None):
     af.sync(device=device)
 
 
+def gpu_sync_wrapper(f: tp.Callable, *args, **kwargs):
+    result = f(*args, **kwargs)
+    sync()
+    return result
+
+
 def is_dbl_supported(
         compute_device: tp.Optional[tp.Union[int, ComputeDevice]] = None) \
         -> bool:

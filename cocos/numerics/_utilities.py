@@ -1,5 +1,6 @@
 from arrayfire.library import backend, c_char_ptr_t
 from arrayfire.util import safe_call, to_str, c_pointer
+import math
 import typing as tp
 
 
@@ -50,10 +51,28 @@ def _pad_shape_tuple_one(shape: tp.Tuple[int]) -> tp.Tuple[int, int, int, int]:
     return d0, d1, d2, d3
 
 
-def _as_str(self, dims: bool=True):
+def _as_str(self, dims: bool = True):
     arr_str = c_char_ptr_t(0)
     be = backend.get()
     safe_call(be.af_array_to_string(c_pointer(arr_str), "", self.arr, 4, dims))
     py_str = to_str(arr_str)
     safe_call(be.af_free_host(arr_str))
     return py_str
+
+
+def _compute_slice_length(index: slice, length: int) -> int:
+    """
+    Given a Python slice such as 1:8:2 and the length of a source sequence
+    (e.g. a numpy array) this function computes the resulting number of elements
+    when using the slice to index the source sequence.
+
+    :param index: a Python slice
+    :param length: length of the source sequence
+    :return: the number of elements resulting from the indexing
+    """
+
+    start, stop, step = index.indices(length)
+    # print(f'start = {start}, stop = {stop}, step = {step}')
+    computed_length = math.floor((stop - start - 1) / step) + 1
+    # print(f'computed length = {computed_length}')
+    return computed_length

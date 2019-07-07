@@ -4,7 +4,6 @@ import numbers
 import numpy as np
 import typing as tp
 
-
 from cocos.options import \
     GPUOptions, \
     MixedComputationErrorLevel
@@ -16,7 +15,8 @@ from ._conversion import \
 from ._utilities import \
     _as_str, \
     _pad_shape_tuple_none, \
-    _pad_shape_tuple_one
+    _pad_shape_tuple_one, \
+    _compute_slice_length
 
 
 def _verify_operand(other):
@@ -71,24 +71,76 @@ def _unary_function(x, func) -> 'ndarray':
         return func(x)
 
 
-def _translate_index_key(item):
+def is_boolean(a):
+    return a.dtype == np.bool or a.dtype == np.bool_
+
+
+def _translate_index_key(item, input_shape: tp.Union[int, tp.Tuple[int, ...]]) \
+        -> tp.Tuple[tp.Any, tp.Tuple[int, ...]]:
     if isinstance(item, tuple):
+        # item is a tuple of items
         af_item = []
-        for key in item:
-            if isinstance(key, ndarray):
-                af_item.append(key._af_array)
+        required_shape = []
+
+        for key, current_shape in zip(item, input_shape):
+            translated_index_for_key, required_shape_for_key \
+                = _translate_index_key(key, current_shape)
+            af_item.append(translated_index_for_key)
+            if isinstance(required_shape_for_key, tuple):
+                required_shape_for_key = list(required_shape_for_key)
+                required_shape += required_shape_for_key
             else:
-                af_item.append(key)
+                required_shape.append(required_shape_for_key)
 
         af_item = tuple(af_item)
+        required_shape = tuple(required_shape)
     elif isinstance(item, ndarray):
+        # item is a cocos array
         af_item = item._af_array
+        if is_boolean(item):
+            required_shape = (int(item.sum()), )
+        else:
+            required_shape = item.shape
     elif isinstance(item, np.ndarray):
+        # item is a numpy array
         af_item = array(item)
+        if is_boolean(item):
+            required_shape = (int(item.sum()), )
+        else:
+            required_shape = item.shape
+    elif isinstance(item, numbers.Number):
+        af_item = item
+        required_shape = (1, )
+    elif isinstance(item, slice):
+        af_item = item
+        if isinstance(input_shape, tuple):
+            input_shape = input_shape[0]
+        required_shape = (_compute_slice_length(item, input_shape), )
     else:
         af_item = item
+        required_shape = (-1,)
 
-    return af_item
+    return af_item, required_shape
+
+
+# def _translate_index_key(item):
+#     if isinstance(item, tuple):
+#         af_item = []
+#         for key in item:
+#             if isinstance(key, ndarray):
+#                 af_item.append(key._af_array)
+#             else:
+#                 af_item.append(key)
+#
+#         af_item = tuple(af_item)
+#     elif isinstance(item, ndarray):
+#         af_item = item._af_array
+#     elif isinstance(item, np.ndarray):
+#         af_item = array(item)
+#     else:
+#         af_item = item
+#
+#     return af_item
 
 
 class ndarray(object):
@@ -410,13 +462,17 @@ class ndarray(object):
         return dot(self, other)
 
     def __getitem__(self, item) -> 'ndarray':
-        af_item = _translate_index_key(item)
+        af_item, required_shape = _translate_index_key(item, self.shape)
         new_af_array = self._af_array.__getitem__(af_item)
+        new_cocos_array = ndarray(new_af_array)
 
-        return ndarray(new_af_array)
+        if new_cocos_array.shape != required_shape:
+            new_cocos_array = new_cocos_array.reshape(shape=required_shape)
+
+        return new_cocos_array
 
     def __setitem__(self, key, value) -> 'ndarray':
-        af_key = _translate_index_key(key)
+        af_key, required_shape = _translate_index_key(key, self.shape)
         if isinstance(value, ndarray):
             value = value._af_array
         new_af_array = self._af_array.__setitem__(af_key, value)
@@ -455,7 +511,7 @@ class ndarray(object):
         """
 
         index = self._get_index_from_args(*args)
-        af_item = _translate_index_key(index)
+        af_item, required_shape = _translate_index_key(index, self.shape)
         return np.asscalar(np.array(self._af_array[af_item]))
         # return self._af_array[af_item].scalar()
 

@@ -70,6 +70,7 @@ if GPUOptions.use_gpu:
 
     # from arrayfire/_arith.py
     from ._arith import \
+        abs, \
         absolute, \
         minimum, \
         maximum, \

@@ -20,6 +20,9 @@ def absolute(x: ndarray) -> ndarray:
     return _unary_function(x, af.abs)
 
 
+abs = absolute
+
+
 @af.broadcast
 def minimum(x1: tp.Union[float, ndarray],
             x2: tp.Union[float, ndarray]) \
