@@ -103,7 +103,7 @@ def _translate_index_key(item, input_shape: tp.Union[int, tp.Tuple[int, ...]]) \
             required_shape = item.shape
     elif isinstance(item, np.ndarray):
         # item is a numpy array
-        af_item = array(item)
+        af_item = array(item)._af_array
         if is_boolean(item):
             required_shape = (int(item.sum()), )
         else:
@@ -463,6 +463,8 @@ class ndarray(object):
 
     def __getitem__(self, item) -> 'ndarray':
         af_item, required_shape = _translate_index_key(item, self.shape)
+        # from IPython.core.debugger import set_trace
+        # set_trace()
         new_af_array = self._af_array.__getitem__(af_item)
         new_cocos_array = ndarray(new_af_array)
 
@@ -953,15 +955,46 @@ def display(array: ndarray):
         print(array)
 
 
+def _complete_shape(a: ndarray, shape: tp.Sequence[int]) -> tp.Tuple[
+    int, ...]:
+    shape_np = np.array(shape)
+    placeholder_indices = np.where(shape_np == -1)[0]
+    number_of_placeholders = len(placeholder_indices)
+
+    assert number_of_placeholders >= 0
+    if number_of_placeholders == 0:
+        return tuple(shape)
+    elif number_of_placeholders > 1:
+        raise ValueError('can only specify one unknown dimension')
+    elif number_of_placeholders == 1:
+        position_of_placeholder = np.asscalar(placeholder_indices)
+        dimensions_without_placeholder = shape_np[np.where(shape_np != -1)]
+        size_of_all_other_dimensions = np.prod(dimensions_without_placeholder)
+        remainder = a.size % size_of_all_other_dimensions
+        if remainder != 0:
+            raise ValueError(
+                f'cannot reshape array of size {a.size} into shape {shape}')
+        dimension_of_placeholder = a.size / size_of_all_other_dimensions
+        shape_np[position_of_placeholder] = dimension_of_placeholder
+        return tuple(shape_np)
+    else:
+        ValueError('This cannot happen')
+
+
 def reshape(a: ndarray,
             newshape: tp.Tuple[int, ...]) -> ndarray:
     """
     Gives a new shape to an array without changing its data.
     """
 
+    newshape = _complete_shape(a, newshape)
+    input_array = a._af_array
+    # input_array = af.transpose(input_array)
     d0, d1, d2, d3 = _pad_shape_tuple_none(newshape)
-    af_array = af.data.moddims(a._af_array, d0, d1, d2, d3)
-    return ndarray(af_array)
+    output_array = af.data.moddims(input_array, d0, d1, d2, d3)
+    # output_array = af.transpose(output_array)
+    # output_array = af.data.moddims(output_array, d0, d1, d2, d3)
+    return ndarray(output_array)
 
 
 def squeeze(a: ndarray,
