@@ -15,6 +15,7 @@ from ._conversion import \
 from ._utilities import \
     _as_str, \
     _pad_shape_tuple_none, \
+    _pad_shape_tuple_axis, \
     _pad_shape_tuple_one, \
     _compute_slice_length
 
@@ -469,7 +470,9 @@ class ndarray(object):
         new_cocos_array = ndarray(new_af_array)
 
         if new_cocos_array.shape != required_shape:
-            new_cocos_array = new_cocos_array.reshape(shape=required_shape)
+            # new_cocos_array = new_cocos_array.reshape(shape=required_shape)
+            new_cocos_array = reshape_without_reorder(new_cocos_array,
+                                                      newshape=required_shape)
 
         return new_cocos_array
 
@@ -981,20 +984,45 @@ def _complete_shape(a: ndarray, shape: tp.Sequence[int]) -> tp.Tuple[
         ValueError('This cannot happen')
 
 
-def reshape(a: ndarray,
-            newshape: tp.Tuple[int, ...]) -> ndarray:
+def reorder(a: ndarray, new_order: tp.Tuple[int, ...]):
+    if len(new_order) > 4:
+        raise ValueError(f'Cocos does not support arrays with more than 4 axes.')
+
+    d0, d1, d2, d3 = _pad_shape_tuple_axis(new_order)
+    # print(f'd0={d0}, d1={d1}, d2={d2}, d3={d3}')
+
+    output_array = af.reorder(a._af_array, d0, d1, d2, d3)
+    return ndarray(output_array)
+
+
+def reshape_without_reorder(a: ndarray,
+                            newshape: tp.Tuple[int, ...]) -> ndarray:
     """
     Gives a new shape to an array without changing its data.
     """
 
     newshape = _complete_shape(a, newshape)
     input_array = a._af_array
-    # input_array = af.transpose(input_array)
     d0, d1, d2, d3 = _pad_shape_tuple_none(newshape)
     output_array = af.data.moddims(input_array, d0, d1, d2, d3)
-    # output_array = af.transpose(output_array)
-    # output_array = af.data.moddims(output_array, d0, d1, d2, d3)
     return ndarray(output_array)
+
+
+def reshape(a, newshape):
+    newshape = _complete_shape(a, newshape)
+    if a.ndim < 1 or a.ndim > 4:
+        raise ValueError('a must have between 1 and 4 axes')
+    elif a.ndim == 1:
+        tmp = a
+    else:
+        tmp = reorder(a, tuple(range(a.ndim))[::-1]).flatten()
+    #     elif a.ndim == 2:
+    #         tmp = cn.reorder(a_gpu, (1, 0)).flatten()
+    #     elif a.ndim == 3:
+    #         tmp = cn.reorder(a_gpu, (2, 1, 0)).flatten()
+
+    tmp = reshape_without_reorder(tmp, newshape=newshape[::-1])
+    return reorder(tmp, tuple(range(len(newshape)))[::-1])
 
 
 def squeeze(a: ndarray,

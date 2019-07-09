@@ -4,15 +4,15 @@ import math
 import typing as tp
 
 
-def _pad_shape_tuple_none(shape: tp.Union[tp.Sequence, int, float]) \
+def _pad_shape_tuple_default(shape: tp.Union[tp.Sequence, int, float],
+                             d0: tp.Optional[int],
+                             d1: tp.Optional[int],
+                             d2: tp.Optional[int],
+                             d3: tp.Optional[int]) \
         -> tp.Tuple[int,
                     tp.Optional[int],
                     tp.Optional[int],
                     tp.Optional[int]]:
-    d0 = None
-    d1 = None
-    d2 = None
-    d3 = None
     if isinstance(shape, list) or isinstance(shape, int):
         shape = tuple(shape)
 
@@ -29,6 +29,27 @@ def _pad_shape_tuple_none(shape: tp.Union[tp.Sequence, int, float]) \
                     d3 = shape[3]
 
     return d0, d1, d2, d3
+
+
+def _pad_shape_tuple_none(shape: tp.Union[tp.Sequence, int, float]) \
+        -> tp.Tuple[int,
+                    tp.Optional[int],
+                    tp.Optional[int],
+                    tp.Optional[int]]:
+    return _pad_shape_tuple_default(shape=shape,
+                                    d0=None,
+                                    d1=None,
+                                    d2=None,
+                                    d3=None)
+
+
+def _pad_shape_tuple_axis(axes: tp.Sequence[int]) \
+        -> tp.Tuple[int, int, int, int]:
+    output_shape = list(axes)
+    for i in range(len(axes), 4):
+        output_shape.append(i)
+
+    return tuple(output_shape)
 
 
 def _pad_shape_tuple_one(shape: tp.Tuple[int]) -> tp.Tuple[int, int, int, int]:

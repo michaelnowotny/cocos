@@ -38,7 +38,9 @@ if GPUOptions.use_gpu:
         array, \
         transpose, \
         display, \
+        reorder, \
         reshape, \
+        reshape_without_reorder, \
         squeeze, \
         nonzero, \
         trace, \
