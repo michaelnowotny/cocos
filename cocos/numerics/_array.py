@@ -157,6 +157,16 @@ class ndarray(object):
     def __del__(self):
         del self._af_array
 
+    def __getstate__(self) -> tp.Tuple:
+        return np.array(self._af_array), self._label, self._shape
+
+    def __setstate__(self, state: tp.Tuple):
+        numpy_array, label, shape = state
+        af_array = af.to_array(numpy_array)
+        self._af_array = af_array
+        self._label = label
+        self._shape = shape
+
     def __array__(self) -> np.ndarray:
 
         return self._af_array.__array__()
