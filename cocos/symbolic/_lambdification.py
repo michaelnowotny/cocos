@@ -18,14 +18,14 @@ from cocos.numerics.numerical_package_selector import \
 # Works for both Matrices and Arrays
 ################################################################################
 def _compute_replacement_functions(
-        replacement_functions_cpu: tp.Sequence[tp.Callable],
-        replacement_functions_gpu: tp.Sequence[tp.Callable],
+        replacement_functions_cpu: tp.Tuple[tp.Callable, ...],
+        replacement_functions_gpu: tp.Tuple[tp.Callable, ...],
         perform_cse: bool,
-        state_vectors: tp.Sequence,
+        state_vectors: tp.Tuple,
         t: float,
         gpu: bool,
         number_of_state_variables: int) \
-        -> tp.Tuple[tp.Sequence, int]:
+        -> tp.Tuple[tp.Tuple, int]:
 
     R = max([state_argument.size
              for state_argument
@@ -52,11 +52,11 @@ def _compute_replacement_functions(
 # General Arrays
 ################################################################################
 def lambdify_array_with_modules(
-        symbols: tp.Sequence[sym.Symbol],
+        symbols: tp.Tuple[sym.Symbol, ...],
         array_expression: tp.Union[sym.Array, sym.MatrixBase],
         numeric_time_functions: tp.Dict[str, tp.Callable],
-        modules: tp.Sequence[str]) \
-        -> tp.List[tp.Callable]:
+        modules: tp.Tuple[str, ...]) \
+        -> tp.Tuple[tp.Callable, ...]:
 
     if not isinstance(modules, list):
         modules = list(modules)
@@ -75,14 +75,14 @@ def lambdify_array_with_modules(
                                    array_expression[index],
                                    modules=[numeric_time_functions] + modules))
 
-    return result
+    return tuple(result)
 
 
 def lambdify_array(
-        symbols: tp.Sequence[sym.Symbol],
+        symbols: tp.Tuple[sym.Symbol, ...],
         array_expression: tp.Union[sym.Array, sym.MatrixBase],
         numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None) \
-        -> tp.Tuple[tp.List[tp.Callable], tp.List[tp.Callable]]:
+        -> tp.Tuple[tp.Tuple[tp.Callable, ...], tp.Tuple[tp.Callable, ...]]:
 
     if numeric_time_functions is None:
         numeric_time_functions = dict()
@@ -90,12 +90,12 @@ def lambdify_array(
     functions_cpu = lambdify_array_with_modules(symbols,
                                                 array_expression,
                                                 numeric_time_functions,
-                                                ['numpy'])
+                                                ('numpy', ))
 
     functions_gpu = lambdify_array_with_modules(symbols,
                                                 array_expression,
                                                 numeric_time_functions,
-                                                [COCOS_TRANSLATIONS])
+                                                (COCOS_TRANSLATIONS, ))
 
     return functions_cpu, functions_gpu
 
@@ -103,8 +103,8 @@ def lambdify_array(
 def _compute_result_internal(R: int,
                              dimensions: tp.Tuple[int, ...],
                              arguments,
-                             functions_cpu: tp.Sequence[tp.Callable],
-                             functions_gpu: tp.Sequence[tp.Callable],
+                             functions_cpu: tp.Tuple[tp.Callable, ...],
+                             functions_gpu: tp.Tuple[tp.Callable, ...],
                              pre_attach: bool,
                              gpu: bool,
                              dtype: np.generic) \
@@ -147,22 +147,24 @@ def _compute_result_internal(R: int,
 class LambdifiedArrayExpressions(object):
     def __init__(
         self,
-        argument_symbols: tp.Sequence[sym.Symbol],
+        argument_symbols: tp.Tuple[sym.Symbol],
         time_symbol: sym.Symbol,
-        symbolic_array_expressions: tp.Sequence[tp.Union[sym.Array,
-                                                         sym.Matrix]],
+        symbolic_array_expressions: tp.Tuple[tp.Union[sym.Array,
+                                                      sym.Matrix],
+                                             ...],
         numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
-        squeeze_column_vectors: tp.Optional[tp.Sequence[bool]] = None,
+        squeeze_column_vectors: tp.Optional[tp.Tuple[bool, ...]] = None,
         perform_cse: bool = True,
         lazy_initialization: bool = False,
-        pre_attach: tp.Optional[tp.Sequence[bool]] = None,
+        pre_attach: tp.Optional[tp.Tuple[bool, ...]] = None,
         dtype: np.generic = np.float32):
 
         if numeric_time_functions is None:
             numeric_time_functions = dict()
 
         symbolic_array_expressions \
-            = check_and_make_sequence(symbolic_array_expressions, sym.Matrix)
+            = tuple(check_and_make_sequence(symbolic_array_expressions,
+                                            sym.Matrix))
 
         if pre_attach is None:
             pre_attach = len(symbolic_array_expressions) * [True]
@@ -184,14 +186,16 @@ class LambdifiedArrayExpressions(object):
         self._symbolic_array_expressions = symbolic_array_expressions
         self._numeric_time_functions = numeric_time_functions
         self._squeeze_column_vectors = squeeze_column_vectors
-        self._symbols = [time_symbol] + argument_symbols
+        self._symbols = tuple([time_symbol] + list(argument_symbols))
 
         self._perform_cse = perform_cse
         self._pre_attach = pre_attach
         self._dtype = dtype
 
-        self._shapes = [symbolic_array_expression.shape for
-                        symbolic_array_expression in symbolic_array_expressions]
+        self._shapes \
+            = tuple([symbolic_array_expression.shape
+                     for symbolic_array_expression
+                     in symbolic_array_expressions])
 
         if lazy_initialization:
             self._functions_cpu = None
@@ -206,17 +210,17 @@ class LambdifiedArrayExpressions(object):
             repl, redu = sym.cse(self._symbolic_array_expressions,
                                  optimizations='basic')
 
-            self._replacement_functions_cpu = []
-            self._replacement_functions_gpu = []
-            syms = [self._time_symbol] + self._argument_symbols
+            replacement_functions_cpu = []
+            replacement_functions_gpu = []
+            syms = [self._time_symbol] + list(self._argument_symbols)
             for i, v in enumerate(repl):
-                self._replacement_functions_cpu.append(
+                replacement_functions_cpu.append(
                     sym.lambdify(syms,
                                  v[1],
                                  modules=[self._numeric_time_functions,
                                           'numpy']))
 
-                self._replacement_functions_gpu.append(
+                replacement_functions_gpu.append(
                     sym.lambdify(
                         syms,
                         v[1],
@@ -225,9 +229,13 @@ class LambdifiedArrayExpressions(object):
 
                 syms.append(v[0])
 
+            self._replacement_functions_cpu = tuple(replacement_functions_cpu)
+            self._replacement_functions_gpu = tuple(replacement_functions_gpu)
+
             for symbolic_matrix_expression in redu:
                 functions_cpu, functions_gpu \
-                    = lambdify_array(syms, symbolic_matrix_expression,
+                    = lambdify_array(tuple(syms),
+                                     symbolic_matrix_expression,
                                      self._numeric_time_functions)
 
                 self._functions_cpu.append(functions_cpu)
@@ -243,7 +251,7 @@ class LambdifiedArrayExpressions(object):
                 self._functions_gpu.append(functions_gpu)
 
     @property
-    def shapes(self) -> tp.Sequence[tp.Tuple[int, ...]]:
+    def shapes(self) -> tp.Tuple[tp.Tuple[int, ...], ...]:
         return self._shapes
 
     def is_column_vector(self, i: int) -> bool:
@@ -265,7 +273,7 @@ class LambdifiedArrayExpressions(object):
                          in shape[2:]]))
 
     @property
-    def argument_symbols(self) -> tp.Sequence[sym.Symbol]:
+    def argument_symbols(self) -> tp.Tuple[sym.Symbol, ...]:
         return self._argument_symbols
 
     @property
@@ -277,7 +285,7 @@ class LambdifiedArrayExpressions(object):
         return self._time_symbol
 
     @property
-    def symbolic_array_expressions(self) -> tp.Sequence[sym.Matrix]:
+    def symbolic_array_expressions(self) -> tp.Tuple[sym.Matrix, ...]:
         return self._symbolic_array_expressions
 
     @property
@@ -285,7 +293,7 @@ class LambdifiedArrayExpressions(object):
         return self._numeric_time_functions
 
     @property
-    def symbols(self) -> tp.Sequence[sym.Symbol]:
+    def symbols(self) -> tp.Tuple[sym.Symbol, ...]:
         return self._symbols
 
     @property
@@ -298,10 +306,10 @@ class LambdifiedArrayExpressions(object):
 
     def evaluate_with_list_of_state_vectors(
             self,
-            list_of_state_vectors: tp.Sequence[NumericArray],
+            list_of_state_vectors: tp.Tuple[NumericArray, ...],
             t: float,
             gpu: bool = False) \
-            -> tp.List[NumericArray]:
+            -> tp.Tuple[NumericArray, ...]:
 
         if self._functions_cpu is None or self._functions_gpu is None:
             self._perform_initialization()
@@ -343,12 +351,12 @@ class LambdifiedArrayExpressions(object):
                                               self.dtype)
             results.append(result)
 
-        return results
+        return tuple(results)
 
     def evaluate(self,
-                 state_matrices: tp.Sequence[NumericArray],
+                 state_matrices: tp.Tuple[NumericArray, ...],
                  t: float) \
-            -> tp.List[NumericArray]:
+            -> tp.Tuple[NumericArray, ...]:
 
         if not isinstance(state_matrices, collections.Sequence):
             if isinstance(state_matrices, (np.ndarray, cn.ndarray)):
@@ -373,14 +381,14 @@ class LambdifiedArrayExpressions(object):
 class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
     def __init__(
          self,
-         argument_symbols: tp.Sequence[sym.Symbol],
+         argument_symbols: tp.Tuple[sym.Symbol, ...],
          time_symbol: sym.Symbol,
-         symbolic_matrix_expressions: tp.Sequence[sym.Matrix],
+         symbolic_matrix_expressions: tp.Tuple[sym.Matrix, ...],
          numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
-         squeeze_column_vectors: tp.Optional[tp.Sequence[bool]] = None,
+         squeeze_column_vectors: tp.Optional[tp.Tuple[bool, ...]] = None,
          perform_cse: bool = True,
          lazy_initialization: bool = False,
-         pre_attach: tp.Optional[tp.Sequence[bool]] = None,
+         pre_attach: tp.Optional[tp.Tuple[bool, ...]] = None,
          dtype: np.generic = np.float32):
 
         if numeric_time_functions is None:
@@ -396,24 +404,27 @@ class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
                          pre_attach,
                          dtype)
 
-        self._rows = []
-        self._cols = []
+        rows = []
+        cols = []
 
         for symbolic_matrix_expression in symbolic_matrix_expressions:
             r, c = symbolic_matrix_expression.shape
-            self._rows.append(r)
-            self._cols.append(c)
+            rows.append(r)
+            cols.append(c)
+
+        self._rows = tuple(rows)
+        self._cols = tuple(cols)
 
     @property
-    def rows(self) -> tp.Sequence[int]:
+    def rows(self) -> tp.Tuple[int, ...]:
         return self._rows
 
     @property
-    def cols(self) -> tp.Sequence[int]:
+    def cols(self) -> tp.Tuple[int, ...]:
         return self._cols
 
     @property
-    def symbolic_matrix_expressions(self) -> tp.Sequence[sym.Matrix]:
+    def symbolic_matrix_expressions(self) -> tp.Tuple[sym.Matrix, ...]:
         return self.symbolic_array_expressions
 
 
@@ -423,7 +434,7 @@ class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
 class LambdifiedArrayExpression(object):
     def __init__(
          self,
-         argument_symbols: tp.Sequence[sym.Symbol],
+         argument_symbols: tp.Tuple[sym.Symbol, ...],
          time_symbol: sym.Symbol,
          symbolic_array_expression: tp.Union[sym.Matrix, sym.Array],
          numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
@@ -437,12 +448,12 @@ class LambdifiedArrayExpression(object):
             LambdifiedArrayExpressions(
                 argument_symbols=argument_symbols,
                 time_symbol=time_symbol,
-                symbolic_array_expressions=[symbolic_array_expression],
+                symbolic_array_expressions=(symbolic_array_expression, ),
                 numeric_time_functions=numeric_time_functions,
-                squeeze_column_vectors=[squeeze_column_vector],
+                squeeze_column_vectors=(squeeze_column_vector, ),
                 perform_cse=perform_cse,
                 lazy_initialization=lazy_initialization,
-                pre_attach=[pre_attach],
+                pre_attach=(pre_attach, ),
                 dtype=dtype)
 
     @property
@@ -454,7 +465,7 @@ class LambdifiedArrayExpression(object):
         return self._lambdified_array_expressions.is_row_vector(0)
 
     @property
-    def argument_symbols(self) -> tp.Sequence[sym.Symbol]:
+    def argument_symbols(self) -> tp.Tuple[sym.Symbol, ...]:
         return self._lambdified_array_expressions.argument_symbols
 
     @property
@@ -474,7 +485,7 @@ class LambdifiedArrayExpression(object):
         return self._lambdified_array_expressions.numeric_time_functions
 
     @property
-    def symbols(self) -> tp.Sequence[sym.Symbol]:
+    def symbols(self) -> tp.Tuple[sym.Symbol, ...]:
         return self._lambdified_array_expressions.symbols
 
     @property
@@ -483,7 +494,7 @@ class LambdifiedArrayExpression(object):
 
     def evaluate_with_list_of_state_vectors(
             self,
-            list_of_state_vectors: tp.Sequence[NumericArray],
+            list_of_state_vectors: tp.Tuple[NumericArray, ...],
             t: float,
             gpu: bool = False) \
             -> NumericArray:
@@ -495,7 +506,7 @@ class LambdifiedArrayExpression(object):
                                                      gpu)[0])
 
     def evaluate(self,
-                 state_matrices: tp.Sequence[NumericArray],
+                 state_matrices: tp.Tuple[NumericArray, ...],
                  t: float) -> NumericArray:
         return self._lambdified_array_expressions.evaluate(state_matrices, t)[0]
 
@@ -503,7 +514,7 @@ class LambdifiedArrayExpression(object):
 class LambdifiedMatrixExpression(LambdifiedArrayExpression):
     def __init__(
          self,
-         argument_symbols: tp.Sequence[sym.Symbol],
+         argument_symbols: tp.Tuple[sym.Symbol, ...],
          time_symbol: sym.Symbol,
          symbolic_matrix_expression: sym.Matrix,
          numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
@@ -540,7 +551,7 @@ class LambdifiedMatrixExpression(LambdifiedArrayExpression):
 class LambdifiedVectorExpression(LambdifiedMatrixExpression):
     def __init__(
          self,
-         argument_symbols: tp.Sequence[sym.Symbol],
+         argument_symbols: tp.Tuple[sym.Symbol, ...],
          time_symbol: sym.Symbol,
          symbolic_vector_expression: sym.Matrix,
          numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
@@ -562,8 +573,8 @@ class LambdifiedVectorExpression(LambdifiedMatrixExpression):
 
 def lambdify(args,
              expr,
-             modules: tp.Optional[tp.Sequence] = None,
-             printer: tp.Optional[tp.Sequence] = None,
+             modules: tp.Optional[tp.Tuple] = None,
+             printer: tp.Optional[tp.Tuple] = None,
              use_imps: bool = True,
              dummify: bool = True):
     if modules is None:
