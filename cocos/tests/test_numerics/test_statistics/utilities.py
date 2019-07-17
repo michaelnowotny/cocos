@@ -1,15 +1,15 @@
 import numpy as np
 from scipy.stats import kstest
-from typing import Union
+import typing as tp
 
 import cocos.numerics as cn
 
 
-def perform_ks_test(x: Union[np.ndarray, cn.ndarray],
+def perform_ks_test(x: tp.Union[np.ndarray, cn.ndarray],
                     alpha: float,
                     distribution,
-                    args=None,
-                    verbose: bool=False) -> bool:
+                    args: tp.Tuple = None,
+                    verbose: bool = False) -> bool:
     D, p_value = kstest(x, distribution, args=args)
     if verbose:
         print(f"D={D}, p-value={p_value}")
