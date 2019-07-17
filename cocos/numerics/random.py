@@ -1,6 +1,6 @@
 import arrayfire as af
 from arrayfire.library import Dtype
-
+import collections
 import math
 import numpy as np
 from types import ModuleType
@@ -16,6 +16,8 @@ from ._array import asscalar, ndarray
 from ._conversion import \
     convert_numpy_to_af_type, \
     convert_af_to_numpy_type
+
+from cocos.numerics.linalg import cholesky
 
 from cocos.options import \
     GPUOptions, \
@@ -463,3 +465,29 @@ def logistic(loc: float = 0.0,
              scale: float = 1.0,
              size: tp.Optional[SIZE_TYPE] = None):
     return _draw_and_reshape(size, lambda n: _logistic_internal(loc, scale, n))
+
+
+def multivariate_normal(mean, cov, size: tp.Sequence[int]) \
+        -> ndarray:
+    d = len(mean)
+    if not isinstance(size, collections.Iterable):
+        size = [size]
+
+    if not isinstance(size, collections.Sequence):
+        size = list(size)
+
+    if not cov.shape == (d, d):
+        raise ValueError('mean and cov must be a arrays with shapes (d, ) and '
+                         '(d, d) respectively')
+
+    draw_shape = list(size)
+    draw_shape.append(d)
+    n = int(np.prod(size))
+    if mean.dtype != cov.dtype:
+        raise ValueError('the dtypes of mean and cov mjust match')
+
+    z = randn(n, d, dtype=cov.dtype)
+    cov_cholesky = cholesky(cov).T
+    x = z @ cov_cholesky
+
+    return x.reshape(draw_shape)
