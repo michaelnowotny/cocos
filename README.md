@@ -355,7 +355,7 @@ using Cocos and CuPy. CuPy is another package that provides a NumPy-like API for
 GPU computing.
 
 The results were produced on a machine with an Intel Core i7 3770K with 32GB of 
-RAM and a NVidia GeForce GTX 1070. Two Million paths are being simulated with 
+RAM and a NVidia GeForce GTX 1070 running Windows 10. Two Million paths are being simulated with 
 500 time steps per year.
 
 <table>
@@ -384,6 +384,14 @@ RAM and a NVidia GeForce GTX 1070. Two Million paths are being simulated with
 
 ![benchmark_results](https://raw.githubusercontent.com/michaelnowotny/cocos/master/images/benchmark_results.png)
 
+Package versions used:
+- arrayfire: 3.6.2
+- arrayfire-python: 3.6.20181017
+- cocos: 0.0.4 (commit a07403d4)
+- CUDA: 9.2
+- cupy-cuda92: 5.4.0 
+- NumPy: 1.16.3
+- Python: 3.7
 
 ## Functionality
 
