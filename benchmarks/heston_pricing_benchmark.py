@@ -129,7 +129,7 @@ class CuPyBundle(NumericalPackageBundle):
 
 
 def get_available_numerical_packages() \
-        -> tp.Tuple[type(NumericalPackageBundle), ...]:
+        -> tp.Tuple[tp.Type[NumericalPackageBundle], ...]:
     numerical_bundles_to_try = (NumpyBundle,
                                 CocosBundle,
                                 CuPyBundle)
@@ -350,7 +350,7 @@ def run_benchmark(x0: float,
 
 def run_benchmarks(
         numerical_package_bundles:
-        tp.Optional[tp.Sequence[NumericalPackageBundle]] = None) \
+        tp.Optional[tp.Tuple[tp.Type[NumericalPackageBundle], ...]] = None) \
         -> tp.Dict[type(NumericalPackageBundle), HestonBenchmarkResults]:
     if numerical_package_bundles is None:
         numerical_package_bundles = get_available_numerical_packages()

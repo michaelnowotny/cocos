@@ -97,3 +97,10 @@ def _compute_slice_length(index: slice, length: int) -> int:
     computed_length = math.floor((stop - start - 1) / step) + 1
     # print(f'computed length = {computed_length}')
     return computed_length
+
+
+def _remove_trailing_ones(shape: tp.Tuple[int, ...]) -> tp.Tuple[int, ...]:
+    while len(shape) > 1 and shape[-1] == 1:
+        shape = shape[:-1]
+
+    return shape

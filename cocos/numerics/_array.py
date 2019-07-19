@@ -17,7 +17,8 @@ from ._utilities import \
     _pad_shape_tuple_none, \
     _pad_shape_tuple_axis, \
     _pad_shape_tuple_one, \
-    _compute_slice_length
+    _compute_slice_length, \
+    _remove_trailing_ones
 
 
 def _verify_operand(other):
@@ -479,8 +480,8 @@ class ndarray(object):
         new_af_array = self._af_array.__getitem__(af_item)
         new_cocos_array = ndarray(new_af_array)
 
-        if new_cocos_array.shape != required_shape:
-            # new_cocos_array = new_cocos_array.reshape(shape=required_shape)
+        if _remove_trailing_ones(new_cocos_array.shape) != \
+                _remove_trailing_ones(required_shape):
             new_cocos_array = reshape_without_reorder(new_cocos_array,
                                                       newshape=required_shape)
 

@@ -9,7 +9,7 @@ sym.init_printing()
 
 # define symbolic arguments to the function
 x1, x2, x3, t = sym.symbols('x1, x2, x3, t')
-argument_symbols = [x1, x2, x3]
+argument_symbols = (x1, x2, x3)
 
 # define a function f: R^3 -> R^3
 f = sym.Matrix([[x1 + x2], [(x1+x3)**2], [sym.exp(x1 + x2)]])
