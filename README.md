@@ -387,10 +387,10 @@ RAM and a NVidia GeForce GTX 1070 running Windows 10. Two Million paths are bein
 Package versions used:
 - arrayfire: 3.6.2
 - arrayfire-python: 3.6.20181017
-- cocos: 0.0.4 (commit a07403d4)
+- cocos: 0.0.7
 - CUDA: 9.2
-- cupy-cuda92: 5.4.0 
-- NumPy: 1.16.3
+- cupy-cuda92: 6.2.0 
+- NumPy: 1.16.4
 - Python: 3.7
 
 ## Functionality
