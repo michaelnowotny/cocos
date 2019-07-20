@@ -22,7 +22,9 @@ Cocos is a package for numeric and scientific computing on GPUs for Python with 
 
 ## Installation
 
-1.  Download and install [ArrayFire 3.5.1](http://arrayfire.s3.amazonaws.com/index.html#!/3.5.1%2F)
+1.  Download and install 
+    - Windows or Linux: [ArrayFire 3.6.4](http://arrayfire.s3.amazonaws.com/index.html#!/3.6.4%2F)
+    - MacOS: [ArrayFire 3.5.1](http://arrayfire.s3.amazonaws.com/index.html#!/3.5.1%2F)
 2.  Install Cocos via PIP: 
     <pre>
     pip install cocos 
@@ -385,7 +387,7 @@ RAM and a NVidia GeForce GTX 1070 running Windows 10. Two Million paths are bein
 ![benchmark_results](https://raw.githubusercontent.com/michaelnowotny/cocos/master/images/benchmark_results.png)
 
 Package versions used:
-- arrayfire: 3.6.2
+- arrayfire: 3.6.4
 - arrayfire-python: 3.6.20181017
 - cocos: 0.0.7
 - CUDA: 9.2
