@@ -67,7 +67,7 @@ def lambdify_array_with_modules(
                         f"sympy.ArrayBase or sympy.MatrixBase "
                         f"but is of type {type(array_expression)}")
 
-    n = np.asscalar(np.prod(array_expression.shape))
+    n = (np.prod(array_expression.shape)).item()
     result = []
     for i in range(n):
         index = tuple(np.unravel_index(i, array_expression.shape, order='F'))
@@ -116,7 +116,7 @@ def _compute_result_internal(R: int,
     else:
         functions = functions_cpu
 
-    n = np.asscalar(np.prod(dimensions))
+    n = (np.prod(dimensions)).item()
 
     if pre_attach:
         dimension_index = tuple([R] + list(dimensions))

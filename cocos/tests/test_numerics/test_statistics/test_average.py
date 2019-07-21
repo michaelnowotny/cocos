@@ -79,3 +79,37 @@ def test_average(A_numpy, weights):
         print("output numpy axis 1 no weights")
         print(np.average(A_numpy, axis=1))
     assert truth_value
+
+
+def test_average_3_axes():
+    A_numpy = np.array([[[0.2, 1.0, 0.5],
+                        [0.4, 0.5, 0.6],
+                        [0.7, 0.2, 0.25]],
+                        [[1, 2, 3],
+                         [4, 5, 6],
+                         [7, 8, 20]],
+                        [[0.5, 2.3, 3.1],
+                         [4, 5.5, 6],
+                         [7, 8, 2]]
+                        ])
+
+    A_cocos = cn.array(A_numpy)
+
+    weights_numpy = np.array([0.2, 0.3, 0.5],
+                             dtype=np.float32)
+    weights_cocos = cn.array(weights_numpy)
+
+    for axis in range(3):
+        print(f'axis = {axis}')
+        average_numpy = np.average(A_numpy, axis=axis, weights=weights_numpy)
+        average_cocos \
+            = np.array(cn.average(A_cocos, axis=axis, weights=weights_cocos))
+
+        truth_value = np.allclose(average_numpy, average_cocos)
+        if not truth_value:
+            print('numpy')
+            print(average_numpy)
+
+            print('cocos')
+            print(average_cocos)
+        assert truth_value

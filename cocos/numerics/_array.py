@@ -150,7 +150,7 @@ class ndarray(object):
 
     def __init__(self,
                  af_array: af.Array,
-                 shape: tp.Optional[tp.Tuple[int]] = None):
+                 shape: tp.Optional[tp.Tuple[int, ...]] = None):
         self._af_array = af_array
         self._label = 'array'
         self._shape = shape
@@ -189,7 +189,7 @@ class ndarray(object):
         return convert_af_to_numpy_type(self._af_array.dtype())
 
     @property
-    def shape(self) -> tp.Tuple[int]:
+    def shape(self) -> tp.Tuple[int, ...]:
         """
         Tuple of array dimensions.
         """
@@ -528,7 +528,7 @@ class ndarray(object):
 
         index = self._get_index_from_args(*args)
         af_item, required_shape = _translate_index_key(index, self.shape)
-        return np.asscalar(np.array(self._af_array[af_item]))
+        return (np.array(self._af_array[af_item])).item()
         # return self._af_array[af_item].scalar()
 
     def itemset(self, *args):
@@ -561,7 +561,7 @@ class ndarray(object):
         af_array = af.data.flat(self._af_array)
         return ndarray(af_array)
 
-    def reshape(self, shape: tp.Tuple[int]) -> 'ndarray':
+    def reshape(self, shape: tp.Tuple[int, ...]) -> 'ndarray':
         """
         Returns an array containing the same data with a new shape.
         """
@@ -798,7 +798,7 @@ def asscalar(a: ndarray) \
     if a.size > 1:
         raise ValueError(f"a must be an array size 1 but has {a.size} elements")
 
-    return np.asscalar(np.array(a))
+    return (np.array(a)).item()
 
 
 def matmul(a: ndarray,
@@ -969,8 +969,8 @@ def display(array: ndarray):
         print(array)
 
 
-def _complete_shape(a: ndarray, shape: tp.Sequence[int]) -> tp.Tuple[
-    int, ...]:
+def _complete_shape(a: ndarray, shape: tp.Sequence[int]) \
+        -> tp.Tuple[int, ...]:
     shape_np = np.array(shape)
     placeholder_indices = np.where(shape_np == -1)[0]
     number_of_placeholders = len(placeholder_indices)
@@ -981,7 +981,7 @@ def _complete_shape(a: ndarray, shape: tp.Sequence[int]) -> tp.Tuple[
     elif number_of_placeholders > 1:
         raise ValueError('can only specify one unknown dimension')
     elif number_of_placeholders == 1:
-        position_of_placeholder = np.asscalar(placeholder_indices)
+        position_of_placeholder = placeholder_indices.item()
         dimensions_without_placeholder = shape_np[np.where(shape_np != -1)]
         size_of_all_other_dimensions = np.prod(dimensions_without_placeholder)
         remainder = a.size % size_of_all_other_dimensions
@@ -1146,7 +1146,19 @@ def average(a: ndarray,
     if weights is None:
         af_weights = None
     else:
-        af_weights = weights._af_array
+        if axis is not None:
+            if axis == 0:
+                af_weights = weights.reshape((-1, ))._af_array
+            elif axis == 1:
+                af_weights = weights.reshape((1, -1))._af_array
+            elif axis == 2:
+                af_weights = weights.reshape((1, 1, -1))._af_array
+            elif axis == 3:
+                af_weights = weights.reshape((1, 1, 1, -1))._af_array
+            else:
+                raise ValueError('axis must be between 0 and 3')
+        else:
+            af_weights = weights._af_array
 
     new_af_array = af.mean(a._af_array,
                            weights=af_weights,
@@ -1469,7 +1481,7 @@ def sum(a: ndarray, axis: tp.Optional[int] = None) \
 
 
 # from ._data
-def _full_internal(shape: tp.Tuple[int],
+def _full_internal(shape: tp.Tuple[int, ...],
                    value,
                    dtype: np.generic = np.float32) -> af.Array:
     af_type = convert_numpy_to_af_type(dtype)
@@ -1478,7 +1490,7 @@ def _full_internal(shape: tp.Tuple[int],
     return af.data.constant(value, d0=d0, d1=d1, d2=d2, d3=d3, dtype=af_type)
 
 
-def full(shape: tp.Tuple[int], fill_value, dtype: np.generic = np.float32) \
+def full(shape: tp.Tuple[int, ...], fill_value, dtype: np.generic = np.float32) \
         -> ndarray:
     """
     Return a new array of given shape and type, filled with fill_value.

@@ -20,14 +20,19 @@ test_data = [np.array([[1, 2, 3],
                        [[5, 6], [7, 8]]],
                       dtype=np.float32)]
 
+test_axes = (0, 1)
+
+test_offset = (-2, -1, 0, 1, 2)
+
 
 @pytest.mark.parametrize("A_numpy", test_data)
-def test_roll(A_numpy):
+@pytest.mark.parametrize("axis", test_axes)
+@pytest.mark.parametrize("shift", test_offset)
+def test_roll(A_numpy, axis, shift):
     cocos.device.init()
     A_cocos = cn.array(A_numpy)
 
-    for shift in range(-2, 2):
-        for axis in range(2):
-            B_numpy = np.roll(A_numpy, shift=shift, axis=axis)
-            B_cocos = cn.roll(A_cocos, shift=shift, axis=axis)
-            assert np.allclose(B_cocos, B_numpy)
+    for axis in range(2):
+        B_numpy = np.roll(A_numpy, shift=shift, axis=axis)
+        B_cocos = cn.roll(A_cocos, shift=shift, axis=axis)
+        assert np.allclose(B_cocos, B_numpy)
