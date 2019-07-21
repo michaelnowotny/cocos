@@ -168,7 +168,7 @@ def dstack(tup: tp.Tuple[ndarray, ...]) -> ndarray:
 def roll(a: ndarray,
          shift: int,
          axis: tp.Optional[int] = None) -> ndarray:
-    if not axis:
+    if axis is None:
         (d0, d1, d2, d3) = _pad_shape_tuple_one(a.shape)
         flat_af_array = af.data.flat(a._af_array)
         af_array_flat_shift = af.data.shift(flat_af_array, shift)

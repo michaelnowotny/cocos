@@ -22,14 +22,13 @@ test_data = [np.array([[1, 2, 3],
 
 test_axes = (0, 1)
 test_offset = (-2, -1, 0, 1, 2)
-# test_axes = (1, )
-# test_offset = (1, )
 
 
 @pytest.mark.parametrize("A_numpy", test_data)
 @pytest.mark.parametrize("axis", test_axes)
 @pytest.mark.parametrize("shift", test_offset)
 def test_roll(A_numpy, axis, shift):
+    print(f'axis={axis}, shift={shift}')
     cocos.device.init()
     A_cocos = cn.array(A_numpy)
 
