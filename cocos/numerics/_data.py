@@ -176,9 +176,9 @@ def roll(a: ndarray,
     else:
         shift_dims = [0, 0, 0, 0]
         shift_dims[axis] = shift
-        d0, d1, d2, d3 = shift_dims
+        d0, d1, d2, d3 = tuple(shift_dims)
 
-        af_array = af.data.shift(a._af_array, d0, d1, d2, d3)
+        af_array = af.shift(a._af_array, d0, d1, d2, d3)
 
     return ndarray(af_array)
 
