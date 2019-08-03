@@ -1,6 +1,8 @@
 import cocos.numerics as cn
 import cocos.device as cd
-import cocos.symbolic as cs
+
+from cocos.symbolic import LambdifiedVectorExpression
+
 import numpy as np
 import sympy as sym
 import time
@@ -26,9 +28,9 @@ print()
 # Convert the symbolic array expression to an object that can evaluated
 # numerically on the cpu or gpu.
 jacobian_f_lambdified \
-    = cs.LambdifiedVectorExpression(argument_symbols=argument_symbols,
-                                    time_symbol=t,
-                                    symbolic_vector_expression=jacobian_f)
+    = LambdifiedVectorExpression(argument_symbols=argument_symbols,
+                                 time_symbol=t,
+                                 symbolic_vector_expression=jacobian_f)
 
 # Define a 3 dimensional vector X = (x1, x2, x3) = (1, 2, 3)
 X_gpu = cn.array([[1], [2], [3]])

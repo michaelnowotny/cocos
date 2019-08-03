@@ -5,13 +5,13 @@ import typing as tp
 import numpy as np
 import sympy as sym
 
-from cocos.symbolic import COCOS_TRANSLATIONS
 from cocos import numerics as cn
 from cocos.numerics.data_types import NumericArray
 from cocos.utilities import check_and_make_sequence
 from cocos.numerics.numerical_package_selector import \
     select_num_pack, \
     get_gpu_and_num_pack_by_dtype_from_iterable
+from cocos.symbolic.translations import COCOS_TRANSLATIONS
 
 
 ################################################################################

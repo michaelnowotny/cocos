@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.core.multiarray import array
 
-from cocos.numerics import \
+from cocos.numerics._arith import \
     absolute, \
     arccos, \
     arccosh, \
@@ -13,7 +13,6 @@ from cocos.numerics import \
     arctanh, \
     ceil, \
     cbrt, \
-    conj, \
     cos, \
     cosh, \
     exp, \
@@ -21,16 +20,13 @@ from cocos.numerics import \
     erf, \
     erfc, \
     factorial, \
-    floor, \
     gamma, \
     hypot, \
-    imag, \
     log, \
     log10, \
     gammaln, \
     mod, \
     power, \
-    real, \
     root, \
     sign, \
     sin, \
@@ -38,6 +34,49 @@ from cocos.numerics import \
     sqrt, \
     tan, \
     tanh
+
+from cocos.numerics._array import \
+    conj, \
+    floor, \
+    imag, \
+    real
+
+# from cocos.numerics import \
+#     arccos, \
+#     arccosh, \
+#     angle, \
+#     arcsin, \
+#     arcsinh, \
+#     arctan, \
+#     arctan2, \
+#     arctanh, \
+#     ceil, \
+#     cbrt, \
+#     conj, \
+#     cos, \
+#     cosh, \
+#     exp, \
+#     expm1, \
+#     erf, \
+#     erfc, \
+#     factorial, \
+#     floor, \
+#     gamma, \
+#     hypot, \
+#     imag, \
+#     log, \
+#     log10, \
+#     gammaln, \
+#     mod, \
+#     power, \
+#     real, \
+#     root, \
+#     sign, \
+#     sin, \
+#     sinh, \
+#     sqrt, \
+#     tan, \
+#     tanh
 
 inf = np.inf
 COCOS_TRANSLATIONS = {
