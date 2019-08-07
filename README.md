@@ -369,18 +369,18 @@ RAM and a NVidia GeForce GTX 1070 running Windows 10. Two Million paths are bein
 </tr>
 <tr>
 <td>NumPy</td>
-<td>145.63899517059326</td>
+<td>103.13499903678894</td>
 <td>1.0</td>
 </tr>
 <tr>
 <td>Cocos</td>
-<td>0.995002269744873</td>
-<td>146.37051552448852</td>
+<td>1.377995491027832</td>
+<td>74.84422097772007</td>
 </tr>
 <tr>
 <td>CuPy</td>
-<td>2.4080007076263428</td>
-<td>60.4812925134707</td>
+<td>2.381995677947998</td>
+<td>43.29772719219876</td>
 </tr>
 </table>
 
@@ -389,7 +389,7 @@ RAM and a NVidia GeForce GTX 1070 running Windows 10. Two Million paths are bein
 Package versions used:
 - arrayfire: 3.6.4
 - arrayfire-python: 3.6.20181017
-- cocos: 0.0.7
+- cocos: 0.0.9
 - CUDA: 9.2
 - cupy-cuda92: 6.2.0 
 - NumPy: 1.16.4
