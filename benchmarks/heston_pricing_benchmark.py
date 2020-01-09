@@ -33,7 +33,6 @@ class NumericalPackageBundle(ABC):
         pass
 
     @classmethod
-    @abstractmethod
     def synchronize(cls):
         pass
 
@@ -60,10 +59,6 @@ class NumpyBundle(NumericalPackageBundle):
     def random_module(cls) -> ModuleType:
         import numpy.random
         return numpy.random
-
-    @classmethod
-    def synchronize(cls):
-        pass
 
 
 class CocosBundle(NumericalPackageBundle):
@@ -128,7 +123,8 @@ class CuPyBundle(NumericalPackageBundle):
         cupy.cuda.Stream.null.synchronize()
 
 
-def get_available_numerical_packages() \
+def get_available_numerical_packages(
+        list_installed_bundles: tp.Optional[bool] = False) \
         -> tp.Tuple[tp.Type[NumericalPackageBundle], ...]:
     numerical_bundles_to_try = (NumpyBundle,
                                 CocosBundle,
@@ -139,20 +135,28 @@ def get_available_numerical_packages() \
            for numerical_bundle in numerical_bundles_to_try
            if numerical_bundle.is_installed()]
 
+    if list_installed_bundles:
+        print(f'Required packages found for the following benchmarks:')
+        for numerical_bundle in available_numerical_bundles:
+            print(numerical_bundle.label())
+
+        print()
+
     return tuple(available_numerical_bundles)
 
 
-def simulate_heston_model(T: float,
-                          N: int,
-                          R: int,
-                          mu: float,
-                          kappa: float,
-                          v_bar: float,
-                          sigma_v: float,
-                          rho: float,
-                          x0: float,
-                          v0: float,
-                          numerical_package_bundle: NumericalPackageBundle) \
+def simulate_heston_model(
+        T: float,
+        N: int,
+        R: int,
+        mu: float,
+        kappa: float,
+        v_bar: float,
+        sigma_v: float,
+        rho: float,
+        x0: float,
+        v0: float,
+        numerical_package_bundle: tp.Type[NumericalPackageBundle]) \
         -> tp.Tuple:
     """
     This function simulates R paths from the Heston stochastic volatility model
@@ -215,11 +219,12 @@ def simulate_heston_model(T: float,
     return x, v
 
 
-def compute_option_price(r: float,
-                         T: float,
-                         K: float,
-                         x_simulated,
-                         numerical_package_bundle: NumericalPackageBundle):
+def compute_option_price_from_simulated_paths(
+        r: float,
+        T: float,
+        K: float,
+        x_simulated,
+        numerical_package_bundle: tp.Type[NumericalPackageBundle]):
     """
     Compute the function of a plain-vanilla call option from simulated
     log-returns.
@@ -238,9 +243,50 @@ def compute_option_price(r: float,
            * num_pack.mean(num_pack.maximum(num_pack.exp(x_simulated) - K, 0))
 
 
+def simulate_and_compute_option_price(
+        x0: float,
+        v0: float,
+        r: float,
+        rho: float,
+        sigma_v: float,
+        kappa: float,
+        v_bar: float,
+        T: float,
+        K: float,
+        nT: int,
+        R: int,
+        numerical_package_bundle: tp.Type[NumericalPackageBundle]) -> float:
+
+    # actual simulation run to price plain vanilla call option
+    (x_simulated, v_simulated) \
+        = simulate_heston_model(
+            T=T,
+            N=nT,
+            R=R,
+            mu=r,
+            kappa=kappa,
+            v_bar=v_bar,
+            sigma_v=sigma_v,
+            rho=rho,
+            x0=x0,
+            v0=v0,
+            numerical_package_bundle=numerical_package_bundle)
+
+    # compute option price
+    option_price \
+        = compute_option_price_from_simulated_paths(
+            r=r,
+            T=T,
+            K=K,
+            x_simulated=x_simulated,
+            numerical_package_bundle=numerical_package_bundle)
+
+    return option_price
+
+
 class HestonBenchmarkResults:
     def __init__(self,
-                 numerical_package_bundle: NumericalPackageBundle,
+                 numerical_package_bundle: tp.Type[NumericalPackageBundle],
                  time_in_simulation: float,
                  time_in_option_price_calculation: float,
                  option_price: float):
@@ -250,7 +296,7 @@ class HestonBenchmarkResults:
         self._option_price = option_price
 
     @property
-    def numerical_package_bundle(self) -> NumericalPackageBundle:
+    def numerical_package_bundle(self) -> tp.Type[NumericalPackageBundle]:
         return self._numerical_package_bundle
 
     @property
@@ -293,7 +339,7 @@ def run_benchmark(x0: float,
                   K: float,
                   nT: int,
                   R: int,
-                  numerical_package_bundle: NumericalPackageBundle) \
+                  numerical_package_bundle: tp.Type[NumericalPackageBundle]) \
         -> HestonBenchmarkResults:
 
     # number of paths for warm-up (compile GPU kernels)
@@ -314,17 +360,18 @@ def run_benchmark(x0: float,
     # actual simulation run to price plain vanilla call option
     tic = time.time()
     (x_simulated, v_simulated) \
-        = simulate_heston_model(T=T,
-                                N=nT,
-                                R=R,
-                                mu=r,
-                                kappa=kappa,
-                                v_bar=v_bar,
-                                sigma_v=sigma_v,
-                                rho=rho,
-                                x0=x0,
-                                v0=v0,
-                                numerical_package_bundle=numerical_package_bundle)
+        = simulate_heston_model(
+            T=T,
+            N=nT,
+            R=R,
+            mu=r,
+            kappa=kappa,
+            v_bar=v_bar,
+            sigma_v=sigma_v,
+            rho=rho,
+            x0=x0,
+            v0=v0,
+            numerical_package_bundle=numerical_package_bundle)
 
     numerical_package_bundle.synchronize()
     time_in_simulation = time.time() - tic
@@ -332,12 +379,14 @@ def run_benchmark(x0: float,
     # compute option price
     tic = time.time()
     option_price \
-        = compute_option_price(r,
-                               T,
-                               K,
-                               x_simulated,
-                               numerical_package_bundle=numerical_package_bundle)
-    print(option_price)
+        = compute_option_price_from_simulated_paths(
+            r=r,
+            T=T,
+            K=K,
+            x_simulated=x_simulated,
+            numerical_package_bundle=numerical_package_bundle)
+
+    # print(option_price)
     numerical_package_bundle.synchronize()
 
     time_in_option_price_calculation = time.time() - tic
@@ -353,7 +402,8 @@ def run_benchmarks(
         tp.Optional[tp.Tuple[tp.Type[NumericalPackageBundle], ...]] = None) \
         -> tp.Dict[type(NumericalPackageBundle), HestonBenchmarkResults]:
     if numerical_package_bundles is None:
-        numerical_package_bundles = get_available_numerical_packages()
+        numerical_package_bundles = \
+            get_available_numerical_packages(list_installed_bundles=True)
 
     # model parameters
     x0 = 0.0  # initial log stock price
