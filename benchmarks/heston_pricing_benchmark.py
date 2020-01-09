@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import math
 import matplotlib.pyplot as plt
+import multiprocessing
 import numpy
 import pandas as pd
 import time
@@ -9,6 +10,14 @@ import typing as tp
 
 import cocos.device
 from cocos.numerics.random import randn_antithetic
+
+
+def loky_installed() -> bool:
+    try:
+        import loky
+        return True
+    except:
+        return False
 
 
 class NumericalPackageBundle(ABC):
@@ -59,6 +68,16 @@ class NumpyBundle(NumericalPackageBundle):
     def random_module(cls) -> ModuleType:
         import numpy.random
         return numpy.random
+
+
+class NumpyMulticoreBundle(NumpyBundle):
+    @classmethod
+    def is_installed(cls) -> bool:
+        return super().is_installed() & loky_installed()
+
+    @classmethod
+    def label(cls) -> str:
+        return 'NumPy Multicore'
 
 
 class CocosBundle(NumericalPackageBundle):
@@ -284,15 +303,100 @@ def simulate_and_compute_option_price(
     return option_price
 
 
+def map_reduce_multicore(
+        f: tp.Callable,
+        reduction: tp.Callable,
+        args_list: tp.Optional[tp.Sequence[tp.Sequence]] = None,
+        kwargs_list: tp.Optional[tp.Sequence[tp.Dict]] = None,
+        number_of_batches: tp.Optional[int] = None):
+    from loky import get_reusable_executor, wait
+
+    if number_of_batches is None:
+        if args_list is not None:
+            number_of_batches = len(args_list)
+        elif kwargs_list is not None:
+            number_of_batches = len(kwargs_list)
+        else:
+            raise ValueError('Number_of_batches must be defined if '
+                             'both args_list and kwargs_list are empty')
+
+    if args_list is None:
+        args_list = [list() for i in range(number_of_batches)]
+    if kwargs_list is None:
+        kwargs_list = number_of_batches * [dict()]
+
+    executor = get_reusable_executor(timeout=None,
+                                     context='loky')
+
+    futures = []
+
+    for args, kwargs in zip(args_list, kwargs_list):
+        future = \
+            executor.submit(f, *args, **kwargs)
+
+        futures.append(future)
+
+    wait(futures)
+    results = [future.result() for future in futures]
+
+    return reduction(results)
+
+
+def simulate_and_compute_option_price_multicore(
+        x0: float,
+        v0: float,
+        r: float,
+        rho: float,
+        sigma_v: float,
+        kappa: float,
+        v_bar: float,
+        T: float,
+        K: float,
+        nT: int,
+        R: int,
+        numerical_package_bundle: tp.Type[NumericalPackageBundle],
+        number_of_cores: tp.Optional[int] = None) -> float:
+    if number_of_cores is None:
+        number_of_cores = 2 * multiprocessing.cpu_count()
+
+    kwargs = \
+        dict(x0=x0,
+             v0=v0,
+             r=r,
+             rho=rho,
+             sigma_v=sigma_v,
+             kappa=kappa,
+             v_bar=v_bar,
+             T=T,
+             K=K,
+             nT=nT,
+             numerical_package_bundle=numerical_package_bundle)
+
+    # actual simulation run to price plain vanilla call option
+    if number_of_cores == 1:
+        kwargs['R'] = R
+        option_price = \
+            simulate_and_compute_option_price(
+                **kwargs)
+
+    else:
+        kwargs['R'] = math.ceil(R / number_of_cores)
+
+        option_price = \
+            map_reduce_multicore(f=simulate_and_compute_option_price,
+                                 reduction=lambda x: numpy.mean(x),
+                                 kwargs_list=number_of_cores * [kwargs])
+
+    return option_price
+
+
 class HestonBenchmarkResults:
     def __init__(self,
                  numerical_package_bundle: tp.Type[NumericalPackageBundle],
-                 time_in_simulation: float,
-                 time_in_option_price_calculation: float,
+                 total_time: float,
                  option_price: float):
         self._numerical_package_bundle = numerical_package_bundle
-        self._time_in_simulation = time_in_simulation
-        self._time_in_option_price_calculation = time_in_option_price_calculation
+        self._total_time = total_time
         self._option_price = option_price
 
     @property
@@ -300,31 +404,18 @@ class HestonBenchmarkResults:
         return self._numerical_package_bundle
 
     @property
-    def time_in_simulation(self) -> float:
-        return self._time_in_simulation
-
-    @property
-    def time_in_option_price_calculation(self) -> float:
-        return self._time_in_option_price_calculation
+    def total_time(self) -> float:
+        return self._total_time
 
     @property
     def option_price(self) -> float:
         return self._option_price
 
-    @property
-    def total_time(self) -> float:
-        return self.time_in_simulation + self.time_in_option_price_calculation
-
     def print_results(self):
         label = self.numerical_package_bundle.label()
         print(f'results on {label}')
         print(
-            f"Time in simulation using {label}: {self.time_in_simulation} secs")
-        print(f"Time in option price calculation using {label}: "
-              f"= {self.time_in_option_price_calculation} secs")
-
-        print(f"Total time using {label}: "
-              f"= {self.total_time} secs")
+            f"Time using {label}: {self.total_time} secs")
         print(f"Call option price using {label}: {self.option_price}")
 
 
@@ -373,11 +464,7 @@ def run_benchmark(x0: float,
             v0=v0,
             numerical_package_bundle=numerical_package_bundle)
 
-    numerical_package_bundle.synchronize()
-    time_in_simulation = time.time() - tic
-
     # compute option price
-    tic = time.time()
     option_price \
         = compute_option_price_from_simulated_paths(
             r=r,
@@ -388,13 +475,11 @@ def run_benchmark(x0: float,
 
     # print(option_price)
     numerical_package_bundle.synchronize()
-
-    time_in_option_price_calculation = time.time() - tic
+    total_time = time.time() - tic
 
     return HestonBenchmarkResults(numerical_package_bundle,
-                                  time_in_simulation,
-                                  time_in_option_price_calculation,
-                                  option_price)
+                                  total_time=total_time,
+                                  option_price=option_price)
 
 
 def run_benchmarks(
@@ -422,27 +507,56 @@ def run_benchmarks(
     nT = int(math.ceil(500 * T))  # number of time-steps to simulate
     R = 2000000  # actual number of paths to simulate for pricing
 
+    kwargs = \
+        dict(x0=x0,
+             v0=v0,
+             r=r,
+             rho=rho,
+             sigma_v=sigma_v,
+             kappa=kappa,
+             v_bar=v_bar,
+             T=T,
+             K=K,
+             nT=nT,
+             R=R)
+
+    # single core benchmarks
     numerical_package_bundle_to_result_map = {}
     for numerical_package_bundle in numerical_package_bundles:
+        kwargs['numerical_package_bundle'] = numerical_package_bundle
         # run benchmark on gpu
         heston_benchmark_results \
-            = run_benchmark(x0,
-                            v0,
-                            r,
-                            rho,
-                            sigma_v,
-                            kappa,
-                            v_bar,
-                            T,
-                            K,
-                            nT,
-                            R,
-                            numerical_package_bundle=numerical_package_bundle)
+            = run_benchmark(**kwargs)
 
         numerical_package_bundle_to_result_map[numerical_package_bundle] \
             = heston_benchmark_results
 
         heston_benchmark_results.print_results()
+
+    # multi core benchmarks
+    if loky_installed():
+        kwargs['numerical_package_bundle'] = NumpyMulticoreBundle
+        # initialize Python processes
+        _ \
+            = simulate_and_compute_option_price_multicore(**kwargs)
+
+        tic = time.time()
+        option_price \
+            = simulate_and_compute_option_price_multicore(**kwargs)
+
+        total_time = time.time() - tic
+        numpy_multicore_results = \
+            HestonBenchmarkResults(
+                numerical_package_bundle=NumpyMulticoreBundle,
+                total_time=total_time,
+                option_price=option_price)
+
+        numpy_multicore_results.print_results()
+
+        numerical_package_bundle_to_result_map[NumpyMulticoreBundle] \
+            = numpy_multicore_results
+    else:
+        print(f'Please install loky to enable multi core benchmarks')
 
     return numerical_package_bundle_to_result_map
 
