@@ -325,8 +325,9 @@ def map_reduce_multicore(
     if kwargs_list is None:
         kwargs_list = number_of_batches * [dict()]
 
-    executor = get_reusable_executor(timeout=None,
-                                     context='loky')
+    executor = \
+        get_reusable_executor(timeout=None,
+                              context='loky')
 
     futures = []
 
@@ -357,7 +358,7 @@ def simulate_and_compute_option_price_multicore(
         numerical_package_bundle: tp.Type[NumericalPackageBundle],
         number_of_cores: tp.Optional[int] = None) -> float:
     if number_of_cores is None:
-        number_of_cores = 2 * multiprocessing.cpu_count()
+        number_of_cores = 5 * multiprocessing.cpu_count()
 
     kwargs = \
         dict(x0=x0,
