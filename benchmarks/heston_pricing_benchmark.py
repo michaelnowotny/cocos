@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+import concurrent
+from concurrent import futures
 import math
 import matplotlib.pyplot as plt
 import multiprocessing
@@ -303,13 +305,17 @@ def simulate_and_compute_option_price(
     return option_price
 
 
+ResultType = tp.TypeVar('ResultType')
+
+
 def map_reduce_multicore(
-        f: tp.Callable,
-        reduction: tp.Callable,
+        f: tp.Callable[..., ResultType],
+        reduction: tp.Callable[[ResultType, ResultType], ResultType],
+        initial_value: ResultType,
         args_list: tp.Optional[tp.Sequence[tp.Sequence]] = None,
-        kwargs_list: tp.Optional[tp.Sequence[tp.Dict]] = None,
-        number_of_batches: tp.Optional[int] = None):
-    from loky import get_reusable_executor, wait
+        kwargs_list: tp.Optional[tp.Sequence[tp.Dict[str, tp.Any]]] = None,
+        number_of_batches: tp.Optional[int] = None) -> ResultType:
+    from loky import get_reusable_executor
 
     if number_of_batches is None:
         if args_list is not None:
@@ -329,18 +335,15 @@ def map_reduce_multicore(
         get_reusable_executor(timeout=None,
                               context='loky')
 
-    futures = []
+    futures = [executor.submit(f, *args, **kwargs)
+               for args, kwargs
+               in zip(args_list, kwargs_list)]
 
-    for args, kwargs in zip(args_list, kwargs_list):
-        future = \
-            executor.submit(f, *args, **kwargs)
+    result = initial_value
+    for future in concurrent.futures.as_completed(futures):
+        result = reduction(result, future.result())
 
-        futures.append(future)
-
-    wait(futures)
-    results = [future.result() for future in futures]
-
-    return reduction(results)
+    return result
 
 
 def simulate_and_compute_option_price_multicore(
@@ -385,7 +388,8 @@ def simulate_and_compute_option_price_multicore(
 
         option_price = \
             map_reduce_multicore(f=simulate_and_compute_option_price,
-                                 reduction=lambda x: numpy.mean(x),
+                                 reduction=lambda x, y: x + y / number_of_cores,
+                                 initial_value=0.0,
                                  kwargs_list=number_of_cores * [kwargs])
 
     return option_price
@@ -436,18 +440,18 @@ def run_benchmark(x0: float,
 
     # number of paths for warm-up (compile GPU kernels)
     R_warm_up = 1000
-    x_simulated, v_simulated \
-        = simulate_heston_model(T=T,
-                                N=nT,
-                                R=R_warm_up,
-                                mu=r,
-                                kappa=kappa,
-                                v_bar=v_bar,
-                                sigma_v=sigma_v,
-                                rho=rho,
-                                x0=x0,
-                                v0=v0,
-                                numerical_package_bundle=numerical_package_bundle)
+    _, _ = \
+        simulate_heston_model(T=T,
+                              N=nT,
+                              R=R_warm_up,
+                              mu=r,
+                              kappa=kappa,
+                              v_bar=v_bar,
+                              sigma_v=sigma_v,
+                              rho=rho,
+                              x0=x0,
+                              v0=v0,
+                              numerical_package_bundle=numerical_package_bundle)
 
     # actual simulation run to price plain vanilla call option
     tic = time.time()
@@ -507,6 +511,7 @@ def run_benchmarks(
     # simulation parameters
     nT = int(math.ceil(500 * T))  # number of time-steps to simulate
     R = 2000000  # actual number of paths to simulate for pricing
+    # R = 20000  # actual number of paths to simulate for pricing
 
     kwargs = \
         dict(x0=x0,
@@ -538,8 +543,10 @@ def run_benchmarks(
     if loky_installed():
         kwargs['numerical_package_bundle'] = NumpyMulticoreBundle
         # initialize Python processes
+        tic = time.time()
         _ \
             = simulate_and_compute_option_price_multicore(**kwargs)
+        print(f'time in first run={time.time() - tic}')
 
         tic = time.time()
         option_price \
