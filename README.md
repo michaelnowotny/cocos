@@ -5438,7 +5438,7 @@ Most differences between NumPy and Cocos stem from two sources:
 *   Matrix multiplication is not supported for integer types.
 
 ## A Note on Hardware Configurations for Multi-GPU Computing
-Cocos implements multi-GPU functionality via process-bases parallelism (one process per GPU device). 
+Cocos implements multi-GPU functionality via process-based parallelism (one process per GPU device). 
 It is recommended to have one physical CPU core per GPU in the system in order to prevent 'starving' the GPUs. 
 Cocos has been successfully used with the following configuration:
 *   Motherboard: <a href="https://www.msi.com/Motherboard/H310-F-PRO">MSI H310-F Pro</a>
