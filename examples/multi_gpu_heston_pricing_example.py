@@ -7,6 +7,7 @@ from cocos.device import (
 
 from abc import ABC, abstractmethod
 import math
+import matplotlib.pyplot as plt
 import numpy
 import time
 from types import ModuleType
@@ -288,6 +289,29 @@ def create_result_table(number_of_devices_to_runtime_map: tp.Dict[int, float]) \
     return res
 
 
+def create_bar_plot(number_of_devices_to_runtime_map: tp.Dict[int, float]):
+    objects = []
+    performance = []
+
+    for number_of_devices, runtime \
+            in number_of_devices_to_runtime_map.items():
+        objects.append(number_of_devices)
+        performance.append(number_of_devices_to_runtime_map[1] / runtime)
+
+    y_pos = numpy.arange(len(objects))
+
+    plt.figure(1)
+    plt.bar(y_pos, performance, align='center', alpha=0.5)
+    plt.xticks(y_pos, objects)
+    plt.ylabel('Speedup Factor')
+    plt.title('Performance Relative to a Single GPU \n'
+              'in Monte Carlo Simulation of Heston Model \n')
+
+    plt.show()
+
+    plt.savefig(f'heston_pricing_benchmark_results_multi_gpu')
+
+
 if __name__ == '__main__':
     info()
 
@@ -373,3 +397,5 @@ if __name__ == '__main__':
 
     result_table = create_result_table(number_of_devices_to_runtime_map)
     print(result_table)
+
+    create_bar_plot(number_of_devices_to_runtime_map)
