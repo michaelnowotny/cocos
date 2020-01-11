@@ -89,6 +89,38 @@ d = cn.random.randn(2, 2)
 print(d)
 </pre>
 
+#### Multi-GPU Usage:
+To run the function 'my_gpu_function' over separate batches of input data on different GPUs in parallel, create a pool of GPU devices:
+<pre>
+device_pool = cd.ComputeDevicePool()
+</pre>
+Put the arguments to the function into 
+*   a list of args lists and (one list per batch)
+*   a list of kwargs dictionaries (one dictionary per batch)
+
+<pre>
+args_list = [args_list_1, arg_list_2, ..., arg_list_n]
+kwargs_list = [kwargs_dict_1, kwargs_dict_2, ..., kwargs_dict_n]
+</pre>
+
+Run your function in separate batches via map-reduce
+<pre>
+result = \
+    device_pool.map_reduce(f=my_gpu_function,
+                           reduction=my_reduction_function,
+                           initial_value=...,
+                           host_to_device_transfer_function=...,
+                           device_to_host_transfer_function=...,
+                           args_list=args_list
+                           kwargs_list=kwargs_list)
+
+</pre>
+
+Please refer to the documentation of 'cocos.device.ComputeDevicePool.map_reduce' for more details. 
+See 'examples/multi_gpu_heston_pricing_example.py' for a fully worked example. 
+
+
+
 ### Packaged examples:
 1.  [Estimating Pi via Monte Carlo](#estimating-pi-via-monte-carlo)
 2.  [Option Pricing in a Stochastic Volatility Model via Monte Carlo](#option-pricing-in-a-stochastic-volatility-model-via-monte-carlo)
