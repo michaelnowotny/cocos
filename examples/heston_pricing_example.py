@@ -11,16 +11,6 @@ from cocos.numerics.numerical_package_selector import \
 from cocos.numerics.random import randn_antithetic
 
 
-# def randn_antithetic(shape: tp.Sequence[int],
-#                      num_pack=numpy):
-#     draw_shape = list(shape)
-#     draw_shape[0] = math.ceil(shape[0]/2)
-#     z = num_pack.random.randn(*draw_shape)
-#     z = num_pack.concatenate((z, -z[0:math.floor(shape[0]/2)]), axis=0)
-#
-#     return z
-
-
 def simulate_heston_model(T: float,
                           N: int,
                           R: int,
@@ -209,32 +199,6 @@ def main():
     nT = int(math.ceil(500 * T))  # number of time-steps to simulate
     R = 2000000  # actual number of paths to simulate for pricing
 
-    # run benchmark on gpu
-    (time_in_simulation_gpu,
-     time_in_option_price_calculation_gpu,
-     total_time_gpu,
-     option_price_gpu) \
-        = run_benchmark(x0,
-                        v0,
-                        r,
-                        rho,
-                        sigma_v,
-                        kappa,
-                        v_bar,
-                        T,
-                        K,
-                        nT,
-                        R,
-                        use_gpu=True)
-
-    print(f"Time in simulation on GPU: {time_in_simulation_gpu} secs")
-    print(f"Time in option price calculation on GPU: "
-          f"= {time_in_option_price_calculation_gpu} secs")
-
-    print(f"Total time on GPU: "
-          f"= {total_time_gpu} secs")
-    print(f"Call option price on GPU: {option_price_gpu}")
-
     # run benchmark on cpu
     (time_in_simulation_cpu,
      time_in_option_price_calculation_cpu,
@@ -260,6 +224,32 @@ def main():
     print(f"Total time on CPU: "
           f"= {total_time_cpu} secs")
     print(f"Call option price on CPU: {option_price_cpu}")
+
+    # run benchmark on gpu
+    (time_in_simulation_gpu,
+     time_in_option_price_calculation_gpu,
+     total_time_gpu,
+     option_price_gpu) \
+        = run_benchmark(x0,
+                        v0,
+                        r,
+                        rho,
+                        sigma_v,
+                        kappa,
+                        v_bar,
+                        T,
+                        K,
+                        nT,
+                        R,
+                        use_gpu=True)
+
+    print(f"Time in simulation on GPU: {time_in_simulation_gpu} secs")
+    print(f"Time in option price calculation on GPU: "
+          f"= {time_in_option_price_calculation_gpu} secs")
+
+    print(f"Total time on GPU: "
+          f"= {total_time_gpu} secs")
+    print(f"Call option price on GPU: {option_price_gpu}")
 
     # compute and print the speedup factor
     print(f'Speedup: {total_time_cpu/ total_time_gpu}')
