@@ -109,28 +109,34 @@ def _init_gpu_in_process(device_id: int):
     # print(f'device {device_id} initialized')
 
 
+def _get_set_of_compute_devices_from_iterable(
+        compute_devices: tp.Iterable[tp.Union[int, ComputeDevice]]) \
+        -> tp.FrozenSet[ComputeDevice]:
+    result_compute_devices = []
+
+    for i, compute_device in enumerate(compute_devices):
+        if isinstance(compute_device, int):
+            compute_device \
+                = ComputeDeviceManager.get_compute_device(compute_device)
+        elif not isinstance(compute_device, ComputeDevice):
+            raise TypeError(f"Every element in compute_devices must be of "
+                            f"type ComputeDevice or of type int. Entry {i} "
+                            f"is of type {type(compute_device)}.")
+
+        result_compute_devices.append(compute_device)
+
+    return frozenset(result_compute_devices)
+
+
 class ComputeDevicePool:
     def __init__(self,
-                 compute_devices: tp.Optional[tp.Sequence[tp.Union[int, ComputeDevice]]] = None) \
+                 compute_devices: tp.Optional[tp.Iterable[tp.Union[int, ComputeDevice]]] = None) \
             -> None:
         if compute_devices is None:
             compute_devices = ComputeDeviceManager.get_compute_devices()
 
-        self._compute_devices = []
-
-        for i, compute_device in enumerate(compute_devices):
-            if isinstance(compute_device, int):
-                compute_device \
-                    = ComputeDeviceManager.get_compute_device(compute_device)
-            elif not isinstance(compute_device, ComputeDevice):
-                raise TypeError(f"Every element in compute_devices must be of "
-                                f"type ComputeDevice or of type int. Entry {i} "
-                                f"is of type {type(compute_device)}")
-
-            self._compute_devices.append(compute_device)
-
-        self._compute_devices: tp.Tuple[ComputeDevice] \
-            = tuple(self._compute_devices)
+        self._compute_devices \
+            = _get_set_of_compute_devices_from_iterable(compute_devices)
 
         # ctx = multiprocessing.get_context("spawn")
         # self._executor = ProcessPoolExecutor(max_workers=self._n_gpus,
@@ -149,7 +155,7 @@ class ComputeDevicePool:
         [future.result() for future in futures]
 
     @property
-    def compute_devices(self) -> tp.Tuple[ComputeDevice]:
+    def compute_devices(self) -> tp.FrozenSet[ComputeDevice]:
         return self._compute_devices
 
     @property
@@ -171,19 +177,24 @@ class ComputeDevicePool:
             tp.Optional[tp.Callable[[ResultType], ResultType]] = None,
             args_list: tp.Optional[tp.Sequence[tp.Sequence]] = None,
             kwargs_list: tp.Optional[tp.Sequence[tp.Dict[str, tp.Any]]] = None,
-            number_of_batches: tp.Optional[int] = None) -> ResultType:
+            number_of_batches: tp.Optional[int] = None) \
+            -> ResultType:
         """
-        This method evaluates the function 'f' on elements of 'args_list' and 'kwargs_list' in parallel on multiple 
-        devices and performs the reduction by calling the function 'reduction' on the result and the result of the 
-        reductions so far to eventually produce one final result of type 'ResultType'. 
+        This method evaluates the function 'f' on elements of 'args_list' and 
+        'kwargs_list' in parallel on multiple devices and performs the reduction 
+        by calling the function 'reduction' on the result and the result of the 
+        reductions so far to eventually produce one final result of type 
+        'ResultType'. 
 
-        Input data to the function f must initially reside in host memory and the user must provide functions \
-        'host_to_device_transfer_function' and 'device_to_host_transfer_function' to transfer the data to and results 
+        Input data to the function f must initially reside in host memory and 
+        the user must provide functions 'host_to_device_transfer_function' and 
+        'device_to_host_transfer_function' to transfer the data to and results 
         from device memory respectively.
 
-        If the arguments for each run of 'f' are identical and they have already been applied to the function that is 
-        passed then 'args_list' and 'kwargs_list' may both be None but the argument 'number_of_batches' must be 
-        specified so the method knows how many times to run the function 'f'.
+        If the arguments for each run of 'f' are identical and they have already 
+        been applied to the function that is passed then 'args_list' and 
+        'kwargs_list' may both be None but the argument 'number_of_batches' must 
+        be specified so the method knows how many times to run the function 'f'.
 
         :param f: The map function to be evaluated over elements of 'args_list' and 'kwargs_list'.
         :param reduction: The reduction to be performed on the results of 'f'. 
@@ -198,7 +209,7 @@ class ComputeDevicePool:
         :param kwargs_list: A sequence of dictionaries of keyword arguments.
         :param number_of_batches: The number of function evaluations is required if 'args_list' and 'kwargs_list' are 
                                   both empty.
-
+                                  
         :return: The final result of map-reduce.
         """
 
