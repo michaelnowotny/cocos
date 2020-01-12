@@ -5444,6 +5444,7 @@ Cocos has been successfully used with the following configuration:
 *   Motherboard: <a href="https://www.msi.com/Motherboard/H310-F-PRO">MSI H310-F Pro</a>
 *   CPU: <a href="https://ark.intel.com/content/www/us/en/ark/products/186604/intel-core-i7-9700k-processor-12m-cache-up-to-4-90-ghz.html">Intel Core i7 9700K</a> 
     (support for this 9th generation Intel Core CPU requires a motherboard BIOS update on some models)
+*   CPU Cooler: <a href="https://noctua.at/en/nh-l9i">Noctua NH-L9i</a>
 *   RAM: <a href="https://www.corsair.com/us/en/Categories/Products/Memory/VENGEANCE-LPX/p/CMK32GX4M2A2666C16">Corsair Vengeance LPX 32GB (2x16GB)</a>
 *   Compute Devices: 4 x <a href="https://www.evga.com/articles/01036/evga-geforce-gtx-1060/">EVGA GeForce GTX 1060 with 6GB of memory</a>
 *   Operating System: <a href="https://linuxmint.com/download.php">Linux Mint 19.2 64bit</a> 
