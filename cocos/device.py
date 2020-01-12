@@ -130,13 +130,33 @@ def _get_set_of_compute_devices_from_iterable(
 
 class ComputeDevicePool:
     def __init__(self,
-                 compute_devices: tp.Optional[tp.Iterable[tp.Union[int, ComputeDevice]]] = None) \
+                 compute_devices: tp.Optional[tp.Iterable[tp.Union[int, ComputeDevice]]] = None,
+                 exclude_intel_devices: bool = True) \
             -> None:
+        """
+        This method constructs a compute device pool from a collection of
+        individual devices.
+
+        :param compute_devices: a collection of device ids or compute devices
+        :param exclude_intel_devices:
+            Some Intel processors feature a GPU integrated on the chip of the CPU.
+            The integrated GPU is typically less performant than discrete GPUs in the system.
+            This parameter can be used to automatically exclude any device whose name containts 'Intel'.
+
+        """
         if compute_devices is None:
             compute_devices = ComputeDeviceManager.get_compute_devices()
 
         self._compute_devices \
             = _get_set_of_compute_devices_from_iterable(compute_devices)
+
+        if exclude_intel_devices:
+            compute_devices = \
+                filter(lambda x: 'intel' not in x.name.lower(),
+                       [compute_device
+                        for compute_device
+                        in self._compute_devices])
+            self._compute_devices = frozenset(compute_devices)
 
         # ctx = multiprocessing.get_context("spawn")
         # self._executor = ProcessPoolExecutor(max_workers=self._n_gpus,

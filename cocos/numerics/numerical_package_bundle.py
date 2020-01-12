@@ -29,6 +29,35 @@ class NumericalPackageBundle(ABC):
         pass
 
 
+# class AFNumpyBundle(NumericalPackageBundle):
+#     @classmethod
+#     def is_installed(cls) -> bool:
+#         try:
+#             import afnumpy
+#             return True
+#         except:
+#             return False
+#
+#     @classmethod
+#     def label(cls) -> str:
+#         return 'afnumpy'
+#
+#     @classmethod
+#     def module(cls) -> ModuleType:
+#         import afnumpy
+#         return afnumpy
+#
+#     @classmethod
+#     def random_module(cls) -> ModuleType:
+#         import afnumpy.random
+#         return afnumpy.random
+#
+#     @classmethod
+#     def synchronize(cls):
+#         from arrayfire import sync
+#         sync()
+
+
 class NumpyBundle(NumericalPackageBundle):
     @classmethod
     def is_installed(cls) -> bool:
@@ -116,7 +145,9 @@ def get_available_numerical_packages(
         -> tp.Tuple[tp.Type[NumericalPackageBundle], ...]:
     numerical_bundles_to_try = (NumpyBundle,
                                 CocosBundle,
-                                CuPyBundle)
+                                CuPyBundle,
+                                # AFNumpyBundle
+                                )
 
     available_numerical_bundles \
         = [numerical_bundle
