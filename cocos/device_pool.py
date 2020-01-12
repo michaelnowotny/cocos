@@ -37,21 +37,34 @@ def _get_set_of_compute_devices_from_iterable(
     return frozenset(result_compute_devices)
 
 
+ComputeDeviceFilter = tp.Callable[[ComputeDevice], bool]
+
+
+def exclude_intel_devices(compute_device: ComputeDevice) -> bool:
+    """
+    Some Intel processors feature a GPU integrated on the chip of the CPU. The
+    integrated GPU is typically less performant than discrete GPUs in the
+    system. This parameter can be used to automatically exclude any device whose
+    name containts 'Intel'.
+    """
+
+    return 'intel' not in compute_device.name.lower()
+
+
 class ComputeDevicePool:
     def __init__(self,
-                 compute_devices: tp.Optional[tp.Iterable[tp.Union[int, ComputeDevice]]] = None,
-                 exclude_intel_devices: bool = True) \
+                 compute_devices:
+                 tp.Optional[tp.Iterable[tp.Union[int, ComputeDevice]]] = None,
+                 compute_device_filter:
+                 tp.Optional[ComputeDeviceFilter] = exclude_intel_devices) \
             -> None:
         """
         This method constructs a compute device pool from a collection of
         individual devices.
 
         :param compute_devices: a collection of device ids or compute devices
-        :param exclude_intel_devices:
-            Some Intel processors feature a GPU integrated on the chip of the CPU.
-            The integrated GPU is typically less performant than discrete GPUs in the system.
-            This parameter can be used to automatically exclude any device whose name containts 'Intel'.
-
+        :param compute_device_filter: provide a predicate used to filter devices 
+                                      to include in the pool
         """
         if compute_devices is None:
             compute_devices = ComputeDeviceManager.get_compute_devices()
@@ -59,13 +72,21 @@ class ComputeDevicePool:
         self._compute_devices \
             = _get_set_of_compute_devices_from_iterable(compute_devices)
 
-        if exclude_intel_devices:
+        if compute_device_filter is not None:
             compute_devices = \
-                filter(lambda x: 'intel' not in x.name.lower(),
-                       [compute_device
-                        for compute_device
-                        in self._compute_devices])
+                    filter(compute_device_filter,
+                           [compute_device
+                            for compute_device
+                            in self._compute_devices])
             self._compute_devices = frozenset(compute_devices)
+
+        # if exclude_intel_devices:
+        #     compute_devices = \
+        #         filter(lambda x: 'intel' not in x.name.lower(),
+        #                [compute_device
+        #                 for compute_device
+        #                 in self._compute_devices])
+        #     self._compute_devices = frozenset(compute_devices)
 
         # ctx = multiprocessing.get_context("spawn")
         # self._executor = ProcessPoolExecutor(max_workers=self._n_gpus,

@@ -263,7 +263,7 @@ def create_bar_plot(number_of_devices_to_runtime_map: tp.Dict[int, float]):
 if __name__ == '__main__':
     info()
 
-    gpu_pool = ComputeDevicePool(exclude_intel_devices=True)
+    gpu_pool = ComputeDevicePool()
 
     # model parameters
     x0 = 0.0  # initial log stock price
