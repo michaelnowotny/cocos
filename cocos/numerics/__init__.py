@@ -1,7 +1,8 @@
 import numpy as np
 
 from cocos.options import GPUOptions
-
+import cocos.numerics.random as random
+import cocos.numerics.linalg as linalg
 
 if GPUOptions.use_gpu:
     # from arrayfire/algorithm.py

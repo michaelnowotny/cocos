@@ -6,9 +6,9 @@ from cocos.numerics.numerical_package_bundle import (
 from cocos.numerics.random import randn_antithetic
 from cocos.device import (
     ComputeDeviceManager,
-    ComputeDevicePool,
     info,
     sync)
+from cocos.device_pool import ComputeDevicePool
 
 import math
 import matplotlib.pyplot as plt

@@ -1,12 +1,16 @@
 import math
 import numpy
 import time
-import types
 import typing as tp
 
 import cocos.device as cd
 from cocos.numerics.numerical_package_selector import \
     get_gpu_and_num_pack_by_dtype
+
+from cocos.numerics.numerical_package_bundle import (
+    NumericalPackageBundle,
+    NumpyBundle
+)
 
 from cocos.numerics.random import randn_antithetic
 
