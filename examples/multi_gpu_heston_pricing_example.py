@@ -1,3 +1,9 @@
+import math
+import matplotlib.pyplot as plt
+import numpy
+import time
+import typing as tp
+
 from cocos.numerics.numerical_package_bundle import (
     NumericalPackageBundle,
     CocosBundle
@@ -9,12 +15,6 @@ from cocos.device import (
     info,
     sync)
 from cocos.device_pool import ComputeDevicePool
-
-import math
-import matplotlib.pyplot as plt
-import numpy
-import time
-import typing as tp
 
 
 def simulate_heston_model(
