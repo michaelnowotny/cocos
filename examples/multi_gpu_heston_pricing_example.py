@@ -1,3 +1,8 @@
+from cocos.numerics.numerical_package_bundle import (
+    NumericalPackageBundle,
+    CocosBundle
+)
+
 from cocos.numerics.random import randn_antithetic
 from cocos.device import (
     ComputeDeviceManager,
@@ -5,68 +10,11 @@ from cocos.device import (
     info,
     sync)
 
-from abc import ABC, abstractmethod
 import math
 import matplotlib.pyplot as plt
 import numpy
 import time
-from types import ModuleType
 import typing as tp
-
-
-class NumericalPackageBundle(ABC):
-    @classmethod
-    @abstractmethod
-    def is_installed(cls) -> bool:
-        pass
-
-    @classmethod
-    @abstractmethod
-    def label(cls) -> str:
-        pass
-
-    @classmethod
-    @abstractmethod
-    def module(cls) -> ModuleType:
-        pass
-
-    @classmethod
-    @abstractmethod
-    def random_module(cls) -> ModuleType:
-        pass
-
-    @classmethod
-    def synchronize(cls):
-        pass
-
-
-class CocosBundle(NumericalPackageBundle):
-    @classmethod
-    def is_installed(cls) -> bool:
-        try:
-            import cocos
-            return True
-        except:
-            return False
-
-    @classmethod
-    def label(cls) -> str:
-        return 'Cocos'
-
-    @classmethod
-    def module(cls) -> ModuleType:
-        import cocos.numerics
-        return cocos.numerics
-
-    @classmethod
-    def random_module(cls) -> ModuleType:
-        import cocos.numerics.random
-        return cocos.numerics.random
-
-    @classmethod
-    def synchronize(cls):
-        from cocos.device import sync
-        sync()
 
 
 def simulate_heston_model(
@@ -315,7 +263,7 @@ def create_bar_plot(number_of_devices_to_runtime_map: tp.Dict[int, float]):
 if __name__ == '__main__':
     info()
 
-    gpu_pool = ComputeDevicePool()
+    gpu_pool = ComputeDevicePool(exclude_intel_devices=True)
 
     # model parameters
     x0 = 0.0  # initial log stock price
