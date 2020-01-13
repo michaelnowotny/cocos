@@ -27,6 +27,10 @@ def _compute_replacement_functions(
     If an expression has been optimized with common subexpression elimination,
     one first needs to compute the replacement values (which are additional
     arguments to the original function) using so-called replacement functions.
+    This is done in an incremental fashion, i.e. the replacement value resulting
+    from a given replacement function may be used as an argument of the next
+    replacement function.
+
     This function evaluates these replacement functions with the original
     arguments and returns the replacement values appended to the original
     arguments along with the number of replications.
@@ -44,6 +48,8 @@ def _compute_replacement_functions(
             the number of variables (original arguments) in the function
 
     Returns:
+        a tuple of arguments with replacement values appended and the number of
+        replications
 
     """
 
@@ -60,6 +66,10 @@ def _compute_replacement_functions(
     arguments = [t] + state_vectors
     if perform_cse:
         for replacement_function in replacement_functions:
+            # Note that the arguments vector grows with each iteration. That
+            # means computed common subexpressions from previous iterations are
+            # used to evaluate subsequent expressions.
+
             arguments.append(replacement_function(*arguments))
 
     return arguments, R
@@ -123,7 +133,7 @@ def lambdify_array(
 
 def _compute_result_internal(R: int,
                              dimensions: tp.Tuple[int, ...],
-                             arguments,
+                             arguments: tp.List[tp.Union[float, NumericArray]],
                              functions_cpu: tp.Tuple[tp.Callable, ...],
                              functions_gpu: tp.Tuple[tp.Callable, ...],
                              pre_attach: bool,
@@ -134,12 +144,21 @@ def _compute_result_internal(R: int,
     This function evaluates a sequence of functions with given positional
     arguments. Each argument is either a scalar or R-dimensional. The result
     Args:
-        R:
+        R: the number of replications (this is the length each of the input
+           vectors if they are not scalars)
+
         dimensions:
+            The shape of the output (excluding the R replications which are
+            either attached to the beginning (if pre_attach is True) or to the
+            end.
+
         arguments:
-        functions_cpu:
-        functions_gpu:
+            a list of arguments to be passed to the functions to be evaluated
+
+        functions_cpu: The sequence of functions to be evaluated on the CPU.
+        functions_gpu: The sequence of functions to be evaluated on the GPU.
         pre_attach:
+            whether to put the replications in the first or the last axis
         gpu: whether to evaluate on the cpu or the gpu
         dtype: the dtype of the output array
 
@@ -347,6 +366,24 @@ class LambdifiedArrayExpressions(object):
             t: float,
             gpu: bool = False) \
             -> tp.Tuple[NumericArray, ...]:
+        """
+        This function evaluates the array expressions at arguments that are
+        vectors (arrays with a single axis) or scalars and returns the resulting
+        arrays as a tuple.
+
+        Args:
+            list_of_state_vectors:
+                A list of one-dimensional numeric arrays. The length of this
+                list must match the number of arguments to the array-valued
+                functions.
+
+            t: time parameter
+            gpu: whether to evaluate the array expressions on the GPU
+
+        Returns: a tuple of arrays corresponding to the array expressions
+                 evaluated at the parameter vectors
+
+        """
 
         if self._functions_cpu is None or self._functions_gpu is None:
             self._perform_initialization()
@@ -399,6 +436,19 @@ class LambdifiedArrayExpressions(object):
                  state_matrices: tp.Tuple[NumericArray, ...],
                  t: float) \
             -> tp.Tuple[NumericArray, ...]:
+        """
+        This function evaluates the array expressions at arguments that may be
+        matrices, vectors, or scalars and returns the resulting arrays as a
+        tuple.
+
+        Args:
+            state_matrices: a tuple of matrices, vectors, or scalars
+            t: time parameter
+
+        Returns: a tuple of arrays corresponding to the array expressions
+                 evaluated at the parameter vectors
+
+        """
 
         if not isinstance(state_matrices, collections.Sequence):
             if isinstance(state_matrices, (np.ndarray, cn.ndarray)):
