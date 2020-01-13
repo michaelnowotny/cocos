@@ -20,11 +20,38 @@ def _compute_replacement_functions(
         replacement_functions_cpu: tp.Tuple[tp.Callable, ...],
         replacement_functions_gpu: tp.Tuple[tp.Callable, ...],
         perform_cse: bool,
-        state_vectors: tp.Tuple,
+        state_vectors: tp.List,
         t: float,
         gpu: bool,
         number_of_state_variables: int) \
-        -> tp.Tuple[tp.Tuple, int]:
+        -> tp.Tuple[tp.List, int]:
+    """
+    If an expression has been optimized with common subexpression elimination,
+    one first needs to compute the replacement values (which are additional
+    arguments to the original function) using so-called replacement functions.
+    This function evaluates these replacement functions with the original
+    arguments and returns the replacement values appended to the original
+    arguments along with the number of replications.
+
+    Args:
+        replacement_functions_cpu:
+            A sequence of functions that compute the replacement values from the
+            original arguments on the CPU.
+
+        replacement_functions_gpu:
+            A sequence of functions that compute the replacement values from the
+            original arguments on the GPU.
+
+        perform_cse: whether common subexpression elimination has been performed
+        state_vectors: a list of numerical vectors (NumPy or Cocos)
+        t: time parameter
+        gpu: whether or not to evaluate the function on the gpu
+        number_of_state_variables:
+            the number of variables (original arguments) in the function
+
+    Returns:
+
+    """
 
     R = max([state_argument.size
              for state_argument
@@ -114,7 +141,7 @@ def _compute_result_internal(R: int,
         -> NumericArray:
     """
     This function evaluates a sequence of functions with given positional
-    arguments. Each argument is either scalar or R-dimensional.
+    arguments. Each argument is either a scalar or R-dimensional. The result
     Args:
         R:
         dimensions:
@@ -325,7 +352,7 @@ class LambdifiedArrayExpressions(object):
 
     def evaluate_with_list_of_state_vectors(
             self,
-            list_of_state_vectors: tp.Tuple[NumericArray, ...],
+            list_of_state_vectors: tp.List[NumericArray],
             t: float,
             gpu: bool = False) \
             -> tp.Tuple[NumericArray, ...]:
@@ -391,12 +418,16 @@ class LambdifiedArrayExpressions(object):
             = get_gpu_and_num_pack_by_dtype_from_iterable(state_matrices)
 
         list_of_state_vectors = []
+        # If a state matrix has more than one axis, it is separated it into a list
+        # of vectors.
+        # Note: This does not work if a state matrix has more than two axes!
         for state_matrix in state_matrices:
             if state_matrix.ndim > 1:
                 for i in range(state_matrix.shape[1]):
                     list_of_state_vectors.append((state_matrix[:, i]))
             else:
                 list_of_state_vectors.append(state_matrix)
+        # list_of_state_vectors = tuple(list_of_state_vectors)
 
         return self.evaluate_with_list_of_state_vectors(
                         list_of_state_vectors=list_of_state_vectors,
