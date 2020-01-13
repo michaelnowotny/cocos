@@ -80,13 +80,13 @@ class ComputeDevicePool:
                             in self._compute_devices])
             self._compute_devices = frozenset(compute_devices)
 
-        # if exclude_intel_devices:
-        #     compute_devices = \
-        #         filter(lambda x: 'intel' not in x.name.lower(),
-        #                [compute_device
-        #                 for compute_device
-        #                 in self._compute_devices])
-        #     self._compute_devices = frozenset(compute_devices)
+        if exclude_intel_devices:
+            compute_devices = \
+                filter(lambda x: 'intel' not in x.name.lower(),
+                       [compute_device
+                        for compute_device
+                        in self._compute_devices])
+            self._compute_devices = frozenset(compute_devices)
 
         # ctx = multiprocessing.get_context("spawn")
         # self._executor = ProcessPoolExecutor(max_workers=self._n_gpus,
@@ -99,7 +99,7 @@ class ComputeDevicePool:
         futures = [self._executor.submit(_init_gpu_in_process,
                                          device_id=compute_device.id)
                    for compute_device
-                   in compute_devices]
+                   in self._compute_devices]
 
         wait(futures)
 
