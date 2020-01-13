@@ -17,11 +17,10 @@ from cocos.symbolic.translations import COCOS_TRANSLATIONS
 # Works for both Matrices and Arrays
 ################################################################################
 def _compute_replacement_functions(
-        replacement_functions: tp.Tuple[tp.Callable, ...],
-        perform_cse: bool,
-        state_vectors: tp.List,
+        state_vectors: tp.List[tp.Union[float, NumericArray]],
         t: float,
-        number_of_state_variables: int) \
+        number_of_state_variables: int,
+        replacement_functions: tp.Optional[tp.Tuple[tp.Callable, ...]] = None) \
         -> tp.Tuple[tp.List, int]:
     """
     If an expression has been optimized with common subexpression elimination,
@@ -40,7 +39,6 @@ def _compute_replacement_functions(
             A sequence of functions that compute the replacement values from the
             original arguments.
 
-        perform_cse: whether common subexpression elimination has been performed
         state_vectors: a list of numerical vectors (NumPy or Cocos)
         t: time parameter
         gpu: whether or not to evaluate the function on the gpu
@@ -64,7 +62,7 @@ def _compute_replacement_functions(
                          f"function({number_of_state_variables}).")
 
     arguments = [t] + state_vectors
-    if perform_cse:
+    if replacement_functions is not None:
         for replacement_function in replacement_functions:
             # Note that the arguments vector grows with each iteration. That
             # means computed common subexpressions from previous iterations are
@@ -395,11 +393,10 @@ class LambdifiedArrayExpressions(object):
 
         arguments, R \
             = _compute_replacement_functions(
-                replacement_functions=replacement_functions,
-                perform_cse=self._perform_cse,
                 state_vectors=list_of_state_vectors,
                 t=t,
-                number_of_state_variables=self.number_of_state_variables)
+                number_of_state_variables=self.number_of_state_variables,
+                replacement_functions=replacement_functions)
 
         results = []
         for i, (shape,
