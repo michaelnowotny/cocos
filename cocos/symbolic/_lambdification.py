@@ -17,12 +17,10 @@ from cocos.symbolic.translations import COCOS_TRANSLATIONS
 # Works for both Matrices and Arrays
 ################################################################################
 def _compute_replacement_functions(
-        replacement_functions_cpu: tp.Tuple[tp.Callable, ...],
-        replacement_functions_gpu: tp.Tuple[tp.Callable, ...],
+        replacement_functions: tp.Tuple[tp.Callable, ...],
         perform_cse: bool,
         state_vectors: tp.List,
         t: float,
-        gpu: bool,
         number_of_state_variables: int) \
         -> tp.Tuple[tp.List, int]:
     """
@@ -34,13 +32,9 @@ def _compute_replacement_functions(
     arguments along with the number of replications.
 
     Args:
-        replacement_functions_cpu:
+        replacement_functions:
             A sequence of functions that compute the replacement values from the
-            original arguments on the CPU.
-
-        replacement_functions_gpu:
-            A sequence of functions that compute the replacement values from the
-            original arguments on the GPU.
+            original arguments.
 
         perform_cse: whether common subexpression elimination has been performed
         state_vectors: a list of numerical vectors (NumPy or Cocos)
@@ -65,11 +59,8 @@ def _compute_replacement_functions(
 
     arguments = [t] + state_vectors
     if perform_cse:
-        for k in range(len(replacement_functions_cpu)):
-            if gpu:
-                arguments.append(replacement_functions_gpu[k](*arguments))
-            else:
-                arguments.append(replacement_functions_cpu[k](*arguments))
+        for replacement_function in replacement_functions:
+            arguments.append(replacement_function(*arguments))
 
     return arguments, R
 
@@ -360,14 +351,17 @@ class LambdifiedArrayExpressions(object):
         if self._functions_cpu is None or self._functions_gpu is None:
             self._perform_initialization()
 
+        if gpu:
+            replacement_functions = self._replacement_functions_gpu
+        else:
+            replacement_functions = self._replacement_functions_cpu
+
         arguments, R \
             = _compute_replacement_functions(
-                replacement_functions_cpu=self._replacement_functions_cpu,
-                replacement_functions_gpu=self._replacement_functions_gpu,
+                replacement_functions=replacement_functions,
                 perform_cse=self._perform_cse,
                 state_vectors=list_of_state_vectors,
                 t=t,
-                gpu=gpu,
                 number_of_state_variables=self.number_of_state_variables)
 
         results = []
