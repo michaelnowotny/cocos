@@ -18,7 +18,7 @@ URL = 'https://github.com/michaelnowotny/cocos'
 EMAIL = 'nowotnym@gmail.com'
 AUTHOR = 'Michael Christoph Nowotny'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = "0.1.3"
+VERSION = "0.1.4"
 
 # What packages are required for this module to be executed?
 REQUIRED = [

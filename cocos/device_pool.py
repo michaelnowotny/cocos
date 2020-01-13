@@ -13,7 +13,7 @@ ParameterTransferFunction = tp.Callable[[tp.Sequence,
 
 def _init_gpu_in_process(device_id: int):
     # print(f'initializing device {device_id}')
-    time.sleep(1.0)
+    time.sleep(0.1)
     ComputeDeviceManager.set_compute_device(compute_device=device_id)
     # print(f'device {device_id} initialized')
 
