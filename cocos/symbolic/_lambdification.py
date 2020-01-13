@@ -1,5 +1,4 @@
 import collections
-from types import ModuleType
 import typing as tp
 
 import numpy as np
@@ -71,8 +70,8 @@ def lambdify_array_with_modules(
     result = []
     for i in range(n):
         index = tuple(np.unravel_index(i, array_expression.shape, order='F'))
-        result.append(sym.lambdify(symbols,
-                                   array_expression[index],
+        result.append(sym.lambdify(args=symbols,
+                                   expr=array_expression[index],
                                    modules=[numeric_time_functions] + modules))
 
     return tuple(result)
@@ -87,15 +86,19 @@ def lambdify_array(
     if numeric_time_functions is None:
         numeric_time_functions = dict()
 
-    functions_cpu = lambdify_array_with_modules(symbols,
-                                                array_expression,
-                                                numeric_time_functions,
-                                                ('numpy', ))
+    functions_cpu = \
+        lambdify_array_with_modules(
+            symbols=symbols,
+            array_expression=array_expression,
+            numeric_time_functions=numeric_time_functions,
+            modules=('numpy', ))
 
-    functions_gpu = lambdify_array_with_modules(symbols,
-                                                array_expression,
-                                                numeric_time_functions,
-                                                (COCOS_TRANSLATIONS, ))
+    functions_gpu = \
+        lambdify_array_with_modules(
+            symbols=symbols,
+            array_expression=array_expression,
+            numeric_time_functions=numeric_time_functions,
+            modules=(COCOS_TRANSLATIONS, ))
 
     return functions_cpu, functions_gpu
 
@@ -109,7 +112,22 @@ def _compute_result_internal(R: int,
                              gpu: bool,
                              dtype: np.generic) \
         -> NumericArray:
+    """
+    This function evaluates a sequence of functions with given positional
+    arguments. Each argument is either scalar or R-dimensional.
+    Args:
+        R:
+        dimensions:
+        arguments:
+        functions_cpu:
+        functions_gpu:
+        pre_attach:
+        gpu: whether to evaluate on the cpu or the gpu
+        dtype: the dtype of the output array
 
+    Returns:
+
+    """
     num_pack = select_num_pack(gpu)
     if gpu:
         functions = functions_gpu
@@ -243,9 +261,10 @@ class LambdifiedArrayExpressions(object):
         else:
             for symbolic_matrix_expression in self._symbolic_array_expressions:
                 functions_cpu, functions_gpu \
-                    = lambdify_array(self._symbols,
-                                     symbolic_matrix_expression,
-                                     self._numeric_time_functions)
+                    = lambdify_array(
+                        symbols=self._symbols,
+                        array_expression=symbolic_matrix_expression,
+                        numeric_time_functions=self._numeric_time_functions)
 
                 self._functions_cpu.append(functions_cpu)
                 self._functions_gpu.append(functions_gpu)
@@ -315,13 +334,14 @@ class LambdifiedArrayExpressions(object):
             self._perform_initialization()
 
         arguments, R \
-            = _compute_replacement_functions(self._replacement_functions_cpu,
-                                             self._replacement_functions_gpu,
-                                             self._perform_cse,
-                                             list_of_state_vectors,
-                                             t,
-                                             gpu,
-                                             self.number_of_state_variables)
+            = _compute_replacement_functions(
+                replacement_functions_cpu=self._replacement_functions_cpu,
+                replacement_functions_gpu=self._replacement_functions_gpu,
+                perform_cse=self._perform_cse,
+                state_vectors=list_of_state_vectors,
+                t=t,
+                gpu=gpu,
+                number_of_state_variables=self.number_of_state_variables)
 
         results = []
         for i, (shape,
@@ -334,6 +354,7 @@ class LambdifiedArrayExpressions(object):
                               self._functions_cpu,
                               self._functions_gpu,
                               self._squeeze_column_vectors)):
+
             is_column_vector = self.is_column_vector(i)
 
             if is_column_vector and squeeze_column_vector:
@@ -341,14 +362,14 @@ class LambdifiedArrayExpressions(object):
             else:
                 dimensions = shape
 
-            result = _compute_result_internal(R,
-                                              dimensions,
-                                              arguments,
-                                              functions_cpu,
-                                              functions_gpu,
-                                              pre_attach,
-                                              gpu,
-                                              self.dtype)
+            result = _compute_result_internal(R=R,
+                                              dimensions=dimensions,
+                                              arguments=arguments,
+                                              functions_cpu=functions_cpu,
+                                              functions_gpu=functions_gpu,
+                                              pre_attach=pre_attach,
+                                              gpu=gpu,
+                                              dtype=self.dtype)
             results.append(result)
 
         return tuple(results)
@@ -365,8 +386,10 @@ class LambdifiedArrayExpressions(object):
                 raise TypeError("state_variables must be of type "
                                 "Sequence[Union[numpy.ndarray, cocos.ndarray]]")
 
-        gpu, num_pack \
+        # determine whether to run on cpu or gpu based on the input types
+        gpu, _ \
             = get_gpu_and_num_pack_by_dtype_from_iterable(state_matrices)
+
         list_of_state_vectors = []
         for state_matrix in state_matrices:
             if state_matrix.ndim > 1:
@@ -375,7 +398,10 @@ class LambdifiedArrayExpressions(object):
             else:
                 list_of_state_vectors.append(state_matrix)
 
-        return self.evaluate_with_list_of_state_vectors(list_of_state_vectors, t, gpu)
+        return self.evaluate_with_list_of_state_vectors(
+                        list_of_state_vectors=list_of_state_vectors,
+                        t=t,
+                        gpu=gpu)
 
 
 class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
@@ -394,15 +420,15 @@ class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
         if numeric_time_functions is None:
             numeric_time_functions = dict()
 
-        super().__init__(argument_symbols,
-                         time_symbol,
-                         symbolic_matrix_expressions,
-                         numeric_time_functions,
-                         squeeze_column_vectors,
-                         perform_cse,
-                         lazy_initialization,
-                         pre_attach,
-                         dtype)
+        super().__init__(argument_symbols=argument_symbols,
+                         time_symbol=time_symbol,
+                         symbolic_array_expressions=symbolic_matrix_expressions,
+                         numeric_time_functions=numeric_time_functions,
+                         squeeze_column_vectors=squeeze_column_vectors,
+                         perform_cse=perform_cse,
+                         lazy_initialization=lazy_initialization,
+                         pre_attach=pre_attach,
+                         dtype=dtype)
 
         rows = []
         cols = []
@@ -524,15 +550,15 @@ class LambdifiedMatrixExpression(LambdifiedArrayExpression):
          pre_attach: bool = True,
          dtype: np.generic = np.float32):
 
-        super().__init__(argument_symbols,
-                         time_symbol,
-                         symbolic_matrix_expression,
-                         numeric_time_functions,
-                         squeeze_column_vector,
-                         perform_cse,
-                         lazy_initialization,
-                         pre_attach,
-                         dtype)
+        super().__init__(argument_symbols=argument_symbols,
+                         time_symbol=time_symbol,
+                         symbolic_array_expression=symbolic_matrix_expression,
+                         numeric_time_functions=numeric_time_functions,
+                         squeeze_column_vector=squeeze_column_vector,
+                         perform_cse=perform_cse,
+                         lazy_initialization=lazy_initialization,
+                         pre_attach=pre_attach,
+                         dtype=dtype)
 
     @property
     def rows(self) -> int:
@@ -560,15 +586,15 @@ class LambdifiedVectorExpression(LambdifiedMatrixExpression):
          pre_attach: bool = True,
          dtype: np.generic = np.float32):
 
-        super().__init__(argument_symbols,
-                         time_symbol,
-                         symbolic_vector_expression,
-                         numeric_time_functions,
-                         True,
-                         perform_cse,
-                         lazy_initialization,
-                         pre_attach,
-                         dtype)
+        super().__init__(argument_symbols=argument_symbols,
+                         time_symbol=time_symbol,
+                         symbolic_matrix_expression=symbolic_vector_expression,
+                         numeric_time_functions=numeric_time_functions,
+                         squeeze_column_vector=True,
+                         perform_cse=perform_cse,
+                         lazy_initialization=lazy_initialization,
+                         pre_attach=pre_attach,
+                         dtype=dtype)
 
 
 def lambdify(args,
@@ -580,8 +606,8 @@ def lambdify(args,
     if modules is None:
         modules = []
 
-    return sym.lambdify(args,
-                        expr,
+    return sym.lambdify(args=args,
+                        expr=expr,
                         modules=list(modules) + [COCOS_TRANSLATIONS],
                         printer=printer,
                         use_imps=use_imps,
