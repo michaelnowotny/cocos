@@ -4,8 +4,6 @@ from cocos.numerics.numerical_package_selector import \
 
 from cocos.numerics.data_types import NumericArray
 
-import cocos.device as cd
-
 from cocos.symbolic import \
     LambdifiedVectorExpression, \
     find_length_of_state_vectors
@@ -55,36 +53,74 @@ def test_lambdified_array_expression():
 
     # Compare the results on cpu and gpu with direct evaluation of the jaboian
     # at n different vectors (x1, x2, x3)
-    n = 10000000
+    n = 10000
     print(f'evaluating Jacobian at {n} vectors\n')
 
     X_gpu = cn.random.rand(n, 3)
     X_cpu = np.array(X_gpu)
 
     # evaluate on GPU
-    jacobian_f_numeric_gpu = jacobian_f_lambdified.evaluate(X_gpu, t=0)
-
     jacobian_f_numeric_gpu_direct = \
         jacobian_direct(x1=X_gpu[:, 0],
                         x2=X_gpu[:, 1],
                         x3=X_gpu[:, 2])
 
-    assert np.allclose(jacobian_f_numeric_gpu_direct, jacobian_f_numeric_gpu)
+    jacobian_f_numeric_gpu_using_matrix = \
+        jacobian_f_lambdified.evaluate(X_gpu, t=0)
+
+    assert np.allclose(jacobian_f_numeric_gpu_direct,
+                       jacobian_f_numeric_gpu_using_matrix)
+
+    jacobian_f_numeric_gpu_using_kwargs = \
+        (jacobian_f_lambdified
+         .evaluate_with_kwargs(x1=X_gpu[:, 0],
+                               x2=X_gpu[:, 1],
+                               x3=X_gpu[:, 2],
+                               t=0))
+    assert np.allclose(jacobian_f_numeric_gpu_direct,
+                       jacobian_f_numeric_gpu_using_kwargs)
+
+    jacobian_f_numeric_gpu_using_dictionary = \
+        (jacobian_f_lambdified
+         .evaluate_with_dictionary(
+            symbolic_to_numeric_parameter_map={x1: X_gpu[:, 0],
+                                               x2: X_gpu[:, 1],
+                                               x3: X_gpu[:, 2]},
+            t=0))
+    assert np.allclose(jacobian_f_numeric_gpu_direct,
+                       jacobian_f_numeric_gpu_using_dictionary)
 
     # evaluate on CPU
-    jacobian_f_numeric_cpu = \
-        (jacobian_f_lambdified
-         .evaluate_with_kwargs(x1=X_cpu[:, 0],
-                               x2=X_cpu[:, 1],
-                               x3=X_cpu[:, 2],
-                               t=0))
-
     jacobian_f_numeric_cpu_direct = \
         jacobian_direct(x1=X_cpu[:, 0],
                         x2=X_cpu[:, 1],
                         x3=X_cpu[:, 2])
 
-    assert np.allclose(jacobian_f_numeric_cpu_direct, jacobian_f_numeric_cpu)
+    jacobian_f_numeric_cpu_using_matrix = \
+        jacobian_f_lambdified.evaluate(X_cpu, t=0)
+
+    assert np.allclose(jacobian_f_numeric_cpu_direct,
+                       jacobian_f_numeric_cpu_using_matrix)
+
+    jacobian_f_numeric_cpu_using_kwargs = \
+        (jacobian_f_lambdified
+         .evaluate_with_kwargs(x1=X_cpu[:, 0],
+                               x2=X_cpu[:, 1],
+                               x3=X_cpu[:, 2],
+                               t=0))
+    assert np.allclose(jacobian_f_numeric_cpu_direct,
+                       jacobian_f_numeric_cpu_using_kwargs)
+
+    jacobian_f_numeric_cpu_using_dictionary = \
+        (jacobian_f_lambdified
+         .evaluate_with_dictionary(
+            symbolic_to_numeric_parameter_map={x1: X_cpu[:, 0],
+                                               x2: X_cpu[:, 1],
+                                               x3: X_cpu[:, 2]},
+            t=0))
+    assert np.allclose(jacobian_f_numeric_cpu_direct,
+                       jacobian_f_numeric_cpu_using_dictionary)
 
     # Verify that the results on CPU and GPU match
-    assert np.allclose(jacobian_f_numeric_gpu, jacobian_f_numeric_cpu)
+    assert np.allclose(jacobian_f_numeric_cpu_using_matrix,
+                       jacobian_f_numeric_cpu_using_matrix)
