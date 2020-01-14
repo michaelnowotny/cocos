@@ -11,6 +11,7 @@ from cocos.numerics.numerical_package_selector import \
     select_num_pack, \
     get_gpu_and_num_pack_by_dtype_from_iterable
 from cocos.symbolic.translations import COCOS_TRANSLATIONS
+from cocos.symbolic.utilities import find_length_of_state_vectors
 
 
 ################################################################################
@@ -51,10 +52,12 @@ def _compute_replacement_functions(
 
     """
 
-    R = max([state_argument.size
-             for state_argument
-             in state_vectors
-             if isinstance(state_argument, (np.ndarray, cn.ndarray))] + [1])
+    # R = max([state_argument.size
+    #          for state_argument
+    #          in state_vectors
+    #          if isinstance(state_argument, (np.ndarray, cn.ndarray))] + [1])
+
+    R = find_length_of_state_vectors(state_vectors)
 
     if number_of_state_variables != len(state_vectors):
         raise ValueError(f"The number of state vectors({len(state_vectors)}) "
@@ -429,6 +432,24 @@ class LambdifiedArrayExpressions(object):
 
         return tuple(results)
 
+    def evaluate_with_dictionary(self,
+                                 symbolic_to_numeric_parameter_map: tp.Dict,
+                                 t: float) \
+            -> tp.Tuple[NumericArray, ...]:
+        list_of_state_vectors = \
+            [symbolic_to_numeric_parameter_map[symbol]
+             for symbol
+             in self.argument_symbols]
+
+        # determine whether to run on cpu or gpu based on the input types
+        gpu, _ \
+            = get_gpu_and_num_pack_by_dtype_from_iterable(list_of_state_vectors)
+
+        return self.evaluate_with_list_of_state_vectors(
+                        list_of_state_vectors=list_of_state_vectors,
+                        t=t,
+                        gpu=gpu)
+
     def evaluate(self,
                  state_matrices: tp.Tuple[NumericArray, ...],
                  t: float) \
@@ -604,6 +625,16 @@ class LambdifiedArrayExpression(object):
                 .evaluate_with_list_of_state_vectors(list_of_state_vectors,
                                                      t,
                                                      gpu)[0])
+
+    def evaluate_with_dictionary(self,
+                                 symbolic_to_numeric_parameter_map: tp.Dict,
+                                 t: float):
+        return (self
+                ._lambdified_array_expressions
+                .evaluate_with_dictionary(
+                    symbolic_to_numeric_parameter_map
+                    =symbolic_to_numeric_parameter_map,
+                    t=t))[0]
 
     def evaluate(self,
                  state_matrices: tp.Tuple[NumericArray, ...],
