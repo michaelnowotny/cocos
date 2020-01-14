@@ -450,6 +450,25 @@ class LambdifiedArrayExpressions(object):
                         t=t,
                         gpu=gpu)
 
+    def evaluate_with_kwargs(self,
+                             t: float,
+                             **kwargs) \
+            -> tp.Tuple[NumericArray, ...]:
+
+        list_of_state_vectors = \
+            [kwargs[symbol.name]
+             for symbol
+             in self.argument_symbols]
+
+        # determine whether to run on cpu or gpu based on the input types
+        gpu, _ \
+            = get_gpu_and_num_pack_by_dtype_from_iterable(list_of_state_vectors)
+
+        return self.evaluate_with_list_of_state_vectors(
+                        list_of_state_vectors=list_of_state_vectors,
+                        t=t,
+                        gpu=gpu)
+
     def evaluate(self,
                  state_matrices: tp.Tuple[NumericArray, ...],
                  t: float) \
@@ -635,6 +654,14 @@ class LambdifiedArrayExpression(object):
                     symbolic_to_numeric_parameter_map
                     =symbolic_to_numeric_parameter_map,
                     t=t))[0]
+
+    def evaluate_with_kwargs(self,
+                             t: float,
+                             **kwargs) \
+            -> tp.Tuple[NumericArray, ...]:
+        return (self
+                ._lambdified_array_expressions
+                .evaluate_with_kwargs(t=t, **kwargs)[0])
 
     def evaluate(self,
                  state_matrices: tp.Tuple[NumericArray, ...],

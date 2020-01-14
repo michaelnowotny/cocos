@@ -31,7 +31,7 @@ print(jacobian_f)
 print()
 
 
-def jacobian(x1, x2, x3):
+def jacobian_direct(x1, x2, x3):
     state_vectors = (x1, x2, x3)
     R = find_length_of_state_vectors(state_vectors)
     num_pack = select_num_pack_by_dtype_from_iterable(state_vectors)
@@ -77,21 +77,27 @@ X_cpu = np.array(X_gpu)
 # evaluate on gpu
 tic = time.time()
 # jacobian_f_numeric_gpu = jacobian_f_lambdified.evaluate(X_gpu, t=0)
+# jacobian_f_numeric_gpu = \
+#     (jacobian_f_lambdified
+#      .evaluate_with_dictionary(
+#         symbolic_to_numeric_parameter_map={x1: X_gpu[:, 0],
+#                                            x2: X_gpu[:, 1],
+#                                            x3: X_gpu[:, 2]},
+#         t=0))
 jacobian_f_numeric_gpu = \
     (jacobian_f_lambdified
-     .evaluate_with_dictionary(
-        symbolic_to_numeric_parameter_map={x1: X_gpu[:, 0],
-                                           x2: X_gpu[:, 1],
-                                           x3: X_gpu[:, 2]},
-        t=0))
+     .evaluate_with_kwargs(x1=X_gpu[:, 0],
+                           x2=X_gpu[:, 1],
+                           x3=X_gpu[:, 2],
+                           t=0))
 cd.sync()
 time_gpu = time.time() - tic
 print(f'time on gpu: {time_gpu}')
 
 jacobian_f_numeric_gpu_direct = \
-    jacobian(x1=X_gpu[:, 0],
-             x2=X_gpu[:, 1],
-             x3=X_gpu[:, 2])
+    jacobian_direct(x1=X_gpu[:, 0],
+                    x2=X_gpu[:, 1],
+                    x3=X_gpu[:, 2])
 
 print(f'numerical results from gpu match results from direct computation: '
       f'{np.allclose(jacobian_f_numeric_gpu_direct, jacobian_f_numeric_gpu)}')
@@ -99,20 +105,26 @@ print(f'numerical results from gpu match results from direct computation: '
 # evaluate on cpu
 tic = time.time()
 # jacobian_f_numeric_cpu = jacobian_f_lambdified.evaluate(X_cpu, t=0)
+# jacobian_f_numeric_cpu = \
+#     (jacobian_f_lambdified
+#      .evaluate_with_dictionary(
+#         symbolic_to_numeric_parameter_map={x1: X_cpu[:, 0],
+#                                            x2: X_cpu[:, 1],
+#                                            x3: X_cpu[:, 2]},
+#         t=0))
 jacobian_f_numeric_cpu = \
     (jacobian_f_lambdified
-     .evaluate_with_dictionary(
-        symbolic_to_numeric_parameter_map={x1: X_cpu[:, 0],
-                                           x2: X_cpu[:, 1],
-                                           x3: X_cpu[:, 2]},
-        t=0))
+     .evaluate_with_kwargs(x1=X_cpu[:, 0],
+                           x2=X_cpu[:, 1],
+                           x3=X_cpu[:, 2],
+                           t=0))
 time_cpu = time.time() - tic
 print(f'time on cpu: {time_cpu}')
 
 jacobian_f_numeric_cpu_direct = \
-    jacobian(x1=X_cpu[:, 0],
-             x2=X_cpu[:, 1],
-             x3=X_cpu[:, 2])
+    jacobian_direct(x1=X_cpu[:, 0],
+                    x2=X_cpu[:, 1],
+                    x3=X_cpu[:, 2])
 
 print(f'numerical results from cpu match results from direct computation: '
       f'{np.allclose(jacobian_f_numeric_cpu_direct, jacobian_f_numeric_cpu)}')
