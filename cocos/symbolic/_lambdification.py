@@ -434,9 +434,13 @@ class LambdifiedArrayExpressions(object):
                  t: float) \
             -> tp.Tuple[NumericArray, ...]:
         """
-        This function evaluates the array expressions at arguments that may be
-        matrices, vectors, or scalars and returns the resulting arrays as a
-        tuple.
+        This function evaluates the array expressions at arguments that are
+        represented either as vectors or as horizontally concatenated vectors
+        (i.e. arrays with 2 axes). It decomposes these matrices into column
+        vectors and evaluates the array functions with this list of column.
+
+        The function returns a tuple of result arrays (one for each array
+        function).
 
         Args:
             state_matrices: a tuple of matrices, vectors, or scalars
@@ -459,16 +463,14 @@ class LambdifiedArrayExpressions(object):
             = get_gpu_and_num_pack_by_dtype_from_iterable(state_matrices)
 
         list_of_state_vectors = []
-        # If a state matrix has more than one axis, it is separated it into a list
-        # of vectors.
-        # Note: This does not work if a state matrix has more than two axes!
+        # If a state matrix has more than one axis, it is separated it into a
+        # list of vectors and appended to the list of vector arguments.
         for state_matrix in state_matrices:
             if state_matrix.ndim > 1:
                 for i in range(state_matrix.shape[1]):
                     list_of_state_vectors.append((state_matrix[:, i]))
             else:
                 list_of_state_vectors.append(state_matrix)
-        # list_of_state_vectors = tuple(list_of_state_vectors)
 
         return self.evaluate_with_list_of_state_vectors(
                         list_of_state_vectors=list_of_state_vectors,
