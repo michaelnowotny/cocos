@@ -21,8 +21,8 @@ DUMMY_TIME_SYMBOL = sym.Symbol('t')
 ################################################################################
 def _compute_replacement_functions(
         state_vectors: tp.List[tp.Union[float, NumericArray]],
-        t: float,
         number_of_state_variables: int,
+        t: tp.Optional[float] = None,
         replacement_functions: tp.Optional[tp.Tuple[tp.Callable, ...]] = None) \
         -> tp.Tuple[tp.List, int]:
     """
@@ -204,23 +204,36 @@ def _compute_result_internal(R: int,
 ################################################################################
 class LambdifiedArrayExpressions(object):
     def __init__(
-        self,
-        symbolic_array_expressions:
-            tp.Tuple[tp.Union[sym.Array, sym.Matrix], ...],
-        argument_symbols: tp.Tuple[sym.Symbol],
-        time_symbol: tp.Optional[sym.Symbol] = None,
-        numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
-        squeeze_column_vectors: tp.Optional[tp.Tuple[bool, ...]] = None,
-        perform_cse: bool = True,
-        lazy_initialization: bool = False,
-        pre_attach: tp.Optional[tp.Tuple[bool, ...]] = None,
-        dtype: np.generic = np.float32):
+            self,
+            symbolic_array_expressions:
+                tp.Tuple[tp.Union[sym.Array, sym.Matrix], ...],
+            argument_symbols: tp.Tuple[sym.Symbol],
+            time_symbol: tp.Optional[sym.Symbol] = None,
+            numeric_time_functions:
+                tp.Optional[tp.Dict[str, tp.Callable]] = None,
+            squeeze_column_vectors: tp.Optional[tp.Tuple[bool, ...]] = None,
+            perform_cse: bool = True,
+            lazy_initialization: bool = False,
+            pre_attach: tp.Optional[tp.Tuple[bool, ...]] = None,
+            dtype: np.generic = np.float32):
 
         if time_symbol is None:
             if numeric_time_functions is not None and len(numeric_time_functions) != 0:
-                raise ValueError('time_symbol must not be none if numeric_time_functions are proviced')
+                raise ValueError('Argument time_symbol must not be none if '
+                                 'numeric_time_functions are provided.')
 
-            time_symbol = DUMMY_TIME_SYMBOL,
+            if any([DUMMY_TIME_SYMBOL
+                    in symbolic_array_expression.free_symbols
+                    for symbolic_array_expression
+                    in symbolic_array_expressions]):
+                raise ValueError('Argument time_symbol must be provided '
+                                 'explicity if expression contains '
+                                 'DUMMY_TIME_SYMBOL.')
+
+            time_symbol = DUMMY_TIME_SYMBOL
+            self._time_symbol_provided = False
+        else:
+            self._time_symbol_provided = True
 
         if numeric_time_functions is None:
             numeric_time_functions = dict()
@@ -373,7 +386,7 @@ class LambdifiedArrayExpressions(object):
     def evaluate_with_list_of_state_vectors(
             self,
             list_of_state_vectors: tp.List[NumericArray],
-            t: float,
+            t: tp.Optional[float] = None,
             gpu: bool = False) \
             -> tp.Tuple[NumericArray, ...]:
         """
@@ -394,6 +407,17 @@ class LambdifiedArrayExpressions(object):
                  evaluated at the parameter vectors
 
         """
+        if t is None:
+            if self._time_symbol_provided:
+                raise ValueError("Argument 't' must be present if 'time_symbol'"
+                                 " was explicitly provided during "
+                                 "construction.'")
+
+            if (self._numeric_time_functions is not None and
+                    len(self._numeric_time_functions) > 0):
+                raise ValueError("Argument 't' must be provided if "
+                                 "numeric_time_functions are present in the "
+                                 "expression.")
 
         if self._functions_cpu is None or self._functions_gpu is None:
             self._perform_initialization()
@@ -406,8 +430,8 @@ class LambdifiedArrayExpressions(object):
         arguments, R \
             = _compute_replacement_functions(
                 state_vectors=list_of_state_vectors,
-                t=t,
                 number_of_state_variables=self.number_of_state_variables,
+                t=t,
                 replacement_functions=replacement_functions)
 
         results = []
@@ -443,7 +467,7 @@ class LambdifiedArrayExpressions(object):
 
     def evaluate_with_dictionary(self,
                                  symbolic_to_numeric_parameter_map: tp.Dict,
-                                 t: float) \
+                                 t: tp.Optional[float] = None) \
             -> tp.Tuple[NumericArray, ...]:
         list_of_state_vectors = \
             [symbolic_to_numeric_parameter_map[symbol]
@@ -460,7 +484,7 @@ class LambdifiedArrayExpressions(object):
                         gpu=gpu)
 
     def evaluate_with_kwargs(self,
-                             t: float,
+                             t: tp.Optional[float] = None,
                              **kwargs) \
             -> tp.Tuple[NumericArray, ...]:
 
@@ -480,7 +504,7 @@ class LambdifiedArrayExpressions(object):
 
     def evaluate(self,
                  state_matrices: tp.Tuple[NumericArray, ...],
-                 t: float) \
+                 t: tp.Optional[float] = None) \
             -> tp.Tuple[NumericArray, ...]:
         """
         This function evaluates the array expressions at arguments that are
@@ -644,7 +668,7 @@ class LambdifiedArrayExpression(object):
     def evaluate_with_list_of_state_vectors(
             self,
             list_of_state_vectors: tp.Tuple[NumericArray, ...],
-            t: float,
+            t: tp.Optional[float] = None,
             gpu: bool = False) \
             -> NumericArray:
 
@@ -656,7 +680,7 @@ class LambdifiedArrayExpression(object):
 
     def evaluate_with_dictionary(self,
                                  symbolic_to_numeric_parameter_map: tp.Dict,
-                                 t: float):
+                                 t: tp.Optional[float] = None):
         return (self
                 ._lambdified_array_expressions
                 .evaluate_with_dictionary(
@@ -665,7 +689,7 @@ class LambdifiedArrayExpression(object):
                     t=t))[0]
 
     def evaluate_with_kwargs(self,
-                             t: float,
+                             t: tp.Optional[float] = None,
                              **kwargs) \
             -> tp.Tuple[NumericArray, ...]:
         return (self
@@ -674,7 +698,7 @@ class LambdifiedArrayExpression(object):
 
     def evaluate(self,
                  state_matrices: tp.Tuple[NumericArray, ...],
-                 t: float) -> NumericArray:
+                 t: tp.Optional[float] = None) -> NumericArray:
         return self._lambdified_array_expressions.evaluate(state_matrices, t)[0]
 
 

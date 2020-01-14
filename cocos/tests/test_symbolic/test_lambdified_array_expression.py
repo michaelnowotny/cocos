@@ -48,7 +48,7 @@ def test_lambdified_array_expression():
     # numerically on the cpu or gpu.
     jacobian_f_lambdified \
         = LambdifiedVectorExpression(argument_symbols=argument_symbols,
-                                     time_symbol=t,
+                                     # time_symbol=t,
                                      symbolic_vector_expression=jacobian_f)
 
     # Compare the results on cpu and gpu with direct evaluation of the jaboian
@@ -76,7 +76,9 @@ def test_lambdified_array_expression():
          .evaluate_with_kwargs(x1=X_gpu[:, 0],
                                x2=X_gpu[:, 1],
                                x3=X_gpu[:, 2],
-                               t=0))
+                               # t=0
+                               )
+         )
     assert np.allclose(jacobian_f_numeric_gpu_direct,
                        jacobian_f_numeric_gpu_using_kwargs)
 
@@ -86,7 +88,9 @@ def test_lambdified_array_expression():
             symbolic_to_numeric_parameter_map={x1: X_gpu[:, 0],
                                                x2: X_gpu[:, 1],
                                                x3: X_gpu[:, 2]},
-            t=0))
+            # t=0
+        )
+        )
     assert np.allclose(jacobian_f_numeric_gpu_direct,
                        jacobian_f_numeric_gpu_using_dictionary)
 
@@ -107,7 +111,9 @@ def test_lambdified_array_expression():
          .evaluate_with_kwargs(x1=X_cpu[:, 0],
                                x2=X_cpu[:, 1],
                                x3=X_cpu[:, 2],
-                               t=0))
+                               # t=0
+                               )
+         )
     assert np.allclose(jacobian_f_numeric_cpu_direct,
                        jacobian_f_numeric_cpu_using_kwargs)
 
@@ -117,7 +123,9 @@ def test_lambdified_array_expression():
             symbolic_to_numeric_parameter_map={x1: X_cpu[:, 0],
                                                x2: X_cpu[:, 1],
                                                x3: X_cpu[:, 2]},
-            t=0))
+            # t=0
+        )
+        )
     assert np.allclose(jacobian_f_numeric_cpu_direct,
                        jacobian_f_numeric_cpu_using_dictionary)
 
