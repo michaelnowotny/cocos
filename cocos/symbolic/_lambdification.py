@@ -14,6 +14,8 @@ from cocos.symbolic.translations import COCOS_TRANSLATIONS
 from cocos.symbolic.utilities import find_length_of_state_vectors
 
 
+DUMMY_TIME_SYMBOL = sym.Symbol('t')
+
 ################################################################################
 # Works for both Matrices and Arrays
 ################################################################################
@@ -203,17 +205,22 @@ def _compute_result_internal(R: int,
 class LambdifiedArrayExpressions(object):
     def __init__(
         self,
+        symbolic_array_expressions:
+            tp.Tuple[tp.Union[sym.Array, sym.Matrix], ...],
         argument_symbols: tp.Tuple[sym.Symbol],
-        time_symbol: sym.Symbol,
-        symbolic_array_expressions: tp.Tuple[tp.Union[sym.Array,
-                                                      sym.Matrix],
-                                             ...],
+        time_symbol: tp.Optional[sym.Symbol] = None,
         numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
         squeeze_column_vectors: tp.Optional[tp.Tuple[bool, ...]] = None,
         perform_cse: bool = True,
         lazy_initialization: bool = False,
         pre_attach: tp.Optional[tp.Tuple[bool, ...]] = None,
         dtype: np.generic = np.float32):
+
+        if time_symbol is None:
+            if numeric_time_functions is not None and len(numeric_time_functions) != 0:
+                raise ValueError('time_symbol must not be none if numeric_time_functions are proviced')
+
+            time_symbol = DUMMY_TIME_SYMBOL,
 
         if numeric_time_functions is None:
             numeric_time_functions = dict()
@@ -242,7 +249,9 @@ class LambdifiedArrayExpressions(object):
         self._symbolic_array_expressions = symbolic_array_expressions
         self._numeric_time_functions = numeric_time_functions
         self._squeeze_column_vectors = squeeze_column_vectors
-        self._symbols = tuple([time_symbol] + list(argument_symbols))
+        self._symbols = \
+            tuple([time_symbol] +
+                   list(argument_symbols))
 
         self._perform_cse = perform_cse
         self._pre_attach = pre_attach
@@ -521,9 +530,9 @@ class LambdifiedArrayExpressions(object):
 class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
     def __init__(
          self,
-         argument_symbols: tp.Tuple[sym.Symbol, ...],
-         time_symbol: sym.Symbol,
          symbolic_matrix_expressions: tp.Tuple[sym.Matrix, ...],
+         argument_symbols: tp.Tuple[sym.Symbol, ...],
+         time_symbol: tp.Optional[sym.Symbol] = None,
          numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
          squeeze_column_vectors: tp.Optional[tp.Tuple[bool, ...]] = None,
          perform_cse: bool = True,
@@ -574,9 +583,9 @@ class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
 class LambdifiedArrayExpression(object):
     def __init__(
          self,
-         argument_symbols: tp.Tuple[sym.Symbol, ...],
-         time_symbol: sym.Symbol,
          symbolic_array_expression: tp.Union[sym.Matrix, sym.Array],
+         argument_symbols: tp.Tuple[sym.Symbol, ...],
+         time_symbol: tp.Optional[sym.Symbol] = None,
          numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
          squeeze_column_vector: bool = False,
          perform_cse: bool = True,
@@ -672,9 +681,9 @@ class LambdifiedArrayExpression(object):
 class LambdifiedMatrixExpression(LambdifiedArrayExpression):
     def __init__(
          self,
-         argument_symbols: tp.Tuple[sym.Symbol, ...],
-         time_symbol: sym.Symbol,
          symbolic_matrix_expression: sym.Matrix,
+         argument_symbols: tp.Tuple[sym.Symbol, ...],
+         time_symbol: tp.Optional[sym.Symbol] = None,
          numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
          squeeze_column_vector: bool = False,
          perform_cse: bool = True,
@@ -709,9 +718,9 @@ class LambdifiedMatrixExpression(LambdifiedArrayExpression):
 class LambdifiedVectorExpression(LambdifiedMatrixExpression):
     def __init__(
          self,
-         argument_symbols: tp.Tuple[sym.Symbol, ...],
-         time_symbol: sym.Symbol,
          symbolic_vector_expression: sym.Matrix,
+         argument_symbols: tp.Tuple[sym.Symbol, ...],
+         time_symbol: tp.Optional[sym.Symbol] = None,
          numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
          perform_cse: bool = True,
          lazy_initialization: bool = False,
