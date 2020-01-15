@@ -321,72 +321,95 @@ def compute_option_price(r: float,
 
 
 ### Numeric evaluation of SymPy array expressions on the GPU
+Cocos can compile symbolic arrays defined using SymPy to GPU or CPU code. 
+
+As an example, consider the following vector valued function.  
+![vector_valued_function](https://raw.githubusercontent.com/michaelnowotny/cocos/master/images/f_x1_x2_x3.png).  
+Here g is a scalar valued function that can be specified at a later point when 
+numerical evaluation is of interest. 
+One reason for this setup would be to retain generality. 
+Another reason might be that a symbolic representation of this function is not 
+available but one has access to an algorithm (a Python function) that can compute g. 
+
+
+The goal is to evaluate this function at many x = (x_1, x_2, x_3) in parallel on a GPU. 
+
+In order to specify this function using SumPy, begin by defining symbolic arguments
 <pre>
-import cocos.numerics as cn
-import cocos.device as cd
-import cocos.symbolic as cs
-import numpy as np
-import sympy as sym
-import time
-
-sym.init_printing()
-
-# define symbolic arguments to the function
 x1, x2, x3, t = sym.symbols('x1, x2, x3, t')
-argument_symbols = [x1, x2, x3]
+</pre>
 
-# define a function f: R^3 -> R^3
-f = sym.Matrix([[x1 + x2], [(x1+x3)**2], [sym.exp(x1 + x2)]])
-print("defining the vector valued function f(x1, x2, x3) as")
-print(f)
-print()
+Separate the state symbols 'x1', 'x2', and 'x3' from the time symbol 't' and collect them in a tuple
+<pre>
+argument_symbols = (x1, x2, x3)
+</pre>
 
-# Compute the Jacobian symbolically
+Declare an as of yet unspecified function g
+<pre>
+g = sym.Function('g')
+</pre>
+
+Define the function f
+<pre>
+f = sym.Matrix([[x1 + x2], [(g(t) * x1 + x3) ** 2], [sym.exp(x1 + x2 + g(t))]])
+</pre>
+
+Compute the Jacobian of g w.r.t x1, x2, and x3 symbolically
+<pre>
 jacobian_f = f.jacobian([x1, x2, x3])
-print("symbolically derived Jacobian:")
-print(jacobian_f)
-print()
+</pre>
+The Jacobian is given by  
+![jacobian_of_vector_valued_function](https://raw.githubusercontent.com/michaelnowotny/cocos/master/images/jacobian_f_x1_x2_x3.png)
 
-# Convert the symbolic array expression to an object that can evaluated
-# numerically on the cpu or gpu.
+Specify the concrete form of g as g(t) = ln(t)
+<pre>
+def numeric_time_function(t: float):
+    return np.log(t)
+</pre>
+
+Convert the symbolic array expression to an object that can evaluated numerically on the cpu or gpu
+<pre>
 jacobian_f_lambdified \
-    = cs.LambdifiedVectorExpression(argument_symbols=argument_symbols,
-                                    time_symbol=t,
-                                    symbolic_vector_expression=jacobian_f)
+    = LambdifiedMatrixExpression(
+        argument_symbols=argument_symbols,
+        time_symbol=t,
+        symbolic_matrix_expression=jacobian_f,
+        numeric_time_functions={'g': numeric_time_function})
+</pre>
 
-# Define a 3 dimensional vector X = (x1, x2, x3) = (1, 2, 3)
-X_gpu = cn.array([[1], [2], [3]])
-
-# Numerically evaluate the Jacobian at X = (1, 2, 3)
-print("numerical Jacobian at X = (1, 2, 3)")
-jacobian_f_lambdified.evaluate(X_gpu.transpose(), t=0)
-
-# Compare the performance on cpu and gpu by numerically evaluating the Jacobian
-# at n different vectors (x1, x2, x3)
+Generate n = 10000000 random vectors for x1, x2, and x3 at which to evaluate the function in parallel
+<pre>
 n = 10000000
-print(f'evaluating Jacobian at {n} vectors\n')
-
 X_gpu = cn.random.rand(n, 3)
 X_cpu = np.array(X_gpu)
+</pre>
 
-tic = time.time()
-jacobian_f_numeric_gpu = jacobian_f_lambdified.evaluate(X_gpu, t=0)
-cd.sync()
-time_gpu = time.time() - tic
-print(f'time on gpu: {time_gpu}')
+Numerically evaluate the Jacobian on the GPU for t=1
+<pre>
+jacobian_f_numeric_gpu = \
+    (jacobian_f_lambdified
+     .evaluate_with_kwargs(x1=X_gpu[:, 0],
+                           x2=X_gpu[:, 1],
+                           x3=X_gpu[:, 2],
+                           t=1.0))
+</pre>
 
-tic = time.time()
-jacobian_f_numeric_cpu = jacobian_f_lambdified.evaluate(X_cpu, t=0)
-time_cpu = time.time() - tic
-print(f'time on cpu: {time_cpu}')
+Numerically evaluate the Jacobian on the CPU for t=1
+<pre>
+jacobian_f_numeric_gpu = \
+    (jacobian_f_lambdified
+     .evaluate_with_kwargs(x1=X_cpu[:, 0],
+                           x2=X_cpu[:, 1],
+                           x3=X_cpu[:, 2],
+                           t=1.0))
+</pre>
 
-print(f'speedup on gpu vs cpu: {time_cpu / time_gpu}\n')
-
-# Verify that the results match
+Verify that the results match
+<pre>
 print(f'numerical results from cpu and gpu match: '
       f'{np.allclose(jacobian_f_numeric_gpu, jacobian_f_numeric_cpu)}')
-
 </pre>
+
 
 ## Benchmark
 ### Single GPU Benchmark
