@@ -387,7 +387,7 @@ class LambdifiedArrayExpressions(object):
             self,
             list_of_state_vectors: tp.List[NumericArray],
             t: tp.Optional[float] = None,
-            gpu: bool = False) \
+            gpu: tp.Optional[bool] = None) \
             -> tp.Tuple[NumericArray, ...]:
         """
         This function evaluates the array expressions at arguments that are
@@ -421,6 +421,12 @@ class LambdifiedArrayExpressions(object):
 
         if self._functions_cpu is None or self._functions_gpu is None:
             self._perform_initialization()
+
+        if gpu is None:
+            # determine whether to run on cpu or gpu based on the input types
+            gpu, _ \
+                = get_gpu_and_num_pack_by_dtype_from_iterable(
+                list_of_state_vectors)
 
         if gpu:
             replacement_functions = self._replacement_functions_gpu
@@ -467,16 +473,13 @@ class LambdifiedArrayExpressions(object):
 
     def evaluate_with_dictionary(self,
                                  symbolic_to_numeric_parameter_map: tp.Dict,
-                                 t: tp.Optional[float] = None) \
+                                 t: tp.Optional[float] = None,
+                                 gpu: tp.Optional[bool] = None) \
             -> tp.Tuple[NumericArray, ...]:
         list_of_state_vectors = \
             [symbolic_to_numeric_parameter_map[symbol]
              for symbol
              in self.argument_symbols]
-
-        # determine whether to run on cpu or gpu based on the input types
-        gpu, _ \
-            = get_gpu_and_num_pack_by_dtype_from_iterable(list_of_state_vectors)
 
         return self.evaluate_with_list_of_state_vectors(
                         list_of_state_vectors=list_of_state_vectors,
@@ -485,6 +488,7 @@ class LambdifiedArrayExpressions(object):
 
     def evaluate_with_kwargs(self,
                              t: tp.Optional[float] = None,
+                             gpu: tp.Optional[bool] = None,
                              **kwargs) \
             -> tp.Tuple[NumericArray, ...]:
 
@@ -493,10 +497,6 @@ class LambdifiedArrayExpressions(object):
              for symbol
              in self.argument_symbols]
 
-        # determine whether to run on cpu or gpu based on the input types
-        gpu, _ \
-            = get_gpu_and_num_pack_by_dtype_from_iterable(list_of_state_vectors)
-
         return self.evaluate_with_list_of_state_vectors(
                         list_of_state_vectors=list_of_state_vectors,
                         t=t,
@@ -504,7 +504,8 @@ class LambdifiedArrayExpressions(object):
 
     def evaluate(self,
                  state_matrices: tp.Tuple[NumericArray, ...],
-                 t: tp.Optional[float] = None) \
+                 t: tp.Optional[float] = None,
+                 gpu: tp.Optional[bool] = None) \
             -> tp.Tuple[NumericArray, ...]:
         """
         This function evaluates the array expressions at arguments that are
@@ -530,10 +531,6 @@ class LambdifiedArrayExpressions(object):
             else:
                 raise TypeError("state_variables must be of type "
                                 "Sequence[Union[numpy.ndarray, cocos.ndarray]]")
-
-        # determine whether to run on cpu or gpu based on the input types
-        gpu, _ \
-            = get_gpu_and_num_pack_by_dtype_from_iterable(state_matrices)
 
         list_of_state_vectors = []
         # If a state matrix has more than one axis, it is separated it into a
@@ -669,7 +666,7 @@ class LambdifiedArrayExpression(object):
             self,
             list_of_state_vectors: tp.Tuple[NumericArray, ...],
             t: tp.Optional[float] = None,
-            gpu: bool = False) \
+            gpu: tp.Optional[bool] = None) \
             -> NumericArray:
 
         return (self
@@ -680,26 +677,36 @@ class LambdifiedArrayExpression(object):
 
     def evaluate_with_dictionary(self,
                                  symbolic_to_numeric_parameter_map: tp.Dict,
-                                 t: tp.Optional[float] = None):
+                                 t: tp.Optional[float] = None,
+                                 gpu: tp.Optional[bool] = None):
         return (self
                 ._lambdified_array_expressions
                 .evaluate_with_dictionary(
                     symbolic_to_numeric_parameter_map
                     =symbolic_to_numeric_parameter_map,
-                    t=t))[0]
+                    t=t,
+                    gpu=gpu))[0]
 
     def evaluate_with_kwargs(self,
                              t: tp.Optional[float] = None,
+                             gpu: tp.Optional[bool] = None,
                              **kwargs) \
             -> tp.Tuple[NumericArray, ...]:
         return (self
                 ._lambdified_array_expressions
-                .evaluate_with_kwargs(t=t, **kwargs)[0])
+                .evaluate_with_kwargs(t=t,
+                                      gpu=gpu,
+                                      **kwargs)[0])
 
     def evaluate(self,
                  state_matrices: tp.Tuple[NumericArray, ...],
-                 t: tp.Optional[float] = None) -> NumericArray:
-        return self._lambdified_array_expressions.evaluate(state_matrices, t)[0]
+                 t: tp.Optional[float] = None,
+                 gpu: tp.Optional[bool] = None) -> NumericArray:
+        return (self
+                ._lambdified_array_expressions
+                .evaluate(state_matrices=state_matrices,
+                          t=t,
+                          gpu=gpu)[0])
 
 
 class LambdifiedMatrixExpression(LambdifiedArrayExpression):
