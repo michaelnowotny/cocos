@@ -87,6 +87,21 @@ def lambdify_array_with_modules(
         numeric_time_functions: tp.Dict[str, tp.Callable],
         modules: tp.Tuple[str, ...]) \
         -> tp.Tuple[tp.Callable, ...]:
+    """
+    This function takes a SymPy array, unravals the index in Fortran order and
+    lambdifies each element separately.
+
+    Args:
+        symbols: a tuple of SymPy symbols that are arguments to the function
+        array_expression: a SymPy matrix or array
+        numeric_time_functions: a dictionary mapping the names of functions of
+                                time to Python functions
+        modules: modules that should be included
+
+    Returns: a tuple of functions of the specified argument representing the
+             elements of the symbolic array in Fortran order
+
+    """
 
     if not isinstance(modules, list):
         modules = list(modules)
@@ -471,11 +486,29 @@ class LambdifiedArrayExpressions(object):
 
         return tuple(results)
 
-    def evaluate_with_dictionary(self,
-                                 symbolic_to_numeric_parameter_map: tp.Dict,
-                                 t: tp.Optional[float] = None,
-                                 gpu: tp.Optional[bool] = None) \
+    def evaluate_with_dictionary(
+            self,
+            symbolic_to_numeric_parameter_map: tp.Dict[sym.Symbol, tp.Any],
+            t: tp.Optional[float] = None,
+            gpu: tp.Optional[bool] = None) \
             -> tp.Tuple[NumericArray, ...]:
+        """
+        This function evaluates the array expressions at arguments that are
+        dictionaries mapping symbolic parameters to one-dimensional numeric
+        arrays or scalars and returns the resulting arrays as a tuple.
+
+        Args:
+            symbolic_to_numeric_parameter_map:
+                A dictionary mapping symbolic parameters to numeric arrays or
+                scalars.
+
+            t: time parameter
+            gpu: whether to evaluate the array expressions on the GPU
+
+        Returns: a tuple of arrays corresponding to the array expressions
+                 evaluated at the parameter vectors
+
+        """
         list_of_state_vectors = \
             [symbolic_to_numeric_parameter_map[symbol]
              for symbol
@@ -491,7 +524,20 @@ class LambdifiedArrayExpressions(object):
                              gpu: tp.Optional[bool] = None,
                              **kwargs) \
             -> tp.Tuple[NumericArray, ...]:
+        """
+        This function evaluates the array expressions using the symbol names
+        given by keyword arguments.
 
+        Args:
+            t: time parameter
+            gpu: whether to evaluate the array expressions on the GPU
+            kwargs: a dictionary mapping parameter names to numeric arrays or
+                    scalars
+
+        Returns: a tuple of arrays corresponding to the array expressions
+                 evaluated at the parameter vectors
+
+        """
         list_of_state_vectors = \
             [kwargs[symbol.name]
              for symbol
@@ -511,7 +557,8 @@ class LambdifiedArrayExpressions(object):
         This function evaluates the array expressions at arguments that are
         represented either as vectors or as horizontally concatenated vectors
         (i.e. arrays with 2 axes). It decomposes these matrices into column
-        vectors and evaluates the array functions with this list of column.
+        vectors and evaluates the array functions with this list of column
+        vectors.
 
         The function returns a tuple of result arrays (one for each array
         function).
@@ -519,12 +566,12 @@ class LambdifiedArrayExpressions(object):
         Args:
             state_matrices: a tuple of matrices, vectors, or scalars
             t: time parameter
+            gpu: whether to evaluate the array expressions on the GPU
 
         Returns: a tuple of arrays corresponding to the array expressions
                  evaluated at the parameter vectors
 
         """
-
         if not isinstance(state_matrices, collections.Sequence):
             if isinstance(state_matrices, (np.ndarray, cn.ndarray)):
                 state_matrices = [state_matrices]
@@ -668,6 +715,24 @@ class LambdifiedArrayExpression(object):
             t: tp.Optional[float] = None,
             gpu: tp.Optional[bool] = None) \
             -> NumericArray:
+        """
+        This function evaluates the array expression at arguments that are
+        vectors (arrays with a single axis) or scalars and returns the resulting
+        array.
+
+        Args:
+            list_of_state_vectors:
+                A list of one-dimensional numeric arrays. The length of this
+                list must match the number of arguments to the array-valued
+                functions.
+
+            t: time parameter
+            gpu: whether to evaluate the array expression on the GPU
+
+        Returns: an array corresponding to the array expressions evaluated at
+                 the parameter vectors
+
+        """
 
         return (self
                 ._lambdified_array_expressions
@@ -679,6 +744,23 @@ class LambdifiedArrayExpression(object):
                                  symbolic_to_numeric_parameter_map: tp.Dict,
                                  t: tp.Optional[float] = None,
                                  gpu: tp.Optional[bool] = None):
+        """
+        This function evaluates the array expression at arguments that are
+        dictionaries mapping symbolic parameters to one-dimensional numeric
+        arrays or scalars and returns the resulting array.
+
+        Args:
+            symbolic_to_numeric_parameter_map:
+                A dictionary mapping symbolic parameters to numeric arrays or
+                scalars.
+
+            t: time parameter
+            gpu: whether to evaluate the array expression on the GPU
+
+        Returns: an array corresponding to the array expressions evaluated at
+                 the parameter vectors
+
+        """
         return (self
                 ._lambdified_array_expressions
                 .evaluate_with_dictionary(
@@ -692,6 +774,20 @@ class LambdifiedArrayExpression(object):
                              gpu: tp.Optional[bool] = None,
                              **kwargs) \
             -> tp.Tuple[NumericArray, ...]:
+        """
+        This function evaluates the array expression using the symbol names
+        given by keyword arguments.
+
+        Args:
+            t: time parameter
+            gpu: whether to evaluate the array expression on the GPU
+            kwargs: a dictionary mapping parameter names to numeric arrays or
+                    scalars
+
+        Returns: an array corresponding to the array expressions evaluated at
+                 the parameter vectors
+
+        """
         return (self
                 ._lambdified_array_expressions
                 .evaluate_with_kwargs(t=t,
@@ -702,6 +798,21 @@ class LambdifiedArrayExpression(object):
                  state_matrices: tp.Tuple[NumericArray, ...],
                  t: tp.Optional[float] = None,
                  gpu: tp.Optional[bool] = None) -> NumericArray:
+        """
+        This function evaluates the array expression at arguments that are
+        represented either as vectors or as horizontally concatenated vectors
+        (i.e. arrays with 2 axes). It decomposes these matrices into column
+        vectors and evaluates the array functions with this list of column vectors.
+
+        Args:
+            state_matrices: a tuple of matrices, vectors, or scalars
+            t: time parameter
+            gpu: whether to evaluate the array expression on the GPU
+
+        Returns: an array corresponding to the array expressions
+                 evaluated at the parameter vectors
+
+        """
         return (self
                 ._lambdified_array_expressions
                 .evaluate(state_matrices=state_matrices,
