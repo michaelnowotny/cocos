@@ -5,7 +5,7 @@ import numpy as np
 import sympy as sym
 
 from cocos import numerics as cn
-from cocos.numerics.data_types import NumericArray
+from cocos.numerics.data_types import NumericArray, NumericArrayOrScalar
 from cocos.utilities import check_and_make_sequence
 from cocos.numerics.numerical_package_selector import \
     select_num_pack, \
@@ -20,7 +20,7 @@ DUMMY_TIME_SYMBOL = sym.Symbol('t')
 # Works for both Matrices and Arrays
 ################################################################################
 def _compute_replacement_functions(
-        state_vectors: tp.List[tp.Union[float, NumericArray]],
+        state_vectors: tp.List[NumericArrayOrScalar],
         number_of_state_variables: int,
         t: tp.Optional[float] = None,
         replacement_functions: tp.Optional[tp.Tuple[tp.Callable, ...]] = None) \
@@ -151,7 +151,7 @@ def lambdify_array(
 
 def _compute_result_internal(R: int,
                              dimensions: tp.Tuple[int, ...],
-                             arguments: tp.List[tp.Union[float, NumericArray]],
+                             arguments: tp.List[NumericArrayOrScalar],
                              functions_cpu: tp.Tuple[tp.Callable, ...],
                              functions_gpu: tp.Tuple[tp.Callable, ...],
                              pre_attach: bool,
@@ -400,7 +400,7 @@ class LambdifiedArrayExpressions(object):
 
     def evaluate_with_list_of_state_vectors(
             self,
-            list_of_state_vectors: tp.List[NumericArray],
+            list_of_state_vectors: tp.List[NumericArrayOrScalar],
             t: tp.Optional[float] = None,
             gpu: tp.Optional[bool] = None) \
             -> tp.Tuple[NumericArray, ...]:
@@ -488,7 +488,8 @@ class LambdifiedArrayExpressions(object):
 
     def evaluate_with_dictionary(
             self,
-            symbolic_to_numeric_parameter_map: tp.Dict[sym.Symbol, tp.Any],
+            symbolic_to_numeric_parameter_map: tp.Dict[sym.Symbol,
+                                                       NumericArrayOrScalar],
             t: tp.Optional[float] = None,
             gpu: tp.Optional[bool] = None) \
             -> tp.Tuple[NumericArray, ...]:
@@ -549,7 +550,7 @@ class LambdifiedArrayExpressions(object):
                         gpu=gpu)
 
     def evaluate(self,
-                 state_matrices: tp.Tuple[NumericArray, ...],
+                 state_matrices: tp.Tuple[NumericArrayOrScalar, ...],
                  t: tp.Optional[float] = None,
                  gpu: tp.Optional[bool] = None) \
             -> tp.Tuple[NumericArray, ...]:
@@ -711,7 +712,7 @@ class LambdifiedArrayExpression(object):
 
     def evaluate_with_list_of_state_vectors(
             self,
-            list_of_state_vectors: tp.Tuple[NumericArray, ...],
+            list_of_state_vectors: tp.Tuple[NumericArrayOrScalar, ...],
             t: tp.Optional[float] = None,
             gpu: tp.Optional[bool] = None) \
             -> NumericArray:
@@ -740,10 +741,12 @@ class LambdifiedArrayExpression(object):
                                                      t,
                                                      gpu)[0])
 
-    def evaluate_with_dictionary(self,
-                                 symbolic_to_numeric_parameter_map: tp.Dict,
-                                 t: tp.Optional[float] = None,
-                                 gpu: tp.Optional[bool] = None):
+    def evaluate_with_dictionary(
+            self,
+            symbolic_to_numeric_parameter_map: tp.Dict[sym.Symbol,
+                                                       NumericArrayOrScalar],
+            t: tp.Optional[float] = None,
+            gpu: tp.Optional[bool] = None):
         """
         This function evaluates the array expression at arguments that are
         dictionaries mapping symbolic parameters to one-dimensional numeric
@@ -795,7 +798,7 @@ class LambdifiedArrayExpression(object):
                                       **kwargs)[0])
 
     def evaluate(self,
-                 state_matrices: tp.Tuple[NumericArray, ...],
+                 state_matrices: tp.Tuple[NumericArrayOrScalar, ...],
                  t: tp.Optional[float] = None,
                  gpu: tp.Optional[bool] = None) -> NumericArray:
         """

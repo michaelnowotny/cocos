@@ -1,3 +1,4 @@
+from numbers import Number
 import numpy as np
 import typing as tp
 
@@ -30,3 +31,7 @@ ComplexOrFloatOrNumericArray \
                  float,
                  np.ndarray,
                  cn.ndarray)
+
+NumericArrayOrScalar = tp.TypeVar('NumericArrayOrScalar',
+                                  np.ndarray,
+                                  cn.ndarray, Number)
