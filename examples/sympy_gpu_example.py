@@ -65,7 +65,7 @@ jacobian_f_lambdified \
         argument_symbols=argument_symbols,
         time_symbol=t,
         symbolic_matrix_expression=jacobian_f,
-        numeric_time_functions={'g': numeric_time_function})
+        symbolic_time_function_name_to_numeric_time_function_map={'g': numeric_time_function})
 
 # Define a 3 dimensional vector X = (x1, x2, x3) = (1, 2, 3)
 X_gpu = cn.array([[1], [2], [3]])

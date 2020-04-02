@@ -84,7 +84,8 @@ def _compute_replacement_functions(
 def lambdify_array_with_modules(
         symbols: tp.Tuple[sym.Symbol, ...],
         array_expression: tp.Union[sym.Array, sym.MatrixBase],
-        numeric_time_functions: tp.Dict[str, tp.Callable],
+        symbolic_time_function_name_to_numeric_time_function_map:
+        tp.Dict[str, tp.Callable],
         modules: tp.Tuple[str, ...]) \
         -> tp.Tuple[tp.Callable, ...]:
     """
@@ -94,7 +95,7 @@ def lambdify_array_with_modules(
     Args:
         symbols: a tuple of SymPy symbols that are arguments to the function
         array_expression: a SymPy matrix or array
-        numeric_time_functions: a dictionary mapping the names of functions of
+        symbolic_time_function_name_to_numeric_time_function_map: a dictionary mapping the names of functions of
                                 time to Python functions
         modules: modules that should be included
 
@@ -118,7 +119,7 @@ def lambdify_array_with_modules(
         index = tuple(np.unravel_index(i, array_expression.shape, order='F'))
         result.append(sym.lambdify(args=symbols,
                                    expr=array_expression[index],
-                                   modules=[numeric_time_functions] + modules))
+                                   modules=[symbolic_time_function_name_to_numeric_time_function_map] + modules))
 
     return tuple(result)
 
@@ -126,24 +127,25 @@ def lambdify_array_with_modules(
 def lambdify_array(
         symbols: tp.Tuple[sym.Symbol, ...],
         array_expression: tp.Union[sym.Array, sym.MatrixBase],
-        numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None) \
+        symbolic_time_function_name_to_numeric_time_function_map:
+        tp.Optional[tp.Dict[str, tp.Callable]] = None) \
         -> tp.Tuple[tp.Tuple[tp.Callable, ...], tp.Tuple[tp.Callable, ...]]:
 
-    if numeric_time_functions is None:
-        numeric_time_functions = dict()
+    if symbolic_time_function_name_to_numeric_time_function_map is None:
+        symbolic_time_function_name_to_numeric_time_function_map = dict()
 
     functions_cpu = \
         lambdify_array_with_modules(
             symbols=symbols,
             array_expression=array_expression,
-            numeric_time_functions=numeric_time_functions,
+            symbolic_time_function_name_to_numeric_time_function_map=symbolic_time_function_name_to_numeric_time_function_map,
             modules=('numpy', ))
 
     functions_gpu = \
         lambdify_array_with_modules(
             symbols=symbols,
             array_expression=array_expression,
-            numeric_time_functions=numeric_time_functions,
+            symbolic_time_function_name_to_numeric_time_function_map=symbolic_time_function_name_to_numeric_time_function_map,
             modules=(COCOS_TRANSLATIONS, ))
 
     return functions_cpu, functions_gpu
@@ -221,11 +223,11 @@ class LambdifiedArrayExpressions(object):
     def __init__(
             self,
             symbolic_array_expressions:
-                tp.Tuple[tp.Union[sym.Array, sym.Matrix], ...],
+            tp.Tuple[tp.Union[sym.Array, sym.Matrix], ...],
             argument_symbols: tp.Tuple[sym.Symbol],
             time_symbol: tp.Optional[sym.Symbol] = None,
-            numeric_time_functions:
-                tp.Optional[tp.Dict[str, tp.Callable]] = None,
+            symbolic_time_function_name_to_numeric_time_function_map:
+            tp.Optional[tp.Dict[str, tp.Callable]] = None,
             squeeze_column_vectors: tp.Optional[tp.Tuple[bool, ...]] = None,
             perform_cse: bool = True,
             lazy_initialization: bool = False,
@@ -233,9 +235,11 @@ class LambdifiedArrayExpressions(object):
             dtype: np.generic = np.float32):
 
         if time_symbol is None:
-            if numeric_time_functions is not None and len(numeric_time_functions) != 0:
-                raise ValueError('Argument time_symbol must not be none if '
-                                 'numeric_time_functions are provided.')
+            if symbolic_time_function_name_to_numeric_time_function_map is not None and len(symbolic_time_function_name_to_numeric_time_function_map) != 0:
+                raise ValueError(
+                        'Argument time_symbol must not be none if '
+                        'symbolic_time_function_name_to_numeric_time_function_map '
+                        'is provided.')
 
             if any([DUMMY_TIME_SYMBOL
                     in symbolic_array_expression.free_symbols
@@ -250,8 +254,8 @@ class LambdifiedArrayExpressions(object):
         else:
             self._time_symbol_provided = True
 
-        if numeric_time_functions is None:
-            numeric_time_functions = dict()
+        if symbolic_time_function_name_to_numeric_time_function_map is None:
+            symbolic_time_function_name_to_numeric_time_function_map = dict()
 
         symbolic_array_expressions \
             = tuple(check_and_make_sequence(symbolic_array_expressions,
@@ -275,7 +279,8 @@ class LambdifiedArrayExpressions(object):
         self._argument_symbols = argument_symbols
         self._time_symbol = time_symbol
         self._symbolic_array_expressions = symbolic_array_expressions
-        self._numeric_time_functions = numeric_time_functions
+        self._symbolic_time_function_name_to_numeric_time_function_map = \
+            symbolic_time_function_name_to_numeric_time_function_map
         self._squeeze_column_vectors = squeeze_column_vectors
         self._symbols = \
             tuple([time_symbol] +
@@ -310,14 +315,14 @@ class LambdifiedArrayExpressions(object):
                 replacement_functions_cpu.append(
                     sym.lambdify(syms,
                                  v[1],
-                                 modules=[self._numeric_time_functions,
+                                 modules=[self._symbolic_time_function_name_to_numeric_time_function_map,
                                           'numpy']))
 
                 replacement_functions_gpu.append(
                     sym.lambdify(
                         syms,
                         v[1],
-                        modules=[self._numeric_time_functions,
+                        modules=[self._symbolic_time_function_name_to_numeric_time_function_map,
                                  COCOS_TRANSLATIONS]))
 
                 syms.append(v[0])
@@ -329,7 +334,7 @@ class LambdifiedArrayExpressions(object):
                 functions_cpu, functions_gpu \
                     = lambdify_array(tuple(syms),
                                      symbolic_matrix_expression,
-                                     self._numeric_time_functions)
+                                     self._symbolic_time_function_name_to_numeric_time_function_map)
 
                 self._functions_cpu.append(functions_cpu)
                 self._functions_gpu.append(functions_gpu)
@@ -339,7 +344,7 @@ class LambdifiedArrayExpressions(object):
                     = lambdify_array(
                         symbols=self._symbols,
                         array_expression=symbolic_matrix_expression,
-                        numeric_time_functions=self._numeric_time_functions)
+                        symbolic_time_function_name_to_numeric_time_function_map=self._symbolic_time_function_name_to_numeric_time_function_map)
 
                 self._functions_cpu.append(functions_cpu)
                 self._functions_gpu.append(functions_gpu)
@@ -383,8 +388,8 @@ class LambdifiedArrayExpressions(object):
         return self._symbolic_array_expressions
 
     @property
-    def numeric_time_functions(self) -> tp.Dict[str, tp.Callable]:
-        return self._numeric_time_functions
+    def symbolic_time_function_name_to_numeric_time_function_map(self) -> tp.Dict[str, tp.Callable]:
+        return self._symbolic_time_function_name_to_numeric_time_function_map
 
     @property
     def symbols(self) -> tp.Tuple[sym.Symbol, ...]:
@@ -428,11 +433,12 @@ class LambdifiedArrayExpressions(object):
                                  " was explicitly provided during "
                                  "construction.'")
 
-            if (self._numeric_time_functions is not None and
-                    len(self._numeric_time_functions) > 0):
-                raise ValueError("Argument 't' must be provided if "
-                                 "numeric_time_functions are present in the "
-                                 "expression.")
+            if (self._symbolic_time_function_name_to_numeric_time_function_map is not None and
+                    len(self._symbolic_time_function_name_to_numeric_time_function_map) > 0):
+                raise ValueError(
+                        "Argument 't' must be provided if "
+                        "symbolic_time_function_name_to_numeric_time_function_map "
+                        "is provided.")
 
         if self._functions_cpu is None or self._functions_gpu is None:
             self._perform_initialization()
@@ -602,20 +608,20 @@ class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
          symbolic_matrix_expressions: tp.Tuple[sym.Matrix, ...],
          argument_symbols: tp.Tuple[sym.Symbol, ...],
          time_symbol: tp.Optional[sym.Symbol] = None,
-         numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
+         symbolic_time_function_name_to_numeric_time_function_map: tp.Optional[tp.Dict[str, tp.Callable]] = None,
          squeeze_column_vectors: tp.Optional[tp.Tuple[bool, ...]] = None,
          perform_cse: bool = True,
          lazy_initialization: bool = False,
          pre_attach: tp.Optional[tp.Tuple[bool, ...]] = None,
          dtype: np.generic = np.float32):
 
-        if numeric_time_functions is None:
-            numeric_time_functions = dict()
+        if symbolic_time_function_name_to_numeric_time_function_map is None:
+            symbolic_time_function_name_to_numeric_time_function_map = dict()
 
         super().__init__(argument_symbols=argument_symbols,
                          time_symbol=time_symbol,
                          symbolic_array_expressions=symbolic_matrix_expressions,
-                         numeric_time_functions=numeric_time_functions,
+                         symbolic_time_function_name_to_numeric_time_function_map=symbolic_time_function_name_to_numeric_time_function_map,
                          squeeze_column_vectors=squeeze_column_vectors,
                          perform_cse=perform_cse,
                          lazy_initialization=lazy_initialization,
@@ -655,7 +661,8 @@ class LambdifiedArrayExpression(object):
          symbolic_array_expression: tp.Union[sym.Matrix, sym.Array],
          argument_symbols: tp.Tuple[sym.Symbol, ...],
          time_symbol: tp.Optional[sym.Symbol] = None,
-         numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
+         symbolic_time_function_name_to_numeric_time_function_map:
+         tp.Optional[tp.Dict[str, tp.Callable]] = None,
          squeeze_column_vector: bool = False,
          perform_cse: bool = True,
          lazy_initialization: bool = False,
@@ -667,7 +674,7 @@ class LambdifiedArrayExpression(object):
                 argument_symbols=argument_symbols,
                 time_symbol=time_symbol,
                 symbolic_array_expressions=(symbolic_array_expression, ),
-                numeric_time_functions=numeric_time_functions,
+                symbolic_time_function_name_to_numeric_time_function_map=symbolic_time_function_name_to_numeric_time_function_map,
                 squeeze_column_vectors=(squeeze_column_vector, ),
                 perform_cse=perform_cse,
                 lazy_initialization=lazy_initialization,
@@ -699,8 +706,11 @@ class LambdifiedArrayExpression(object):
         return self._lambdified_array_expressions.symbolic_array_expressions[0]
 
     @property
-    def numeric_time_functions(self) -> tp.Dict[str, tp.Callable]:
-        return self._lambdified_array_expressions.numeric_time_functions
+    def symbolic_time_function_name_to_numeric_time_function_map(self) \
+            -> tp.Dict[str, tp.Callable]:
+        return (self
+                ._lambdified_array_expressions
+                .symbolic_time_function_name_to_numeric_time_function_map)
 
     @property
     def symbols(self) -> tp.Tuple[sym.Symbol, ...]:
@@ -829,7 +839,7 @@ class LambdifiedMatrixExpression(LambdifiedArrayExpression):
          symbolic_matrix_expression: sym.Matrix,
          argument_symbols: tp.Tuple[sym.Symbol, ...],
          time_symbol: tp.Optional[sym.Symbol] = None,
-         numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
+         symbolic_time_function_name_to_numeric_time_function_map: tp.Optional[tp.Dict[str, tp.Callable]] = None,
          squeeze_column_vector: bool = False,
          perform_cse: bool = True,
          lazy_initialization: bool = False,
@@ -839,7 +849,7 @@ class LambdifiedMatrixExpression(LambdifiedArrayExpression):
         super().__init__(argument_symbols=argument_symbols,
                          time_symbol=time_symbol,
                          symbolic_array_expression=symbolic_matrix_expression,
-                         numeric_time_functions=numeric_time_functions,
+                         symbolic_time_function_name_to_numeric_time_function_map=symbolic_time_function_name_to_numeric_time_function_map,
                          squeeze_column_vector=squeeze_column_vector,
                          perform_cse=perform_cse,
                          lazy_initialization=lazy_initialization,
@@ -866,7 +876,7 @@ class LambdifiedVectorExpression(LambdifiedMatrixExpression):
          symbolic_vector_expression: sym.Matrix,
          argument_symbols: tp.Tuple[sym.Symbol, ...],
          time_symbol: tp.Optional[sym.Symbol] = None,
-         numeric_time_functions: tp.Optional[tp.Dict[str, tp.Callable]] = None,
+         symbolic_time_function_name_to_numeric_time_function_map: tp.Optional[tp.Dict[str, tp.Callable]] = None,
          perform_cse: bool = True,
          lazy_initialization: bool = False,
          pre_attach: bool = True,
@@ -875,7 +885,7 @@ class LambdifiedVectorExpression(LambdifiedMatrixExpression):
         super().__init__(argument_symbols=argument_symbols,
                          time_symbol=time_symbol,
                          symbolic_matrix_expression=symbolic_vector_expression,
-                         numeric_time_functions=numeric_time_functions,
+                         symbolic_time_function_name_to_numeric_time_function_map=symbolic_time_function_name_to_numeric_time_function_map,
                          squeeze_column_vector=True,
                          perform_cse=perform_cse,
                          lazy_initialization=lazy_initialization,
