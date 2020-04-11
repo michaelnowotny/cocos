@@ -63,14 +63,16 @@ def _binary_method(rhs,
     return ndarray(new_af_array)
 
 
-def _unary_function(x, func) -> 'ndarray':
+def _unary_function(x, af_func: tp.Callable, np_func: tp.Callable) -> 'ndarray':
     _verify_operand(x)
     # print("unary function argument is a {}".format(type(x)))
     if isinstance(x, ndarray):
         x = x._af_array
-        return ndarray(func(x))
+        return ndarray(af_func(x))
+    elif isinstance(x, numbers.Number):
+        return np_func(x)
     else:
-        return func(x)
+        return af_func(x)
 
 
 def is_boolean(a):
@@ -898,7 +900,7 @@ def real(val: ndarray):
     Return the real part of the complex argument.
     """
 
-    return _unary_function(val, af.real)
+    return _unary_function(val, af_func=af.real, np_func=np.real)
 
 
 def imag(a: ndarray):
@@ -906,7 +908,7 @@ def imag(a: ndarray):
     Return the imaginary part of the complex argument.
     """
 
-    return _unary_function(a, af.imag)
+    return _unary_function(a, af_func=af.imag, np_func=np.imag)
 
 
 def isempty(num: ndarray) -> bool:
@@ -1430,7 +1432,7 @@ def conj(x: ndarray):
     Return the complex conjugate, element-wise.
     """
 
-    return _unary_function(x, af.conjg)
+    return _unary_function(x, af_func=af.conjg, np_func=np.conj)
 
 
 def cumsum(a: ndarray,
@@ -1538,7 +1540,7 @@ def round(a: ndarray):
     Return a with each element rounded to the given number of decimals.
     """
 
-    return _unary_function(a, af.round)
+    return _unary_function(a, af_func=af.round, np_func=np.round)
 
 
 def array_equal(a1: ndarray, a2: ndarray) -> bool:
@@ -1598,7 +1600,7 @@ def floor(a: ndarray):
     Return the floor of the input, element-wise.
     """
 
-    return _unary_function(a, af.floor)
+    return _unary_function(a, af_func=af.floor, np_func=np.floor)
 
 
 def floor_divide(x1: ndarray, x2: ndarray) -> ndarray:

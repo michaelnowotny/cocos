@@ -55,7 +55,7 @@ def inv(a: ndarray) -> ndarray:
     Compute the (multiplicative) inverse of a matrix.
     """
 
-    return _unary_function(a, af.inverse)
+    return _unary_function(a, af_func=af.inverse, np_func=np.linalg.inv)
 
 
 def matrix_rank(M: ndarray,
