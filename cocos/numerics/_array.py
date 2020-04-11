@@ -488,7 +488,15 @@ class ndarray(object):
         return new_cocos_array
 
     def __setitem__(self, key, value) -> 'ndarray':
+        from cocos.options import GPUOptions, MixedComputationErrorLevel
         af_key, required_shape = _translate_index_key(key, self.shape)
+        if isinstance(value, np.ndarray):
+            if GPUOptions.mixed_computation_error_level == MixedComputationErrorLevel.ERROR:
+                raise TypeError('Trying to set elements of a cocos array with a numpy array.')
+            elif GPUOptions.mixed_computation_error_level == MixedComputationErrorLevel.WARNING:
+                print('Trying to set elements of a cocos array with a numpy array might be slow. ')
+
+            value = array(value)
         if isinstance(value, ndarray):
             value = value._af_array
         new_af_array = self._af_array.__setitem__(af_key, value)
