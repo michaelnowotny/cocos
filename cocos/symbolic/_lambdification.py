@@ -95,8 +95,9 @@ def lambdify_array_with_modules(
     Args:
         symbols: a tuple of SymPy symbols that are arguments to the function
         array_expression: a SymPy matrix or array
-        symbolic_time_function_name_to_numeric_time_function_map: a dictionary mapping the names of functions of
-                                time to Python functions
+        symbolic_time_function_name_to_numeric_time_function_map: 
+            a dictionary mapping the names of functions of time to Python 
+            functions
         modules: modules that should be included
 
     Returns: a tuple of functions of the specified argument representing the
@@ -119,7 +120,9 @@ def lambdify_array_with_modules(
         index = tuple(np.unravel_index(i, array_expression.shape, order='F'))
         result.append(sym.lambdify(args=symbols,
                                    expr=array_expression[index],
-                                   modules=[symbolic_time_function_name_to_numeric_time_function_map] + modules))
+                                   modules
+                                   =[symbolic_time_function_name_to_numeric_time_function_map] +
+                                    modules))
 
     return tuple(result)
 
@@ -138,14 +141,16 @@ def lambdify_array(
         lambdify_array_with_modules(
             symbols=symbols,
             array_expression=array_expression,
-            symbolic_time_function_name_to_numeric_time_function_map=symbolic_time_function_name_to_numeric_time_function_map,
+            symbolic_time_function_name_to_numeric_time_function_map
+            =symbolic_time_function_name_to_numeric_time_function_map,
             modules=('numpy', ))
 
     functions_gpu = \
         lambdify_array_with_modules(
             symbols=symbols,
             array_expression=array_expression,
-            symbolic_time_function_name_to_numeric_time_function_map=symbolic_time_function_name_to_numeric_time_function_map,
+            symbolic_time_function_name_to_numeric_time_function_map
+            =symbolic_time_function_name_to_numeric_time_function_map,
             modules=(COCOS_TRANSLATIONS, ))
 
     return functions_cpu, functions_gpu
@@ -219,11 +224,11 @@ def _compute_result_internal(R: int,
 ################################################################################
 # Sequences of Lambdified Array, Matrix, and Vector-Expressions
 ################################################################################
-class LambdifiedArrayExpressions(object):
+class LambdifiedArrayExpressions:
     def __init__(
             self,
             symbolic_array_expressions:
-            tp.Tuple[tp.Union[sym.Array, sym.Matrix], ...],
+            tp.Tuple[tp.Union[sym.Array, sym.MatrixBase], ...],
             argument_symbols: tp.Tuple[sym.Symbol],
             time_symbol: tp.Optional[sym.Symbol] = None,
             symbolic_time_function_name_to_numeric_time_function_map:
@@ -235,7 +240,8 @@ class LambdifiedArrayExpressions(object):
             dtype: np.generic = np.float32):
 
         if time_symbol is None:
-            if symbolic_time_function_name_to_numeric_time_function_map is not None and len(symbolic_time_function_name_to_numeric_time_function_map) != 0:
+            if symbolic_time_function_name_to_numeric_time_function_map is not None and \
+                    len(symbolic_time_function_name_to_numeric_time_function_map) != 0:
                 raise ValueError(
                         'Argument time_symbol must not be none if '
                         'symbolic_time_function_name_to_numeric_time_function_map '
@@ -259,7 +265,15 @@ class LambdifiedArrayExpressions(object):
 
         symbolic_array_expressions \
             = tuple(check_and_make_sequence(symbolic_array_expressions,
-                                            sym.Matrix))
+                                            sym.MatrixBase))
+
+        # print(f'{symbolic_array_expressions=}\n')
+        symbolic_array_expressions = \
+                tuple(sym.ImmutableMatrix(symbolic_array_expression)
+                      if isinstance(symbolic_array_expression, sym.MatrixBase)
+                      else sym.ImmutableDenseNDimArray(symbolic_array_expression)
+                      for symbolic_array_expression
+                      in symbolic_array_expressions)
 
         if pre_attach is None:
             pre_attach = len(symbolic_array_expressions) * [True]
@@ -313,17 +327,19 @@ class LambdifiedArrayExpressions(object):
             syms = [self._time_symbol] + list(self._argument_symbols)
             for i, v in enumerate(repl):
                 replacement_functions_cpu.append(
-                    sym.lambdify(syms,
-                                 v[1],
-                                 modules=[self._symbolic_time_function_name_to_numeric_time_function_map,
-                                          'numpy']))
+                    sym.lambdify(args=syms,
+                                 expr=v[1],
+                                 modules
+                                 =[self._symbolic_time_function_name_to_numeric_time_function_map,
+                                   'numpy']))
 
                 replacement_functions_gpu.append(
                     sym.lambdify(
-                        syms,
-                        v[1],
-                        modules=[self._symbolic_time_function_name_to_numeric_time_function_map,
-                                 COCOS_TRANSLATIONS]))
+                        args=syms,
+                        expr=v[1],
+                        modules
+                        =[self._symbolic_time_function_name_to_numeric_time_function_map,
+                          COCOS_TRANSLATIONS]))
 
                 syms.append(v[0])
 
@@ -332,9 +348,11 @@ class LambdifiedArrayExpressions(object):
 
             for symbolic_matrix_expression in redu:
                 functions_cpu, functions_gpu \
-                    = lambdify_array(tuple(syms),
-                                     symbolic_matrix_expression,
-                                     self._symbolic_time_function_name_to_numeric_time_function_map)
+                    = lambdify_array(
+                        symbols=tuple(syms),
+                        array_expression=symbolic_matrix_expression,
+                        symbolic_time_function_name_to_numeric_time_function_map
+                        =self._symbolic_time_function_name_to_numeric_time_function_map)
 
                 self._functions_cpu.append(functions_cpu)
                 self._functions_gpu.append(functions_gpu)
@@ -344,7 +362,8 @@ class LambdifiedArrayExpressions(object):
                     = lambdify_array(
                         symbols=self._symbols,
                         array_expression=symbolic_matrix_expression,
-                        symbolic_time_function_name_to_numeric_time_function_map=self._symbolic_time_function_name_to_numeric_time_function_map)
+                        symbolic_time_function_name_to_numeric_time_function_map
+                        =self._symbolic_time_function_name_to_numeric_time_function_map)
 
                 self._functions_cpu.append(functions_cpu)
                 self._functions_gpu.append(functions_gpu)
@@ -384,11 +403,12 @@ class LambdifiedArrayExpressions(object):
         return self._time_symbol
 
     @property
-    def symbolic_array_expressions(self) -> tp.Tuple[sym.Matrix, ...]:
+    def symbolic_array_expressions(self) -> tp.Tuple[sym.ImmutableMatrix, ...]:
         return self._symbolic_array_expressions
 
     @property
-    def symbolic_time_function_name_to_numeric_time_function_map(self) -> tp.Dict[str, tp.Callable]:
+    def symbolic_time_function_name_to_numeric_time_function_map(self) \
+            -> tp.Dict[str, tp.Callable]:
         return self._symbolic_time_function_name_to_numeric_time_function_map
 
     @property
@@ -605,10 +625,11 @@ class LambdifiedArrayExpressions(object):
 class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
     def __init__(
          self,
-         symbolic_matrix_expressions: tp.Tuple[sym.Matrix, ...],
+         symbolic_matrix_expressions: tp.Tuple[sym.MatrixBase, ...],
          argument_symbols: tp.Tuple[sym.Symbol, ...],
          time_symbol: tp.Optional[sym.Symbol] = None,
-         symbolic_time_function_name_to_numeric_time_function_map: tp.Optional[tp.Dict[str, tp.Callable]] = None,
+         symbolic_time_function_name_to_numeric_time_function_map:
+         tp.Optional[tp.Dict[str, tp.Callable]] = None,
          squeeze_column_vectors: tp.Optional[tp.Tuple[bool, ...]] = None,
          perform_cse: bool = True,
          lazy_initialization: bool = False,
@@ -618,15 +639,17 @@ class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
         if symbolic_time_function_name_to_numeric_time_function_map is None:
             symbolic_time_function_name_to_numeric_time_function_map = dict()
 
-        super().__init__(argument_symbols=argument_symbols,
-                         time_symbol=time_symbol,
-                         symbolic_array_expressions=symbolic_matrix_expressions,
-                         symbolic_time_function_name_to_numeric_time_function_map=symbolic_time_function_name_to_numeric_time_function_map,
-                         squeeze_column_vectors=squeeze_column_vectors,
-                         perform_cse=perform_cse,
-                         lazy_initialization=lazy_initialization,
-                         pre_attach=pre_attach,
-                         dtype=dtype)
+        super().__init__(
+                    argument_symbols=argument_symbols,
+                    time_symbol=time_symbol,
+                    symbolic_array_expressions=symbolic_matrix_expressions,
+                    symbolic_time_function_name_to_numeric_time_function_map
+                    =symbolic_time_function_name_to_numeric_time_function_map,
+                    squeeze_column_vectors=squeeze_column_vectors,
+                    perform_cse=perform_cse,
+                    lazy_initialization=lazy_initialization,
+                    pre_attach=pre_attach,
+                    dtype=dtype)
 
         rows = []
         cols = []
@@ -648,17 +671,51 @@ class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
         return self._cols
 
     @property
-    def symbolic_matrix_expressions(self) -> tp.Tuple[sym.Matrix, ...]:
+    def symbolic_matrix_expressions(self) -> tp.Tuple[sym.ImmutableMatrix, ...]:
         return self.symbolic_array_expressions
+
+
+class LambdifiedVectorExpressions(LambdifiedMatrixExpressions):
+    def __init__(
+         self,
+         symbolic_vector_expressions: tp.Tuple[sym.MatrixBase, ...],
+         argument_symbols: tp.Tuple[sym.Symbol, ...],
+         time_symbol: tp.Optional[sym.Symbol] = None,
+         symbolic_time_function_name_to_numeric_time_function_map:
+         tp.Optional[tp.Dict[str, tp.Callable]] = None,
+         squeeze_column_vectors: tp.Optional[tp.Tuple[bool, ...]] = None,
+         perform_cse: bool = True,
+         lazy_initialization: bool = False,
+         pre_attach: tp.Optional[tp.Tuple[bool, ...]] = None,
+         dtype: np.generic = np.float32):
+
+        super().__init__(
+                    symbolic_matrix_expressions=symbolic_vector_expressions,
+                    argument_symbols=argument_symbols,
+                    time_symbol=time_symbol,
+                    symbolic_time_function_name_to_numeric_time_function_map
+                    =symbolic_time_function_name_to_numeric_time_function_map,
+                    squeeze_column_vectors=squeeze_column_vectors,
+                    perform_cse=perform_cse,
+                    lazy_initialization=lazy_initialization,
+                    pre_attach=pre_attach, dtype=dtype)
+
+    @property
+    def dimension(self) -> int:
+        return len(self.symbolic_vector_expressions)
+
+    @property
+    def symbolic_vector_expressions(self) -> tp.Tuple[sym.ImmutableMatrix, ]:
+        return self.symbolic_matrix_expressions
 
 
 ################################################################################
 # Single Lambdified Array, Matrix, and Vector-Expressions
 ################################################################################
-class LambdifiedArrayExpression(object):
+class LambdifiedArrayExpression:
     def __init__(
          self,
-         symbolic_array_expression: tp.Union[sym.Matrix, sym.Array],
+         symbolic_array_expression: tp.Union[sym.MatrixBase, sym.Array],
          argument_symbols: tp.Tuple[sym.Symbol, ...],
          time_symbol: tp.Optional[sym.Symbol] = None,
          symbolic_time_function_name_to_numeric_time_function_map:
@@ -670,16 +727,17 @@ class LambdifiedArrayExpression(object):
          dtype: np.generic = np.float32):
 
         self._lambdified_array_expressions = \
-            LambdifiedArrayExpressions(
-                argument_symbols=argument_symbols,
-                time_symbol=time_symbol,
-                symbolic_array_expressions=(symbolic_array_expression, ),
-                symbolic_time_function_name_to_numeric_time_function_map=symbolic_time_function_name_to_numeric_time_function_map,
-                squeeze_column_vectors=(squeeze_column_vector, ),
-                perform_cse=perform_cse,
-                lazy_initialization=lazy_initialization,
-                pre_attach=(pre_attach, ),
-                dtype=dtype)
+                LambdifiedArrayExpressions(
+                    argument_symbols=argument_symbols,
+                    time_symbol=time_symbol,
+                    symbolic_array_expressions=(symbolic_array_expression, ),
+                    symbolic_time_function_name_to_numeric_time_function_map
+                    =symbolic_time_function_name_to_numeric_time_function_map,
+                    squeeze_column_vectors=(squeeze_column_vector, ),
+                    perform_cse=perform_cse,
+                    lazy_initialization=lazy_initialization,
+                    pre_attach=(pre_attach, ),
+                    dtype=dtype)
 
     @property
     def is_column_vector(self) -> bool:
@@ -702,7 +760,7 @@ class LambdifiedArrayExpression(object):
         return self._lambdified_array_expressions.time_symbol
 
     @property
-    def symbolic_array_expression(self) -> sym.Matrix:
+    def symbolic_array_expression(self) -> sym.ImmutableMatrix:
         return self._lambdified_array_expressions.symbolic_array_expressions[0]
 
     @property
@@ -724,8 +782,7 @@ class LambdifiedArrayExpression(object):
             self,
             list_of_state_vectors: tp.Tuple[NumericArrayOrScalar, ...],
             t: tp.Optional[float] = None,
-            gpu: tp.Optional[bool] = None) \
-            -> NumericArray:
+            gpu: tp.Optional[bool] = None) -> NumericArray:
         """
         This function evaluates the array expression at arguments that are
         vectors (arrays with a single axis) or scalars and returns the resulting
@@ -756,7 +813,7 @@ class LambdifiedArrayExpression(object):
             symbolic_to_numeric_parameter_map: tp.Dict[sym.Symbol,
                                                        NumericArrayOrScalar],
             t: tp.Optional[float] = None,
-            gpu: tp.Optional[bool] = None):
+            gpu: tp.Optional[bool] = None) -> NumericArray:
         """
         This function evaluates the array expression at arguments that are
         dictionaries mapping symbolic parameters to one-dimensional numeric
@@ -786,7 +843,7 @@ class LambdifiedArrayExpression(object):
                              t: tp.Optional[float] = None,
                              gpu: tp.Optional[bool] = None,
                              **kwargs) \
-            -> tp.Tuple[NumericArray, ...]:
+            -> NumericArray:
         """
         This function evaluates the array expression using the symbol names
         given by keyword arguments.
@@ -836,10 +893,11 @@ class LambdifiedArrayExpression(object):
 class LambdifiedMatrixExpression(LambdifiedArrayExpression):
     def __init__(
          self,
-         symbolic_matrix_expression: sym.Matrix,
+         symbolic_matrix_expression: sym.MatrixBase,
          argument_symbols: tp.Tuple[sym.Symbol, ...],
          time_symbol: tp.Optional[sym.Symbol] = None,
-         symbolic_time_function_name_to_numeric_time_function_map: tp.Optional[tp.Dict[str, tp.Callable]] = None,
+         symbolic_time_function_name_to_numeric_time_function_map:
+         tp.Optional[tp.Dict[str, tp.Callable]] = None,
          squeeze_column_vector: bool = False,
          perform_cse: bool = True,
          lazy_initialization: bool = False,
@@ -849,7 +907,8 @@ class LambdifiedMatrixExpression(LambdifiedArrayExpression):
         super().__init__(argument_symbols=argument_symbols,
                          time_symbol=time_symbol,
                          symbolic_array_expression=symbolic_matrix_expression,
-                         symbolic_time_function_name_to_numeric_time_function_map=symbolic_time_function_name_to_numeric_time_function_map,
+                         symbolic_time_function_name_to_numeric_time_function_map
+                         =symbolic_time_function_name_to_numeric_time_function_map,
                          squeeze_column_vector=squeeze_column_vector,
                          perform_cse=perform_cse,
                          lazy_initialization=lazy_initialization,
@@ -869,14 +928,19 @@ class LambdifiedMatrixExpression(LambdifiedArrayExpression):
                 ._lambdified_array_expressions
                 .symbolic_array_expressions[0].shape[1])
 
+    @property
+    def symbolic_matrix_expression(self) -> sym.ImmutableMatrix:
+        return self.symbolic_array_expression
+
 
 class LambdifiedVectorExpression(LambdifiedMatrixExpression):
     def __init__(
          self,
-         symbolic_vector_expression: sym.Matrix,
+         symbolic_vector_expression: sym.MatrixBase,
          argument_symbols: tp.Tuple[sym.Symbol, ...],
          time_symbol: tp.Optional[sym.Symbol] = None,
-         symbolic_time_function_name_to_numeric_time_function_map: tp.Optional[tp.Dict[str, tp.Callable]] = None,
+         symbolic_time_function_name_to_numeric_time_function_map:
+         tp.Optional[tp.Dict[str, tp.Callable]] = None,
          perform_cse: bool = True,
          lazy_initialization: bool = False,
          pre_attach: bool = True,
@@ -885,12 +949,154 @@ class LambdifiedVectorExpression(LambdifiedMatrixExpression):
         super().__init__(argument_symbols=argument_symbols,
                          time_symbol=time_symbol,
                          symbolic_matrix_expression=symbolic_vector_expression,
-                         symbolic_time_function_name_to_numeric_time_function_map=symbolic_time_function_name_to_numeric_time_function_map,
+                         symbolic_time_function_name_to_numeric_time_function_map
+                         =symbolic_time_function_name_to_numeric_time_function_map,
                          squeeze_column_vector=True,
                          perform_cse=perform_cse,
                          lazy_initialization=lazy_initialization,
                          pre_attach=pre_attach,
                          dtype=dtype)
+
+    @property
+    def symbolic_vector_expression(self) -> sym.ImmutableMatrix:
+        return self.symbolic_matrix_expression
+
+
+class LambdifiedScalarExpression(LambdifiedVectorExpression):
+    def __init__(
+         self,
+         symbolic_expression: sym.Expr,
+         argument_symbols: tp.Tuple[sym.Symbol, ...],
+         time_symbol: tp.Optional[sym.Symbol] = None,
+         symbolic_time_function_name_to_numeric_time_function_map:
+         tp.Optional[tp.Dict[str, tp.Callable]] = None,
+         perform_cse: bool = True,
+         lazy_initialization: bool = False,
+         pre_attach: bool = True,
+         dtype: np.generic = np.float32):
+
+        super().__init__(argument_symbols=argument_symbols,
+                         time_symbol=time_symbol,
+                         symbolic_vector_expression
+                         =sym.ImmutableMatrix([symbolic_expression]),
+                         symbolic_time_function_name_to_numeric_time_function_map
+                         =symbolic_time_function_name_to_numeric_time_function_map,
+                         perform_cse=perform_cse,
+                         lazy_initialization=lazy_initialization,
+                         pre_attach=pre_attach,
+                         dtype=dtype)
+
+    @property
+    def symbolic_expression(self) -> sym.Expr:
+        return self.symbolic_matrix_expression[0, 0]
+
+    def evaluate_with_list_of_state_vectors(
+            self,
+            list_of_state_vectors: tp.Tuple[NumericArrayOrScalar, ...],
+            t: tp.Optional[float] = None,
+            gpu: tp.Optional[bool] = None) -> NumericArray:
+        """
+        This function evaluates the scalar expression at arguments that are
+        vectors (arrays with a single axis) or scalars and returns the resulting
+        array.
+
+        Args:
+            list_of_state_vectors:
+                A list of one-dimensional numeric arrays. The length of this
+                list must match the number of arguments to the array-valued
+                functions.
+
+            t: time parameter
+            gpu: whether to evaluate the array expression on the GPU
+
+        Returns: an array corresponding to the array expressions evaluated at
+                 the parameter vectors
+
+        """
+
+        return (super()
+                .evaluate_with_list_of_state_vectors(
+                    list_of_state_vectors=list_of_state_vectors,
+                    t=t,
+                    gpu=gpu)
+                .squeeze())
+
+    def evaluate_with_dictionary(
+            self,
+            symbolic_to_numeric_parameter_map: tp.Dict[sym.Symbol,
+                                                       NumericArrayOrScalar],
+            t: tp.Optional[float] = None,
+            gpu: tp.Optional[bool] = None) -> NumericArray:
+        """
+        This function evaluates the scalar expression at arguments that are
+        dictionaries mapping symbolic parameters to one-dimensional numeric
+        arrays or scalars and returns the resulting array.
+
+        Args:
+            symbolic_to_numeric_parameter_map:
+                A dictionary mapping symbolic parameters to numeric arrays or
+                scalars.
+
+            t: time parameter
+            gpu: whether to evaluate the array expression on the GPU
+
+        Returns: an array corresponding to the array expressions evaluated at
+                 the parameter vectors
+
+        """
+        return (super()
+                .evaluate_with_dictionary(symbolic_to_numeric_parameter_map
+                                          =symbolic_to_numeric_parameter_map,
+                                          t=t,
+                                          gpu=gpu)
+                .squeeze())
+
+    def evaluate_with_kwargs(self,
+                             t: tp.Optional[float] = None,
+                             gpu: tp.Optional[bool] = None,
+                             **kwargs) \
+            -> NumericArray:
+        """
+        This function evaluates the scalar expression using the symbol names
+        given by keyword arguments.
+
+        Args:
+            t: time parameter
+            gpu: whether to evaluate the array expression on the GPU
+            kwargs: a dictionary mapping parameter names to numeric arrays or
+                    scalars
+
+        Returns: an array corresponding to the array expressions evaluated at
+                 the parameter vectors
+
+        """
+        return super().evaluate_with_kwargs(t=t, gpu=gpu, **kwargs).squeeze()
+
+    def evaluate(self,
+                 state_matrices: tp.Tuple[NumericArrayOrScalar, ...],
+                 t: tp.Optional[float] = None,
+                 gpu: tp.Optional[bool] = None) -> NumericArray:
+        """
+        This function evaluates the scalar expression at arguments that are
+        represented either as vectors or as horizontally concatenated vectors
+        (i.e. arrays with 2 axes). It decomposes these matrices into column
+        vectors and evaluates the array functions with this list of column
+        vectors.
+
+        Args:
+            state_matrices: a tuple of matrices, vectors, or scalars
+            t: time parameter
+            gpu: whether to evaluate the array expression on the GPU
+
+        Returns: an array corresponding to the array expressions
+                 evaluated at the parameter vectors
+
+        """
+        return (super()
+                .evaluate(state_matrices=state_matrices,
+                          t=t,
+                          gpu=gpu)
+                .squeeze())
 
 
 def lambdify(args,

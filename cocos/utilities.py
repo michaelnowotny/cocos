@@ -1,5 +1,6 @@
 import collections
 import arrayfire as af
+import sympy as sym
 import typing as tp
 
 

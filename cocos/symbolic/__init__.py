@@ -3,9 +3,11 @@ from ._lambdification import (
     lambdify,
     LambdifiedArrayExpressions,
     LambdifiedMatrixExpressions,
+    LambdifiedVectorExpressions,
     LambdifiedArrayExpression,
     LambdifiedMatrixExpression,
-    LambdifiedVectorExpression
+    LambdifiedVectorExpression,
+    LambdifiedScalarExpression
 )
 
 from .utilities import find_length_of_state_vectors
