@@ -26,7 +26,7 @@ def is_broadcastable(shp1: tp.Tuple, shp2: tp.Tuple) -> bool:
 
 def check_and_make_sequence(sequence_candidate,
                             item_class) -> tp.Sequence:
-    if not isinstance(sequence_candidate, collections.Sequence):
+    if not isinstance(sequence_candidate, collections.abc.Sequence):
         if isinstance(sequence_candidate, item_class):
             sequence_candidate = [sequence_candidate]
         else:

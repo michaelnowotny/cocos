@@ -470,10 +470,10 @@ def logistic(loc: float = 0.0,
 def multivariate_normal(mean, cov, size: tp.Sequence[int]) \
         -> ndarray:
     d = len(mean)
-    if not isinstance(size, collections.Iterable):
+    if not isinstance(size, collections.abc.Iterable):
         size = [size]
 
-    if not isinstance(size, collections.Sequence):
+    if not isinstance(size, collections.abc.Sequence):
         size = list(size)
 
     if not cov.shape == (d, d):

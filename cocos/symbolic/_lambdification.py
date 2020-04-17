@@ -599,7 +599,7 @@ class LambdifiedArrayExpressions:
                  evaluated at the parameter vectors
 
         """
-        if not isinstance(state_matrices, collections.Sequence):
+        if not isinstance(state_matrices, collections.abc.Sequence):
             if isinstance(state_matrices, (np.ndarray, cn.ndarray)):
                 state_matrices = [state_matrices]
             else:
