@@ -146,9 +146,12 @@ if GPUOptions.use_gpu:
     from ._array import dot
 
     # from arrayfire/data.py
-    from ._array import \
-        full, \
-        tile
+    from ._array import (
+        full,
+        tile,
+        # repeat
+    )
+
     from ._data import \
         empty, \
         zeros, \

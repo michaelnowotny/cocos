@@ -1534,6 +1534,16 @@ def tile(A: ndarray, reps: tp.Union[int, tp.Tuple[int, ...]]) -> ndarray:
     return ndarray(af_array)
 
 
+def repeat(A: ndarray, repeats: int, axis: tp.Optional[int] = None):
+    if axis is None:
+        raise ValueError('axis=None is not supported')
+
+    reps = A.ndim * [1]
+    reps[axis] = repeats
+
+    return tile(A=A, reps=tuple(reps))
+
+
 # from ._arith
 def round(a: ndarray):
     """
