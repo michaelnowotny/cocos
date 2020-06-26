@@ -15,6 +15,7 @@ In addition to its numeric functionality, it allows parallel computation of SymP
 *   Multi GPU support via map-reduce.
 *   High-performance random number generators for beta, chi-square, exponential, gamma, logistic, lognormal, normal, uniform, and Wald distributions. Antithetic random numbers for uniform and normal distributions.
 *   Provides a GPU equivalent to SymPy's lambdify, which enables numeric evaluation of symbolic SymPy (multi-dimensional array) expressions on the GPU for vectors of input parameters in parallel.
+*   Adaptation of SciPy's gaussian_kde for the GPU
 
 ## Table of Contents
 
@@ -31,6 +32,7 @@ In addition to its numeric functionality, it allows parallel computation of SymP
 1.  Download and install 
     - Windows or Linux: [ArrayFire 3.6.4](http://arrayfire.s3.amazonaws.com/index.html#!/3.6.4%2F)
     - MacOS: [ArrayFire 3.5.1](http://arrayfire.s3.amazonaws.com/index.html#!/3.5.1%2F)
+    
 2.  Install Cocos via PIP: 
     <pre>
     pip install cocos 

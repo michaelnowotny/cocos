@@ -23,6 +23,7 @@ VERSION = "0.1.14"
 # What packages are required for this module to be executed?
 REQUIRED = [
     "arrayfire",
+    "contexttimer",
     "loky",
     "numpy",
     "scipy",
