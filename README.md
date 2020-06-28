@@ -468,8 +468,8 @@ Package versions used:
 This benchmark compares the runtime performance of the option pricing example 
 under a Heston stochastic volatility model for different numbers of GPU devices.
 
-The results were produced on a machine with an Intel Core i7 9700K with 32GB of 
-RAM and four NVidia GeForce GTX 1060 GPUs running Linux Mint 19.2. Two Million paths are being simulated with 
+The results were produced on a machine with an Intel Core i7 9700K with 128GB of 
+RAM and two NVidia GeForce GTX 1060 GPUs running Windows 10. Two Million paths are being simulated with 
 500 time steps per year.
 
 <table>
@@ -481,34 +481,24 @@ RAM and four NVidia GeForce GTX 1060 GPUs running Linux Mint 19.2. Two Million p
 </tr>
 <tr>
 <td>1</td>
-<td>3.2491214275360107</td>
+<td>1.8540585041046143</td>
 <td>1.0</td>
 </tr>
 <tr>
 <td>2</td>
-<td>1.644874095916748</td>
-<td>1.975300988447482</td>
-</tr>
-<tr>
-<td>3</td>
-<td>1.2264270782470703</td>
-<td>2.6492577383238904</td>
-</tr>
-<tr>
-<td>4</td>
-<td>0.8516700267791748</td>
-<td>3.8150003233335097</td>
+<td>0.9664418697357178</td>
+<td>1.9184376858709808</td>
 </tr>
 </table>
 
 
 Package versions used:
-- arrayfire: 3.7
+- arrayfire: 3.6.4
 - arrayfire-python: 3.6.20181017
-- cocos: 0.1.0
+- cocos: 0.1.14
 - CUDA: 10.1
-- NumPy: 1.17.2
-- Python: 3.7.4
+- NumPy: 1.16.4
+- Python: 3.7.3
 
 ## Functionality
 
@@ -5469,17 +5459,7 @@ Most differences between NumPy and Cocos stem from two sources:
 
 ## A Note on Hardware Configurations for Multi-GPU Computing
 Cocos implements multi-GPU functionality via process-based parallelism (one process per GPU device). 
-It is recommended to have one physical CPU core per GPU in the system in order to prevent 'starving' the GPUs. 
-Cocos has been successfully used with the following configuration:
-*   Motherboard: <a href="https://www.msi.com/Motherboard/H310-F-PRO">MSI H310-F Pro</a>
-*   CPU: <a href="https://ark.intel.com/content/www/us/en/ark/products/186604/intel-core-i7-9700k-processor-12m-cache-up-to-4-90-ghz.html">Intel Core i7 9700K</a> 
-    (support for this 9th generation Intel Core CPU requires a motherboard BIOS update on some models)
-*   CPU Cooler: <a href="https://noctua.at/en/nh-l9i">Noctua NH-L9i</a>
-*   RAM: <a href="https://www.corsair.com/us/en/Categories/Products/Memory/VENGEANCE-LPX/p/CMK32GX4M2A2666C16">Corsair Vengeance LPX 32GB (2x16GB)</a>
-*   Compute Devices: 4 x <a href="https://www.evga.com/articles/01036/evga-geforce-gtx-1060/">EVGA GeForce GTX 1060 with 6GB of memory</a>
-*   Operating System: <a href="https://linuxmint.com/download.php">Linux Mint 19.2 64bit</a> 
-
-This information is provided without any guarantees.
+It is recommended to have at least one physical CPU core per GPU in the system in order to prevent 'starving' the GPUs. 
 
 ## License
 MIT License
