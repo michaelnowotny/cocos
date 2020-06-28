@@ -416,9 +416,9 @@ print(f'numerical results from cpu and gpu match: '
 ## Benchmark
 ### Single GPU Benchmark
 This benchmark compares the runtime performance of the option pricing example 
-under a Heston stochastic volatility model on the CPU using NumPy and the GPU 
-using Cocos and CuPy. CuPy is another package that provides a NumPy-like API for 
-GPU computing.
+under a Heston stochastic volatility model on the CPU using NumPy on a single 
+core as well as on all cores simultaneously and the GPU using Cocos and CuPy. 
+CuPy is another package that provides a NumPy-like API for GPU computing.
 
 The results were produced on a machine with an Intel Core i7 3770K with 32GB of 
 RAM and a NVidia GeForce GTX 1070 running Windows 10. Two Million paths are being simulated with 
@@ -433,18 +433,23 @@ RAM and a NVidia GeForce GTX 1070 running Windows 10. Two Million paths are bein
 </tr>
 <tr>
 <td>NumPy</td>
-<td>103.13499903678894</td>
+<td>112.67600083351135</td>
 <td>1.0</td>
 </tr>
 <tr>
 <td>Cocos</td>
-<td>1.377995491027832</td>
-<td>74.84422097772007</td>
+<td>1.3659989833831787</td>
+<td>82.48615277475973</td>
 </tr>
 <tr>
 <td>CuPy</td>
-<td>2.381995677947998</td>
-<td>43.29772719219876</td>
+<td>2.3670005798339844</td>
+<td>47.60286152587853</td>
+</tr>
+<tr>
+<td>NumPy Multicore</td>
+<td>25.01400113105774</td>
+<td>4.504517299857768</td>
 </tr>
 </table>
 
@@ -453,11 +458,11 @@ RAM and a NVidia GeForce GTX 1070 running Windows 10. Two Million paths are bein
 Package versions used:
 - arrayfire: 3.6.4
 - arrayfire-python: 3.6.20181017
-- cocos: 0.0.9
+- cocos: 0.1.14
 - CUDA: 9.2
 - cupy-cuda92: 6.2.0 
 - NumPy: 1.16.4
-- Python: 3.7
+- Python: 3.7.3
 
 ### Multi-GPU Benchmark
 This benchmark compares the runtime performance of the option pricing example 
