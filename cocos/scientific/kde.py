@@ -104,31 +104,10 @@ def ensure_consistent_numeric_arrays(arrays: tp.Iterable[tp.Optional[NumericArra
                  in arrays)
 
 
-def gaussian_kernel_estimate_vectorized(points: NumericArray,
-                                        values: NumericArray,
-                                        xi: NumericArray,
-                                        precision: NumericArray,
-                                        dtype: np.generic,
-                                        gpu: bool = False) -> np.ndarray:
-    """
-    def gaussian_kernel_estimate(points, real[:, :] values, xi, precision)
-    Evaluate a multivariate Gaussian kernel estimate.
-    Parameters
-    ----------
-    points : array_like with shape (n, d)
-        Data points to estimate from in d dimenions.
-    values : real[:, :] with shape (n, p)
-        Multivariate values associated with the data points.
-    xi : array_like with shape (m, d)
-        Coordinates to evaluate the estimate at in d dimensions.
-    precision : array_like with shape (d, d)
-        Precision matrix for the Gaussian kernel.
-    Returns
-    -------
-    estimate : double[:, :] with shape (m, p)
-        Multivariate Gaussian kernel estimate evaluated at the input coordinates.
-    """
-    num_pack = select_num_pack(gpu)
+def _verify_and_get_shape_of_datapoints_datavalues_and_evaluation_points(points: NumericArray,
+                                                                         values: NumericArray,
+                                                                         xi: NumericArray) \
+        -> tp.Tuple[int, int, int]:
     n = points.shape[0]
 
     if points.ndim > 1:
@@ -146,28 +125,39 @@ def gaussian_kernel_estimate_vectorized(points: NumericArray,
         raise ValueError('p != 1 is not supported')
 
     if xi.shape[1] != d:
-        raise ValueError("points and xi must have same trailing dim")
-    if precision.shape[0] != d or precision.shape[1] != d:
-        raise ValueError("precision matrix must match data dims")
+        raise ValueError(f"points and xi must have same trailing dim but the shape of xi is {xi.shape}")
 
-    points, values, xi, precision = \
-        ensure_consistent_numeric_arrays((points, values, xi, precision), gpu)
+    return n, m, d
 
-    # Rescale the data
-    whitening = num_pack.linalg.cholesky(precision).astype(dtype, copy=False)
-    points = num_pack.dot(points, whitening).astype(dtype, copy=False)
-    xi = num_pack.dot(xi, whitening).astype(dtype, copy=False)
+
+def gaussian_kernel_estimate_vectorized_whitened(whitening: NumericArray,
+                                                 whitened_points: NumericArray,
+                                                 values: NumericArray,
+                                                 xi: NumericArray,
+                                                 norm: float,
+                                                 dtype: np.generic,
+                                                 gpu: bool) -> NumericArray:
+    # print(f'whitened_points.shape = {whitened_points.shape}')
+    # print(f'values.shape = {xi.shape}')
+    # print(f'xi.shape = {xi.shape}')
+
+    n, m, d = \
+        _verify_and_get_shape_of_datapoints_datavalues_and_evaluation_points(points=whitened_points,
+                                                                             values=values,
+                                                                             xi=xi)
+    whitened_points, values, xi, whitening = \
+        ensure_consistent_numeric_arrays((whitened_points, values, xi, whitening), gpu)
+
+    num_pack = select_num_pack(gpu)
+
+    whitened_points = whitened_points.astype(dtype, copy=False)
+    whitened_xi = num_pack.dot(xi, whitening).astype(dtype, copy=False)
     values = values.astype(dtype, copy=False)
 
-    # Evaluate the normalisation
-    norm = (2 * np.pi) ** (- d / 2) * num_pack.prod(num_pack.diag(whitening))
-
-    del whitening
-
     # Create the result array and evaluate the weighted sum
-    points = points.reshape((n, 1, d))
-    xi = xi.reshape((1, m, d))
-    residual = points - xi
+    whitened_points = whitened_points.reshape((n, 1, d))
+    whitened_xi = whitened_xi.reshape((1, m, d))
+    residual = whitened_points - whitened_xi
     arg = residual * residual
     del residual
     if d > 1:
@@ -185,6 +175,104 @@ def gaussian_kernel_estimate_vectorized(points: NumericArray,
         cd.sync()
 
     return estimate.squeeze()
+
+
+def gaussian_kernel_estimate_vectorized(points: NumericArray,
+                                        values: NumericArray,
+                                        xi: NumericArray,
+                                        precision: NumericArray,
+                                        dtype: np.generic,
+                                        gpu: bool = False) \
+        -> NumericArray:
+    """
+    def gaussian_kernel_estimate(points, real[:, :] values, xi, precision)
+    Evaluate a multivariate Gaussian kernel estimate.
+    Parameters
+    ----------
+    points : array_like with shape (n, d)
+        Data points to estimate from in d dimenions.
+    values : real[:, :] with shape (n, p)
+        Multivariate values associated with the data points.
+    xi : array_like with shape (m, d)
+        Coordinates to evaluate the estimate at in d dimensions.
+    precision : array_like with shape (d, d)
+        Precision matrix for the Gaussian kernel.
+    dtype : the result dtype
+    gpu : whether to compute the gaussian kernel estimate on the gpu
+
+    Returns
+    -------
+    estimate : double[:, :] with shape (m, p)
+        Multivariate Gaussian kernel estimate evaluated at the input coordinates.
+    """
+    num_pack = select_num_pack(gpu)
+    n, m, d = \
+        _verify_and_get_shape_of_datapoints_datavalues_and_evaluation_points(points=points,
+                                                                             values=values,
+                                                                             xi=xi)
+
+    # n = points.shape[0]
+    #
+    # if points.ndim > 1:
+    #     d = points.shape[1]
+    # else:
+    #     d = 1
+    # m = xi.shape[0]
+    #
+    # if values.ndim > 1:
+    #     p = values.shape[1]
+    # else:
+    #     p = 1
+    #
+    # if p != 1:
+    #     raise ValueError('p != 1 is not supported')
+    #
+    # if xi.shape[1] != d:
+    #     raise ValueError("points and xi must have same trailing dim")
+    # if precision.shape[0] != d or precision.shape[1] != d:
+    #     raise ValueError("precision matrix must match data dims")
+
+    points, values, xi, precision = \
+        ensure_consistent_numeric_arrays((points, values, xi, precision), gpu)
+
+    # Rescale the data
+    whitening = num_pack.linalg.cholesky(precision).astype(dtype, copy=False)
+    points = num_pack.dot(points, whitening).astype(dtype, copy=False)
+    # xi = num_pack.dot(xi, whitening).astype(dtype, copy=False)
+    values = values.astype(dtype, copy=False)
+
+    # Evaluate the normalisation
+    norm = (2 * np.pi) ** (- d / 2) * num_pack.prod(num_pack.diag(whitening))
+
+    # # Create the result array and evaluate the weighted sum
+    # points = points.reshape((n, 1, d))
+    # xi = xi.reshape((1, m, d))
+    # residual = points - xi
+    # arg = residual * residual
+    # del residual
+    # if d > 1:
+    #     assert arg.shape == (n, m, d)
+    #     arg = num_pack.sum(arg, axis=2)
+    # else:
+    #     arg = arg.reshape((n, m))
+    # assert arg.shape == (n, m)
+    # arg = num_pack.exp(- 0.5 * arg) * norm
+    # assert arg.shape == (n, m)
+    #
+    # estimate = num_pack.dot(arg.T, values)
+    #
+    # if gpu:
+    #     cd.sync()
+    #
+    # return estimate.squeeze()
+
+    return gaussian_kernel_estimate_vectorized_whitened(whitening=whitening,
+                                                        whitened_points=points,
+                                                        xi=xi,
+                                                        values=values,
+                                                        norm=norm,
+                                                        dtype=dtype,
+                                                        gpu=gpu)
 
 
 def gaussian_kernel_estimate(points, values, xi, precision, dtype):
@@ -356,8 +444,6 @@ class gaussian_kde:
     pdf
     logpdf
     resample
-    # set_bandwidth
-    # covariance_factor
 
     Notes
     -----
@@ -449,29 +535,6 @@ class gaussian_kde:
 
     """
 
-    @staticmethod
-    def _get_covariance_factor_from_bandwidth(
-            bw_method: tp.Optional[tp.Union[CovarianceFactorFunctionType,
-                                            str,
-                                            tp.Callable,
-                                            numbers.Number]] = None) \
-            -> CovarianceFactorFunctionType:
-        if bw_method is None:
-            return compute_scotts_factor
-        elif isinstance(bw_method, str):
-            if bw_method == SCOTTS_FACTOR_STRING:
-                return compute_scotts_factor
-            elif bw_method == SILVERMAN_FACTOR_STRING:
-                return compute_silverman_factor
-            else:
-                raise ValueError(f'bw_method={bw_method} is not supported')
-        elif callable(bw_method):
-            return bw_method
-        elif np.isscalar(bw_method):
-            return lambda kde_info: bw_method
-        else:
-            raise ValueError(f'bw_method {bw_method} is not supported')
-
     def __init__(self,
                  dataset: NumericArray,
                  bw_method: tp.Optional[tp.Union[CovarianceFactorFunctionType,
@@ -500,7 +563,7 @@ class gaussian_kde:
         else:
             self._weights = ones(self.n) / self.n
 
-        self._covariance_factor = self._get_covariance_factor_from_bandwidth(bw_method)
+        self._covariance_factor = self._get_covariance_factor_function_from_bandwidth_type(bw_method)
         self._compute_covariance()
 
     def evaluate(self, points):
@@ -538,12 +601,22 @@ class gaussian_kde:
         output_dtype = np.common_type(self.covariance, points)
 
         if True:
-            result = gaussian_kernel_estimate_vectorized(points=self.dataset.T,
-                                                         values=self.weights[:, None],
-                                                         xi=points.T,
-                                                         precision=self.inv_cov,
-                                                         dtype=output_dtype,
-                                                         gpu=self._gpu)
+            # result = gaussian_kernel_estimate_vectorized(points=self.dataset.T,
+            #                                              values=self.weights[:, None],
+            #                                              xi=points.T,
+            #                                              precision=self.inv_cov,
+            #                                              dtype=output_dtype,
+            #                                              gpu=self._gpu)
+
+            result = gaussian_kernel_estimate_vectorized_whitened(
+                        whitening=self.whitening,
+                        whitened_points=self.whitened_points,
+                        values=self.weights[:, None],
+                        xi=points.T,
+                        norm=self.normalization_constant,
+                        dtype=output_dtype,
+                        gpu=self._gpu)
+
             return result
         else:
             result = gaussian_kernel_estimate(points=self.dataset.T,
@@ -765,15 +838,47 @@ class gaussian_kde:
 
         return means + norm
 
+    @staticmethod
+    def _get_covariance_factor_function_from_bandwidth_type(
+            bw_method: tp.Optional[tp.Union[CovarianceFactorFunctionType,
+                                            str,
+                                            tp.Callable,
+                                            numbers.Number]] = None) \
+            -> CovarianceFactorFunctionType:
+        """
+        Infers the bandwidth selection method from
+        Args:
+            bw_method: either 'scotts' or 'silverman' or a scalar or a function returning a float
+
+        Returns:
+        covariance factor function
+        """
+        if bw_method is None:
+            return compute_scotts_factor
+        elif isinstance(bw_method, str):
+            if bw_method == SCOTTS_FACTOR_STRING:
+                return compute_scotts_factor
+            elif bw_method == SILVERMAN_FACTOR_STRING:
+                return compute_silverman_factor
+            else:
+                raise ValueError(f'bw_method={bw_method} is not supported')
+        elif callable(bw_method):
+            return bw_method
+        elif np.isscalar(bw_method):
+            return lambda kde_info: bw_method
+        else:
+            raise ValueError(f'bw_method {bw_method} is not supported')
+
     def _compute_covariance(self):
-        """Computes the covariance matrix for each Gaussian kernel using
+        """
+        Computes the covariance matrix for each Gaussian kernel using
         covariance_factor().
         """
         kde_info = GaussianKDEInformation(dimension=self.d,
                                           n=self.n,
                                           neff=self.neff,
                                           points=self.dataset,
-                                          weights=self._weights)
+                                          weights=self.weights)
 
         self.factor = self._covariance_factor(kde_info)
 
@@ -840,9 +945,38 @@ class gaussian_kde:
         return result
 
     @property
+    def gpu(self) -> bool:
+        return self._gpu
+
+    @property
     def weights(self) -> np.ndarray:
         return self._weights
 
     @cached_property
     def neff(self) -> float:
-        return 1.0/sum(self.weights**2)
+        return 1.0/np.sum(self.weights*self.weights)
+
+    @cached_property
+    def whitening(self) -> NumericArray:
+        gpu = self.gpu
+        num_pack = select_num_pack(gpu)
+        precision = \
+            ensure_consistent_numeric_arrays((self.inv_cov, ), gpu)[0]
+
+        return num_pack.linalg.cholesky(precision)
+
+    @cached_property
+    def whitened_points(self) -> NumericArray:
+        gpu = self.gpu
+        num_pack = select_num_pack(gpu)
+        points = \
+            ensure_consistent_numeric_arrays((self.dataset.T, ), gpu)[0]
+
+        return num_pack.dot(points, self.whitening)
+
+    @cached_property
+    def normalization_constant(self) -> float:
+        gpu = self.gpu
+        num_pack = select_num_pack(gpu)
+
+        return (2 * np.pi) ** (- self.d / 2) * num_pack.prod(num_pack.diag(self.whitening))
