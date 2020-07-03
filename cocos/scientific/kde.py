@@ -248,11 +248,11 @@ def gaussian_kernel_estimate(points, values, xi, precision, dtype):
 
 @dataclass(frozen=True)
 class GaussianKDEInformation:
+    points: np.ndarray  # (d, n) shaped array of datapoints
+    weights: np.ndarray  # (d, n) shaped array of weights, optional
     dimension: int  # data dimension
     n: int  # number of data points
     neff: float  # effective sample size
-    points: np.ndarray  # (d, n) shaped array of datapoints
-    weights: tp.Optional[np.ndarray] = None  # (d, n) shaped array of weights, optional
 
 
 CovarianceFactorFunctionType = tp.Callable[[GaussianKDEInformation], float]
@@ -448,26 +448,38 @@ class gaussian_kde:
     >>> plt.show()
 
     """
-    def __init__(self,
-                 dataset: NumericArray,
-                 bw_method: tp.Optional[tp.Union[CovarianceFactorFunctionType, str, tp.Callable, numbers.Number]] = None,
-                 weights: tp.Optional[NumericArray] = None,
-                 gpu: bool = False):
+
+    @staticmethod
+    def _get_covariance_factor_from_bandwidth(
+            bw_method: tp.Optional[tp.Union[CovarianceFactorFunctionType,
+                                            str,
+                                            tp.Callable,
+                                            numbers.Number]] = None) \
+            -> CovarianceFactorFunctionType:
         if bw_method is None:
-            self._covariance_factor = compute_scotts_factor
+            return compute_scotts_factor
         elif isinstance(bw_method, str):
             if bw_method == SCOTTS_FACTOR_STRING:
-                self._covariance_factor = compute_scotts_factor
+                return compute_scotts_factor
             elif bw_method == SILVERMAN_FACTOR_STRING:
-                self._covariance_factor = compute_silverman_factor
+                return compute_silverman_factor
             else:
                 raise ValueError(f'bw_method={bw_method} is not supported')
         elif callable(bw_method):
-            self._covariance_factor = bw_method
+            return bw_method
         elif np.isscalar(bw_method):
-            self._covariance_factor = lambda kde_info: bw_method
+            return lambda kde_info: bw_method
         else:
             raise ValueError(f'bw_method {bw_method} is not supported')
+
+    def __init__(self,
+                 dataset: NumericArray,
+                 bw_method: tp.Optional[tp.Union[CovarianceFactorFunctionType,
+                                                 str,
+                                                 tp.Callable,
+                                                 numbers.Number]] = None,
+                 weights: tp.Optional[NumericArray] = None,
+                 gpu: bool = False):
 
         self._num_pack = select_num_pack(gpu)
         self._gpu = gpu
@@ -488,8 +500,7 @@ class gaussian_kde:
         else:
             self._weights = ones(self.n) / self.n
 
-        # self.set_bandwidth(bw_method=bw_method)
-
+        self._covariance_factor = self._get_covariance_factor_from_bandwidth(bw_method)
         self._compute_covariance()
 
     def evaluate(self, points):
@@ -525,16 +536,7 @@ class gaussian_kde:
                 raise ValueError(f"points have dimension {d}, dataset has dimension {self.d}")
 
         output_dtype = np.common_type(self.covariance, points)
-        # itemsize = np.dtype(output_dtype).itemsize
-        # if itemsize == 4:
-        #     spec = 'float'
-        # elif itemsize == 8:
-        #     spec = 'double'
-        # elif itemsize in (12, 16):
-        #     spec = 'long double'
-        # else:
-        #     raise TypeError('%s has unexpected item size %d' %
-        #                     (output_dtype, itemsize))
+
         if True:
             result = gaussian_kernel_estimate_vectorized(points=self.dataset.T,
                                                          values=self.weights[:, None],
@@ -763,100 +765,10 @@ class gaussian_kde:
 
         return means + norm
 
-    # def scotts_factor(self) -> float:
-    #     """Compute Scott's factor.
-    #
-    #     Returns
-    #     -------
-    #     s : float
-    #         Scott's factor.
-    #     """
-    #     return power(self.neff, -1./(self.d+4))
-    #
-    # def silverman_factor(self) -> float:
-    #     """Compute the Silverman factor.
-    #
-    #     Returns
-    #     -------
-    #     s : float
-    #         The silverman factor.
-    #     """
-    #     return power(self.neff*(self.d+2.0)/4.0, -1./(self.d+4))
-    #
-    # #  Default method to calculate bandwidth, can be overwritten by subclass
-    # covariance_factor = scotts_factor
-    # covariance_factor.__doc__ = """Computes the coefficient (`kde.factor`) that
-    #     multiplies the data covariance matrix to obtain the kernel covariance
-    #     matrix. The default is `scotts_factor`.  A subclass can overwrite this
-    #     method to provide a different method, or set it through a call to
-    #     `kde.set_bandwidth`."""
-    #
-    # def set_bandwidth(self, bw_method: tp.Optional[str] = None):
-    #     """Compute the estimator bandwidth with given method.
-    #
-    #     The new bandwidth calculated after a call to `set_bandwidth` is used
-    #     for subsequent evaluations of the estimated density.
-    #
-    #     Parameters
-    #     ----------
-    #     bw_method : str, scalar or callable, optional
-    #         The method used to calculate the estimator bandwidth.  This can be
-    #         'scott', 'silverman', a scalar constant or a callable.  If a
-    #         scalar, this will be used directly as `kde.factor`.  If a callable,
-    #         it should take a `gaussian_kde` instance as only parameter and
-    #         return a scalar.  If None (default), nothing happens; the current
-    #         `kde.covariance_factor` method is kept.
-    #
-    #     Notes
-    #     -----
-    #     .. versionadded:: 0.11
-    #
-    #     Examples
-    #     --------
-    #     >>> import scipy.stats as stats
-    #     >>> x1 = np.array([-7, -5, 1, 4, 5.])
-    #     >>> kde = stats.gaussian_kde(x1)
-    #     >>> xs = np.linspace(-10, 10, num=50)
-    #     >>> y1 = kde(xs)
-    #     >>> kde.set_bandwidth(bw_method='silverman')
-    #     >>> y2 = kde(xs)
-    #     >>> kde.set_bandwidth(bw_method=kde.factor / 3.)
-    #     >>> y3 = kde(xs)
-    #
-    #     >>> import matplotlib.pyplot as plt
-    #     >>> fig, ax = plt.subplots()
-    #     >>> ax.plot(x1, np.full(x1.shape, 1 / (4. * x1.size)), 'bo',
-    #     ...         label='Data points (rescaled)')
-    #     >>> ax.plot(xs, y1, label='Scott (default)')
-    #     >>> ax.plot(xs, y2, label='Silverman')
-    #     >>> ax.plot(xs, y3, label='Const (1/3 * Silverman)')
-    #     >>> ax.legend()
-    #     >>> plt.show()
-    #
-    #     """
-    #     if bw_method is None:
-    #         pass
-    #     elif bw_method == SCOTTS_FACTOR_STRING:
-    #         self.covariance_factor = self.scotts_factor
-    #     elif bw_method == SILVERMAN_FACTOR_STRING:
-    #         self.covariance_factor = self.silverman_factor
-    #     elif np.isscalar(bw_method) and not isinstance(bw_method, str):
-    #         # self._bw_method = 'use constant'
-    #         self.covariance_factor = lambda: bw_method
-    #     elif callable(bw_method):
-    #         # self._bw_method = bw_method
-    #         # self.covariance_factor = lambda: self._bw_method(self)
-    #         self.covariance_factor = lambda: bw_method
-    #     else:
-    #         raise ValueError(f"`bw_method` should be '{SCOTTS_FACTOR_STRING}', '{SILVERMAN_FACTOR_STRING}', a scalar or a callable.")
-    #
-    #     self._compute_covariance()
-
     def _compute_covariance(self):
         """Computes the covariance matrix for each Gaussian kernel using
         covariance_factor().
         """
-        # self.factor = self.covariance_factor()
         kde_info = GaussianKDEInformation(dimension=self.d,
                                           n=self.n,
                                           neff=self.neff,
@@ -926,22 +838,6 @@ class gaussian_kde:
                                       self._norm_factor)
 
         return result
-
-    # @property
-    # def weights(self) -> np.ndarray:
-    #     try:
-    #         return self._weights
-    #     except AttributeError:
-    #         self._weights = ones(self.n)/self.n
-    #         return self._weights
-
-    # @property
-    # def neff(self) -> float:
-    #     try:
-    #         return self._neff
-    #     except AttributeError:
-    #         self._neff = 1/sum(self.weights**2)
-    #         return self._neff
 
     @property
     def weights(self) -> np.ndarray:
