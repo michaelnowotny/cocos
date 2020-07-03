@@ -4,19 +4,12 @@
 #
 #  Currently, only Gaussian kernels are implemented.
 #
-#  Written by: Robert Kern
-#
-#  Date: 2004-08-09
-#
-#  Modified: 2005-02-10 by Robert Kern.
-#              Contributed to SciPy
-#            2005-10-07 by Robert Kern.
-#              Some fixes to match the new scipy_core
-#
 #  Copyright 2004-2005 by Enthought, Inc.
 #
-#  The code has been adapted by Michael Nowotny on 2020-06-25 to work
-#  with GPUs using Cocos.
+#  The code has been adapted by Michael Nowotny to work with GPUs
+#  using Cocos from the SciPy code available at
+#  https://github.com/scipy/scipy/blob/master/scipy/stats/kde.py
+#
 #  The open source license of the original code is reproduced below:
 #
 # Copyright (c) 2001-2002 Enthought, Inc.  2003-2019, SciPy Developers.
