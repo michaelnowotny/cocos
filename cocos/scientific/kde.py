@@ -163,7 +163,8 @@ def gaussian_kernel_estimate_vectorized_whitened(whitening: NumericArray,
     arg = num_pack.exp(- 0.5 * arg) * norm
     assert arg.shape == (n, m)
 
-    estimate = num_pack.dot(arg.T, values)
+    # estimate = num_pack.dot(arg.T, values)
+    estimate = (values * arg).sum(axis=0)
 
     if gpu:
         cd.sync()
@@ -977,7 +978,7 @@ class gaussian_kde:
 
 
 def evaluate_gaussian_kde_in_batches(kde: gaussian_kde,
-                                     points: NumericArray,  # NumPy array with shape (d, m)
+                                     points: NumericArray,
                                      maximum_number_of_elements_per_batch: int) \
         -> np.ndarray:
     """
