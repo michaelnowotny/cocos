@@ -46,6 +46,7 @@
 #-------------------------------------------------------------------------------
 
 # Standard library imports.
+import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import cached_property
@@ -973,3 +974,36 @@ class gaussian_kde:
         num_pack = select_num_pack(gpu)
 
         return (2 * np.pi) ** (- self.d / 2) * num_pack.prod(num_pack.diag(self.whitening))
+
+
+def evaluate_gaussian_kde_in_batches(kde: gaussian_kde,
+                                     points: NumericArray,  # NumPy array with shape (d, m)
+                                     maximum_number_of_elements_per_batch: int) \
+        -> np.ndarray:
+    """
+    Evaluates a Gaussian KDE in batches and stores the results in main memory.
+
+    Args:
+        kde: a gaussian_kde object
+        points:
+            numeric array with shape (d, m) containing the points at which to evaluate the kernel
+            density estimate
+        maximum_number_of_elements_per_batch:
+            maximum number of data points times evaluation points to process in a single batch
+
+    Returns:
+        a m-dimensional NumPy array of kernel density estimates
+    """
+    number_of_points = points.shape[1]
+    points_per_batch = math.floor(maximum_number_of_elements_per_batch / (kde.n * kde.d))
+
+    n_begin = 0
+
+    output_array = np.zeros((number_of_points, ), dtype=points.dtype)
+
+    while n_begin < number_of_points:
+        n_end = min(n_begin + points_per_batch, number_of_points)
+        output_array[n_begin:n_end] = np.array(kde.evaluate(points[:, n_begin:n_end]))
+        n_begin = n_end
+
+    return output_array
