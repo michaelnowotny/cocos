@@ -18,11 +18,12 @@ URL = 'https://github.com/michaelnowotny/cocos'
 EMAIL = 'nowotnym@gmail.com'
 AUTHOR = 'Michael Christoph Nowotny'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = "0.1.15"
+VERSION = "0.1.16"
 
 # What packages are required for this module to be executed?
 REQUIRED = [
     "arrayfire",
+    "cached_property",
     "contexttimer",
     "loky",
     "numpy",

@@ -49,7 +49,7 @@
 import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from functools import cached_property
+from cached_property import cached_property
 import numbers
 import typing as tp
 import warnings
