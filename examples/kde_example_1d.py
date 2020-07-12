@@ -4,6 +4,7 @@ import numpy as np
 import scipy.stats as ss
 
 import cocos.numerics as cn
+import cocos.device as cd
 from cocos.scientific.kde import gaussian_kde
 
 n = 10000  # number of data points
@@ -51,6 +52,7 @@ if __name__ == '__main__':
     with Timer() as cocos_timer:
         for _ in range(R):
             gaussian_kde_cocos.evaluate(grid)
+            cd.sync()
 
     print(f'Time to evaluate gaussian kde on gpu using cocos was {cocos_timer.elapsed / R} seconds')
 

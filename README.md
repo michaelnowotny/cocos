@@ -164,11 +164,11 @@ cd.info()
 n = 100000000
 print(f'simulating {n} draws')
 
-# run estimation of Pi on the cpu via numpy
+# run estimation of Pi on the cpu via NumPy
 pi_cpu = estimate_pi(n, gpu=False)
 print(f'Estimate of Pi on cpu: {pi_cpu}')
 
-# run estimation of Pi on the cpu via numpy
+# run estimation of Pi on the gpu via Cocos
 pi_gpu = estimate_pi(n, gpu=True)
 print(f'Estimate of Pi on gpu: {pi_gpu}')
 

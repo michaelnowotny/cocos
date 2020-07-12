@@ -159,17 +159,22 @@ def gaussian_kernel_estimate_vectorized_whitened(whitening: NumericArray,
         arg = num_pack.sum(arg, axis=2)
     else:
         arg = arg.reshape((n, m))
-    assert arg.shape == (n, m)
+    # print(arg.shape)
+    if not gpu:
+        assert arg.shape == (n, m)
     arg = num_pack.exp(- 0.5 * arg) * norm
-    assert arg.shape == (n, m)
+    if not gpu:
+        assert arg.shape == (n, m)
 
     # estimate = num_pack.dot(arg.T, values)
     estimate = (values * arg).sum(axis=0)
+    if estimate.ndim > 1:
+        estimate = estimate.squeeze()
 
     if gpu:
         cd.sync()
 
-    return estimate.squeeze()
+    return estimate
 
 
 def gaussian_kernel_estimate_vectorized(points: NumericArray,
