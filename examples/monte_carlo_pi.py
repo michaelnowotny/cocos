@@ -13,9 +13,7 @@ def estimate_pi(n: int, gpu: bool = True) -> float:
     x = np.random.rand(n)
     y = np.random.rand(n)
     in_quarter_circle = (x * x + y * y) <= 1.0
-    estimate = int(np.sum(in_quarter_circle))
-
-    return estimate / n * 4
+    return 4.0 * float(np.mean(in_quarter_circle))
 
 
 # initialize cocos device - the architecture is selected automatically
