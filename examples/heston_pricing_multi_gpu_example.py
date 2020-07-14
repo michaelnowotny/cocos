@@ -13,7 +13,9 @@ from cocos.numerics.random import randn_antithetic
 from cocos.device import (
     ComputeDeviceManager,
     info,
-    sync)
+    sync
+)
+
 from cocos.device_pool import ComputeDevicePool
 
 

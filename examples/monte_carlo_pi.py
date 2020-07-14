@@ -5,13 +5,12 @@ import cocos.device as cd
 def estimate_pi(n: int, gpu: bool = True) -> float:
     if gpu:
         import cocos.numerics as np
-        import cocos.numerics.random as random
     else:
         import numpy as np
-        import numpy.random as random
 
     x = np.random.rand(n)
     y = np.random.rand(n)
+
     in_quarter_circle = (x * x + y * y) <= 1.0
     return 4.0 * float(np.mean(in_quarter_circle))
 
