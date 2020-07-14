@@ -257,9 +257,9 @@ def create_bar_plot(number_of_devices_to_runtime_map: tp.Dict[int, float]):
     plt.title('Performance Relative to a Single GPU \n'
               'in Monte Carlo Simulation of Heston Model \n')
 
-    plt.show()
-
     plt.savefig(f'heston_pricing_benchmark_results_multi_gpu')
+
+    plt.show()
 
 
 if __name__ == '__main__':

@@ -1,31 +1,16 @@
 from contexttimer import Timer
 import math
-import matplotlib.pyplot as plt
 import numpy
-import time
 import typing as tp
 
-from cocos.numerics.numerical_package_bundle import (
-    NumericalPackageBundle,
-    CocosBundle
-)
-
-from cocos.numerics.random import randn_antithetic
-from cocos.device import (
-    ComputeDeviceManager,
-    info,
-    sync
-)
-
+import cocos.numerics as cn
+from cocos.numerics.numerical_package_selector import select_num_pack
+from cocos.device import sync
 from cocos.device_pool import ComputeDevicePool
 
 
 def estimate_pi(n: int, gpu: bool = True) -> float:
-    if gpu:
-        import cocos.numerics as np
-    else:
-        import numpy as np
-
+    np = select_num_pack(gpu)
     x = np.random.rand(n)
     y = np.random.rand(n)
 
@@ -33,26 +18,33 @@ def estimate_pi(n: int, gpu: bool = True) -> float:
     return 4.0 * float(np.mean(in_quarter_circle))
 
 
-if __name__ == '__main__':
-    n = 100000000
-    gpu_pool = ComputeDevicePool()
+def multi_gpu_benchmark(n: int, gpu_pool: ComputeDevicePool) -> tp.Dict[int, float]:
     number_of_devices_to_runtime_map = {}
 
     for number_of_devices_to_use in range(1, gpu_pool.number_of_devices + 1):
-        print(f'computing on {number_of_devices_to_use} GPUs')
-        number_of_batches = number_of_devices_to_use
         with Timer() as timer:
-            pi = gpu_pool.map_reduce(lambda x: estimate_pi(n=n, gpu=True),
-                                     reduction=lambda x, y: x + y/ number_of_devices_to_use,
+            pi = gpu_pool.map_reduce(lambda: estimate_pi(n=math.ceil(n/number_of_devices_to_use), gpu=True),
+                                     reduction=lambda x, y: x + y / number_of_devices_to_use,
                                      initial_value=0.0,
                                      number_of_batches=number_of_devices_to_use)
+
             sync()
 
         gpu_time = timer.elapsed
-        print(f'Estimation of pi = {pi} on {number_of_devices_to_use} GPUs in '
-              f'{gpu_time} seconds')
-
         number_of_devices_to_runtime_map[number_of_devices_to_use] = gpu_time
+
+    return number_of_devices_to_runtime_map
+
+
+def main():
+    n = 200000000
+    gpu_pool = ComputeDevicePool()
+
+    multi_gpu_benchmark(n=100, gpu_pool=gpu_pool)
+    number_of_devices_to_runtime_map = multi_gpu_benchmark(n=n, gpu_pool=gpu_pool)
+
+    for number_of_devices_to_use, gpu_time in number_of_devices_to_runtime_map.items():
+        print(f'Estimation of pi on {number_of_devices_to_use} GPUs in {gpu_time} seconds')
 
     if gpu_pool.number_of_devices > 1:
         for number_of_devices_to_use in range(2, gpu_pool.number_of_devices + 1):
@@ -60,3 +52,6 @@ if __name__ == '__main__':
                   f' {number_of_devices_to_runtime_map[1] / number_of_devices_to_runtime_map[number_of_devices_to_use]} '
                   f'over a single GPU.')
 
+
+if __name__ == '__main__':
+    main()
