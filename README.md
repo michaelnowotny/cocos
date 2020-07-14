@@ -420,8 +420,8 @@ under a Heston stochastic volatility model on the CPU using NumPy on a single
 core as well as on all cores simultaneously and the GPU using Cocos and CuPy. 
 CuPy is another package that provides a NumPy-like API for GPU computing.
 
-The results were produced on a machine with an Intel Core i7 3770K with 32GB of 
-RAM and a NVidia GeForce GTX 1070 running Windows 10. Two Million paths are being simulated with 
+The results were produced on a machine with an Intel Core i7 9700K with 128GB of 
+RAM and a NVidia GeForce GTX 1060 running Windows 10. Two Million paths are being simulated with 
 500 time steps per year.
 
 <table>
@@ -433,23 +433,23 @@ RAM and a NVidia GeForce GTX 1070 running Windows 10. Two Million paths are bein
 </tr>
 <tr>
 <td>NumPy</td>
-<td>112.67600083351135</td>
+<td>45.31574273109436</td>
 <td>1.0</td>
 </tr>
 <tr>
 <td>Cocos</td>
-<td>1.3659989833831787</td>
-<td>82.48615277475973</td>
+<td>1.8577601909637451</td>
+<td>24.39267616536989</td>
 </tr>
 <tr>
 <td>CuPy</td>
-<td>2.3670005798339844</td>
-<td>47.60286152587853</td>
+<td>2.8235089778900146</td>
+<td>16.049441700361953</td>
 </tr>
 <tr>
 <td>NumPy Multicore</td>
-<td>25.01400113105774</td>
-<td>4.504517299857768</td>
+<td>11.038469791412354</td>
+<td>4.10525585406311</td>
 </tr>
 </table>
 

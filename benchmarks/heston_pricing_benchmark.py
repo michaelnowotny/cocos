@@ -232,6 +232,7 @@ def simulate_and_compute_option_price_multicore(
         numerical_package_bundle: tp.Type[NumericalPackageBundle],
         number_of_cores: tp.Optional[int] = None) -> float:
     if number_of_cores is None:
+        # number_of_cores = 5 * multiprocessing.cpu_count()
         number_of_cores = 5 * multiprocessing.cpu_count()
 
     kwargs = \
@@ -508,9 +509,9 @@ def create_bar_plot(
     plt.title('Performance Relative to NumPy \n'
               'in Monte Carlo Simulation of Heston Model \n')
 
-    plt.show()
-
     plt.savefig(f'heston_pricing_benchmark_results_{device_name}')
+
+    plt.show()
 
 
 def main():
