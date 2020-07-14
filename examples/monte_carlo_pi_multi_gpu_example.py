@@ -23,7 +23,8 @@ def multi_gpu_benchmark(n: int, gpu_pool: ComputeDevicePool) -> tp.Dict[int, flo
 
     for number_of_devices_to_use in range(1, gpu_pool.number_of_devices + 1):
         with Timer() as timer:
-            pi = gpu_pool.map_reduce(lambda: estimate_pi(n=math.ceil(n/number_of_devices_to_use), gpu=True),
+            pi = gpu_pool.map_reduce(lambda: estimate_pi(n=math.ceil(n/number_of_devices_to_use),
+                                                         gpu=True),
                                      reduction=lambda x, y: x + y / number_of_devices_to_use,
                                      initial_value=0.0,
                                      number_of_batches=number_of_devices_to_use)
@@ -48,9 +49,10 @@ def main():
 
     if gpu_pool.number_of_devices > 1:
         for number_of_devices_to_use in range(2, gpu_pool.number_of_devices + 1):
+            gpu_speedup = number_of_devices_to_runtime_map[1] / \
+                          number_of_devices_to_runtime_map[number_of_devices_to_use]
             print(f'Performance on {number_of_devices_to_use} GPUs increased by a factor of'
-                  f' {number_of_devices_to_runtime_map[1] / number_of_devices_to_runtime_map[number_of_devices_to_use]} '
-                  f'over a single GPU.')
+                  f' {gpu_speedup} over a single GPU.')
 
 
 if __name__ == '__main__':
