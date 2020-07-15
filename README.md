@@ -21,11 +21,12 @@ In addition to its numeric functionality, it allows parallel computation of SymP
 
 1.  [Installation](#installation)
 2.  [Getting Started](#getting-started)
-3.  [Benchmark](#benchmark)
-4.  [Functionality](#functionality)
-5.  [Limitations and Differences with NumPy](#limitations-and-differences-with-numpy)
-6.  [A Note on Hardware Configurations for Multi-GPU Computing](#a-note-on-hardware-configurations-for-multi-gpu-computing)
-7.  [License](#license)
+3.  [Examples](#packaged-examples)
+4.  [Benchmark](#benchmark)
+5.  [Functionality](#functionality)
+6.  [Limitations and Differences with NumPy](#limitations-and-differences-with-numpy)
+7.  [A Note on Hardware Configurations for Multi-GPU Computing](#a-note-on-hardware-configurations-for-multi-gpu-computing)
+8.  [License](#license)
 
 ## Installation
 
@@ -123,7 +124,7 @@ See 'examples/multi_gpu_heston_pricing_example.py' for a fully worked example.
 
 
 
-### Packaged examples:
+## Packaged examples:
 1.  [Estimating Pi via Monte Carlo](#estimating-pi-via-monte-carlo)
 2.  [Option Pricing in a Stochastic Volatility Model via Monte Carlo](#option-pricing-in-a-stochastic-volatility-model-via-monte-carlo)
 3.  [Numeric evaluation of SymPy array expressions on the GPU](#numeric-evaluation-of-sympy-array-expressions-on-the-gpu)
