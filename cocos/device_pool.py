@@ -94,7 +94,7 @@ class ComputeDevicePool:
 
         self._executor = get_reusable_executor(max_workers=self.number_of_devices,
                                                timeout=None,
-                                               context='spawn')
+                                               context='loky')
 
         futures = [self._executor.submit(_init_gpu_in_process,
                                          device_id=compute_device.id)
