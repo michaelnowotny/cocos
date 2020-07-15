@@ -414,7 +414,96 @@ print(f'numerical results from cpu and gpu match: '
 
 
 ## Benchmark
-### Single GPU Benchmark
+### Monte Carlo Pi Benchmark
+This benchmark compares the runtime performance of the Monte Carlo pi example 
+using NumPy on 1 through 8 cpu cores as well as 1-2 GPUs using Cocos. 
+
+The results were produced on a machine with an Intel Core i7 9700K with 128GB of 
+RAM and a NVidia GeForce GTX 1060 running Windows 10. A total of 1000000000 points 
+are drawn in 20 batches.
+
+<table>
+<tbody>
+<tr>
+<th></th>
+<th>Total Time in Seconds</th>
+<th>Speedup Compared to NumPy</th>
+</tr>
+<tr>
+<td>Single Core NumPy</td>
+<td>17.2867612</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>NumPy with 1 CPU core(s)</td>
+<td>17.1750117</td>
+<td>1.0065065166738723</td>
+</tr>
+<tr>
+<td>NumPy with 2 CPU core(s)</td>
+<td>10.494477000000003</td>
+<td>1.6472246496895457</td>
+</tr>
+<tr>
+<td>NumPy with 3 CPU core(s)</td>
+<td>8.422800300000006</td>
+<td>2.0523769511667025</td>
+</tr>
+<tr>
+<td>NumPy with 4 CPU core(s)</td>
+<td>7.082252900000007</td>
+<td>2.440856242227665</td>
+</tr>
+<tr>
+<td>NumPy with 5 CPU core(s)</td>
+<td>6.365301000000002</td>
+<td>2.715780636296696</td>
+</tr>
+<tr>
+<td>NumPy with 6 CPU core(s)</td>
+<td>5.8881023</td>
+<td>2.935879901407284</td>
+</tr>
+<tr>
+<td>NumPy with 7 CPU core(s)</td>
+<td>5.609009299999997</td>
+<td>3.081963369181793</td>
+</tr>
+<tr>
+<td>NumPy with 8 CPU core(s)</td>
+<td>5.667201699999993</td>
+<td>3.0503169139012685</td>
+</tr>
+<tr>
+<td>Cocos Single GPU</td>
+<td>0.17866180000000043</td>
+<td>96.75689599007711</td>
+</tr>
+<tr>
+<td>Cocos with 1 GPU(s)</td>
+<td>0.1841428000000036</td>
+<td>93.87693246762655</td>
+</tr>
+<tr>
+<td>Cocos with 2 GPU(s)</td>
+<td>0.09644749999999647</td>
+<td>179.23493299464096</td>
+</tr>
+</table>
+
+![benchmark_results](https://raw.githubusercontent.com/michaelnowotny/cocos/master/images/monte_carlo_pi_benchmark_results.png)
+
+Package versions used:
+- arrayfire: 3.6.4
+- arrayfire-python: 3.6.20181017
+- cocos: 0.1.14
+- CUDA: 9.2
+- cupy-cuda92: 6.2.0 
+- NumPy: 1.16.4
+- Python: 3.7.3
+
+
+### Single GPU Stochastic Volatility Model Benchmark
 This benchmark compares the runtime performance of the option pricing example 
 under a Heston stochastic volatility model on the CPU using NumPy on a single 
 core as well as on all cores simultaneously and the GPU using Cocos and CuPy. 
@@ -453,7 +542,7 @@ RAM and a NVidia GeForce GTX 1060 running Windows 10. Two Million paths are bein
 </tr>
 </table>
 
-![benchmark_results](https://raw.githubusercontent.com/michaelnowotny/cocos/master/images/benchmark_results.png)
+![benchmark_results](https://raw.githubusercontent.com/michaelnowotny/cocos/master/images/heston_benchmark_results.png)
 
 Package versions used:
 - arrayfire: 3.6.4
@@ -464,7 +553,8 @@ Package versions used:
 - NumPy: 1.16.4
 - Python: 3.7.3
 
-### Multi-GPU Benchmark
+
+### Multi-GPU Stochastic Volatility Model Benchmark
 This benchmark compares the runtime performance of the option pricing example 
 under a Heston stochastic volatility model for different numbers of GPU devices.
 
@@ -499,6 +589,7 @@ Package versions used:
 - CUDA: 10.1
 - NumPy: 1.16.4
 - Python: 3.7.3
+
 
 ## Functionality
 

@@ -14,13 +14,36 @@ from cocos.device_pool import ComputeDevicePool
 SINGLE_CORE_NUMPY = 'Single Core NumPy'
 
 
-def estimate_pi(n: int, gpu: bool = True) -> float:
+def estimate_pi(n: int, batches: int = 1, gpu: bool = True) -> float:
     np = select_num_pack(gpu)
-    x = np.random.rand(n)
-    y = np.random.rand(n)
 
-    in_quarter_circle = (x * x + y * y) <= 1.0
-    return 4.0 * float(np.mean(in_quarter_circle))
+    n_per_batch = math.ceil(n/batches)
+
+    pi = 0.0
+    for _ in range(batches):
+        x = np.random.rand(n_per_batch)
+        y = np.random.rand(n_per_batch)
+
+        in_quarter_circle = (x * x + y * y) <= 1.0
+        pi += 4.0 * float(np.mean(in_quarter_circle))
+
+    return pi / batches
+
+
+# def estimate_pi_cupy(n: int, batches: int = 1) -> float:
+#     import cupy as np
+#
+#     n_per_batch = math.ceil(n/batches)
+#
+#     pi = 0.0
+#     for _ in range(batches):
+#         x = np.random.rand(n_per_batch)
+#         y = np.random.rand(n_per_batch)
+#
+#         in_quarter_circle = (x * x + y * y) <= 1.0
+#         pi += 4.0 * float(np.mean(in_quarter_circle))
+#
+#     return pi / batches
 
 
 def single_core_benchmark(n: int, repetitions: int = 1) -> float:
@@ -50,10 +73,18 @@ def multi_core_benchmark(n: int, core_config: tp.Iterable[int], repetitions: int
     return number_of_cores_to_runtime_map
 
 
-def single_gpu_benchmark(n: int, repetitions: int = 1) -> float:
+# def single_gpu_cupy_benchmark(n: int, batches: int, repetitions: int = 1) -> float:
+#     with Timer() as timer:
+#         for _ in range(repetitions):
+#             estimate_pi_cupy(n, batches=batches)
+#
+#     return timer.elapsed / repetitions
+
+
+def single_gpu_benchmark(n: int, batches: int, repetitions: int = 1) -> float:
     with Timer() as timer:
         for _ in range(repetitions):
-            estimate_pi(n, gpu=True)
+            estimate_pi(n, batches=batches, gpu=True)
 
     return timer.elapsed / repetitions
 
@@ -64,10 +95,10 @@ def multi_gpu_benchmark(n: int, batches: int, gpu_pool: ComputeDevicePool, repet
     for number_of_devices_to_use in range(1, gpu_pool.number_of_devices + 1):
         with Timer() as timer:
             for _ in range(repetitions):
-                pi = gpu_pool.map_reduce(lambda: estimate_pi(n=math.ceil(n / number_of_devices_to_use / batches), gpu=True),
-                                         reduction=lambda x, y: x + y / number_of_devices_to_use / batches,
+                pi = gpu_pool.map_reduce(lambda: estimate_pi(n=math.ceil(n / number_of_devices_to_use), batches=batches, gpu=True),
+                                         reduction=lambda x, y: x + y / number_of_devices_to_use,
                                          initial_value=0.0,
-                                         number_of_batches=number_of_devices_to_use * batches)
+                                         number_of_batches=number_of_devices_to_use)
 
                 sync()
 
@@ -118,22 +149,22 @@ def create_bar_plot(means_of_computation_to_runtime_map: tp.Dict[str, float]):
     plt.title('Performance Relative to NumPy \n'
               'in Monte Carlo Approximation of Pi \n')
 
-    plt.savefig('monte_carlo_pi_benchmark_results')
+    plt.savefig('monte_carlo_pi_benchmark_results', bbox_inches='tight')
 
     plt.show()
 
 
 def main():
-    n = 100000000
+    n = 1000000000
     repetitions = 1
-    batches = 1
+    batches = 20
 
     # single core benchmark
     single_core_runtime = single_core_benchmark(n, repetitions=repetitions)
     means_of_computation_to_runtime_map = {SINGLE_CORE_NUMPY: single_core_runtime}
     print(f'Estimation of pi using single core NumPy performed in {single_core_runtime} seconds')
 
-    # multi-core benchmark
+    # multi core benchmark
     multi_core_benchmark(n=100, core_config=range(1, multiprocessing.cpu_count() + 1), repetitions=repetitions)
     number_of_cores_to_runtime_map = multi_core_benchmark(n=n, core_config=range(1, multiprocessing.cpu_count() + 1))
 
@@ -142,18 +173,17 @@ def main():
         print(f'Estimation of pi on {number_of_cores_to_use} core(s) using NumPy performed in {cpu_time} seconds')
 
     # single gpu
-    single_gpu_benchmark(n=100)
-    single_gpu_runtime = batches * single_gpu_benchmark(n=math.ceil(n/batches), repetitions=repetitions)
+    single_gpu_benchmark(n=100, batches=1)
+    single_gpu_runtime = single_gpu_benchmark(n=n, batches=batches, repetitions=repetitions)
     means_of_computation_to_runtime_map['Cocos Single GPU'] = single_gpu_runtime
-    print(f'Estimation of pi using single GPU Cocos performed in {single_core_runtime} seconds')
+    print(f'Estimation of pi using single GPU Cocos performed in {single_gpu_runtime} seconds')
 
-    # multi-gpu benchmark
+    # multi gpu benchmark
     gpu_pool = ComputeDevicePool()
 
     multi_gpu_benchmark(n=100, batches=batches, gpu_pool=gpu_pool, repetitions=repetitions)
     number_of_devices_to_runtime_map = multi_gpu_benchmark(n=n, batches=batches, gpu_pool=gpu_pool)
 
-    # display results
     for number_of_devices_to_use, gpu_time in number_of_devices_to_runtime_map.items():
         means_of_computation_to_runtime_map[f'Cocos with {number_of_devices_to_use} GPU(s)'] = gpu_time
         print(f'Estimation of pi on {number_of_devices_to_use} GPUs in {gpu_time} seconds')
@@ -163,6 +193,16 @@ def main():
             print(f'Performance on {number_of_devices_to_use} GPUs increased by a factor of'
                   f' {number_of_devices_to_runtime_map[1] / number_of_devices_to_runtime_map[number_of_devices_to_use]} '
                   f'over a single GPU.')
+
+    # # cupy single gpu
+    # try:
+    #     single_gpu_cupy_benchmark(n=100, batches=1)
+    #     single_gpu_cupy_runtime = single_gpu_cupy_benchmark(n=n, batches=batches, repetitions=repetitions)
+    #     means_of_computation_to_runtime_map['CuPy Single GPU'] = single_gpu_cupy_runtime
+    #     print(f'Estimation of pi using single GPU CuPy performed in {single_gpu_cupy_runtime} seconds')
+    # except Exception as e:
+    #     print(e)
+    #     print('CuPy is not installed or not working correctly.')
 
     print(create_result_table(means_of_computation_to_runtime_map))
     create_bar_plot(means_of_computation_to_runtime_map)

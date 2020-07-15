@@ -53,6 +53,6 @@ def map_reduce_multicore(
     return result
 
 
-class MultiCoreMapReduce:
-    def __init__(self, number_of_cores: tp.Optional[int] = None):
-        self._number_of_cores = number_of_cores
+# class MultiCoreMapReduce:
+#     def __init__(self, number_of_cores: tp.Optional[int] = None):
+#         self._number_of_cores = number_of_cores
