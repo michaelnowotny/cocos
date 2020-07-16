@@ -5,7 +5,7 @@ import multiprocessing
 import numpy
 import typing as tp
 
-from cocos.map_reduce_multicore import map_reduce_multicore
+from cocos.map_reduce import map_reduce_multicore
 import cocos.numerics as cn
 from cocos.numerics.numerical_package_selector import select_num_pack
 from cocos.device import sync

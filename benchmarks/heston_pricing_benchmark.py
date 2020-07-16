@@ -9,7 +9,7 @@ import time
 import typing as tp
 
 import cocos.device
-from cocos.map_reduce_multicore import map_reduce_multicore
+from cocos.map_reduce import map_reduce_multicore
 from cocos.numerics.random import randn_antithetic
 from cocos.numerics.numerical_package_bundle import (
     get_available_numerical_packages,
