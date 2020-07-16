@@ -25,7 +25,9 @@ def estimate_pi(n: int, batches: int = 1, gpu: bool = True) -> float:
         y = np.random.rand(n_per_batch)
 
         in_quarter_circle = (x * x + y * y) <= 1.0
+        del x, y
         pi += 4.0 * float(np.mean(in_quarter_circle))
+        del in_quarter_circle
 
     return pi / batches
 

@@ -1,19 +1,22 @@
 from contexttimer import Timer
+import cupy
 import math
 
 
 def estimate_pi_cupy(n: int, batches: int = 1) -> float:
-    import cupy as np
+    # import cupy as np
 
     n_per_batch = math.ceil(n/batches)
 
     pi = 0.0
     for _ in range(batches):
-        x = np.random.rand(n_per_batch)
-        y = np.random.rand(n_per_batch)
+        x = cupy.random.rand(n_per_batch)
+        y = cupy.random.rand(n_per_batch)
 
         in_quarter_circle = (x * x + y * y) <= 1.0
-        pi += 4.0 * float(np.mean(in_quarter_circle))
+        del x, y
+        pi += 4.0 * float(cupy.mean(in_quarter_circle))
+        del in_quarter_circle
 
     return pi / batches
 
@@ -22,6 +25,7 @@ def single_gpu_cupy_benchmark(n: int, batches: int, repetitions: int = 1) -> flo
     with Timer() as timer:
         for _ in range(repetitions):
             estimate_pi_cupy(n, batches=batches)
+            cupy.cuda.Stream.null.synchronize()
 
     return timer.elapsed / repetitions
 
