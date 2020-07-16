@@ -58,7 +58,7 @@ class ComputeDevicePool:
                  tp.Optional[tp.Iterable[tp.Union[int, ComputeDevice]]] = None,
                  compute_device_filter:
                  tp.Optional[ComputeDeviceFilter] = exclude_intel_devices,
-                 multiprocessing_pool_type: MultiprocessingPoolType = MultiprocessingPoolType.LOKY) \
+                 multiprocessing_pool_type: MultiprocessingPoolType = MultiprocessingPoolType.default()) \
             -> None:
         """
         This method constructs a compute device pool from a collection of
