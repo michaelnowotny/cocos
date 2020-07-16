@@ -1,5 +1,5 @@
-from concurrent.futures import as_completed
-# from pathos.pools import ProcessPool
+from cocos.multi_processing.utilities import MultiprocessingPoolType
+
 import typing as tp
 
 ResultType = tp.TypeVar('ResultType')
@@ -11,8 +11,9 @@ def map_reduce_multicore(
         initial_value: ResultType,
         args_list: tp.Optional[tp.Sequence[tp.Sequence]] = None,
         kwargs_list: tp.Optional[tp.Sequence[tp.Dict[str, tp.Any]]] = None,
-        number_of_batches: tp.Optional[int] = None, pool: tp.Optional = None) -> ResultType:
-    from loky import get_reusable_executor
+        number_of_batches: tp.Optional[int] = None,
+        multiprocessing_pool_type: MultiprocessingPoolType = MultiprocessingPoolType.default()) \
+        -> ResultType:
 
     if number_of_batches is None:
         if args_list is not None:
@@ -28,27 +29,34 @@ def map_reduce_multicore(
     if kwargs_list is None:
         kwargs_list = number_of_batches * [dict()]
 
-    if pool is None:
-        pool = \
+    if multiprocessing_pool_type == MultiprocessingPoolType.LOKY:
+        from concurrent.futures import as_completed
+        from loky import get_reusable_executor
+
+        executor = \
             get_reusable_executor(timeout=None,
                                   context='loky')
 
-    futures = [pool.submit(f, *args, **kwargs)
-               for args, kwargs
-               in zip(args_list, kwargs_list)]
+        futures = [executor.submit(f, *args, **kwargs)
+                   for args, kwargs
+                   in zip(args_list, kwargs_list)]
 
-    result = initial_value
-    for future in as_completed(futures):
-        result = reduction(result, future.result())
+        result = initial_value
+        for future in as_completed(futures):
+            result = reduction(result, future.result())
 
-    # pool = ProcessPool()
-    # futures = [pool.apipe(f, *args, **kwargs)
-    #            for args, kwargs
-    #            in zip(args_list, kwargs_list)]
-    #
-    # result = initial_value
-    # for future in futures:
-    #     result = reduction(result, future.get())
+    elif multiprocessing_pool_type == MultiprocessingPoolType.PATHOS:
+        from pathos.pools import ProcessPool
+        pool = ProcessPool()
+        futures = [pool.apipe(f, *args, **kwargs)
+                   for args, kwargs
+                   in zip(args_list, kwargs_list)]
+
+        result = initial_value
+        for future in futures:
+            result = reduction(result, future.get())
+    else:
+        raise ValueError(f'Multiprocessing pool type {multiprocessing_pool_type} not supported')
 
     return result
 

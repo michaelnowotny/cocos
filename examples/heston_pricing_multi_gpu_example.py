@@ -98,7 +98,7 @@ def compute_option_price_from_simulated_paths(
         T: float,
         K: float,
         x_simulated,
-        numerical_package_bundle: tp.Type[NumericalPackageBundle]):
+        numerical_package_bundle: tp.Type[NumericalPackageBundle]) -> float:
     """
     Compute the function of a plain-vanilla call option from simulated
     log-returns.
@@ -113,8 +113,7 @@ def compute_option_price_from_simulated_paths(
 
     num_pack = numerical_package_bundle.module()
 
-    return math.exp(-r * T) \
-           * num_pack.mean(num_pack.maximum(num_pack.exp(x_simulated) - K, 0))
+    return float(math.exp(-r * T) * num_pack.mean(num_pack.maximum(num_pack.exp(x_simulated) - K, 0)))
 
 
 def simulate_and_compute_option_price(
@@ -151,11 +150,11 @@ def simulate_and_compute_option_price(
     # compute option price
     option_price \
         = compute_option_price_from_simulated_paths(
-        r=r,
-        T=T,
-        K=K,
-        x_simulated=x_simulated,
-        numerical_package_bundle=numerical_package_bundle)
+            r=r,
+            T=T,
+            K=K,
+            x_simulated=x_simulated,
+            numerical_package_bundle=numerical_package_bundle)
 
     return option_price
 

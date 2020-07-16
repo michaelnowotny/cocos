@@ -1,9 +1,6 @@
 import time
 import typing as tp
 
-from pathos.pools import ProcessPool
-from loky import get_reusable_executor, wait, as_completed
-
 from cocos.device import ComputeDeviceManager, ComputeDevice, sync
 from cocos.multi_processing.utilities import MultiprocessingPoolType
 
@@ -95,6 +92,8 @@ class ComputeDevicePool:
         #                                      mp_context=ctx)
 
         if multiprocessing_pool_type == MultiprocessingPoolType.LOKY:
+            from loky import get_reusable_executor, wait
+
             self._executor = get_reusable_executor(max_workers=self.number_of_devices,
                                                    timeout=None,
                                                    context='loky')
@@ -108,6 +107,8 @@ class ComputeDevicePool:
 
             [future.result() for future in futures]
         elif multiprocessing_pool_type == MultiprocessingPoolType.PATHOS:
+            from pathos.pools import ProcessPool
+
             self._executor = ProcessPool(nodes=self.number_of_devices)
             futures = [self._executor.apipe(_init_gpu_in_process, device_id=compute_device.id)
                        for compute_device
@@ -218,6 +219,8 @@ class ComputeDevicePool:
             return result
 
         if self.multiprocessing_pool_type == MultiprocessingPoolType.LOKY:
+            from loky import as_completed
+
             futures = [self._executor.submit(synced_f, *args, **kwargs)
                        for i, (args, kwargs)
                        in enumerate(zip(args_list, kwargs_list))]

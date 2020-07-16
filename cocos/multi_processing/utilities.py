@@ -28,7 +28,10 @@ class MultiprocessingPoolType(Enum):
 
     @staticmethod
     def default() -> 'MultiprocessingPoolType':
-        if is_pathos_installed():
-            return MultiprocessingPoolType.PATHOS
-        elif is_loky_installed():
+        if is_loky_installed():
             return MultiprocessingPoolType.LOKY
+        elif is_pathos_installed():
+            return MultiprocessingPoolType.PATHOS
+        else:
+            raise ValueError('No suitable multiprocessing package found. '
+                             'Please install either loky or pathos.')
