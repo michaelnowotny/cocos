@@ -1,8 +1,17 @@
+from enum import Enum
 import time
 import typing as tp
 
-from cocos.device import ComputeDeviceManager, ComputeDevice, sync
+from pathos.pools import ProcessPool
 from loky import get_reusable_executor, wait, as_completed
+
+from cocos.device import ComputeDeviceManager, ComputeDevice, sync
+
+
+class MultiprocessingPoolType(Enum):
+    LOKY = 1
+    PATHOS = 2
+
 
 ResultType = tp.TypeVar('ResultType')
 ParameterTransferFunction = tp.Callable[[tp.Sequence,
@@ -56,7 +65,8 @@ class ComputeDevicePool:
                  compute_devices:
                  tp.Optional[tp.Iterable[tp.Union[int, ComputeDevice]]] = None,
                  compute_device_filter:
-                 tp.Optional[ComputeDeviceFilter] = exclude_intel_devices) \
+                 tp.Optional[ComputeDeviceFilter] = exclude_intel_devices,
+                 multiprocessing_pool_type: MultiprocessingPoolType = MultiprocessingPoolType.LOKY) \
             -> None:
         """
         This method constructs a compute device pool from a collection of
@@ -92,18 +102,32 @@ class ComputeDevicePool:
         # self._executor = ProcessPoolExecutor(max_workers=self._n_gpus,
         #                                      mp_context=ctx)
 
-        self._executor = get_reusable_executor(max_workers=self.number_of_devices,
-                                               timeout=None,
-                                               context='loky')
+        if multiprocessing_pool_type == MultiprocessingPoolType.LOKY:
+            self._executor = get_reusable_executor(max_workers=self.number_of_devices,
+                                                   timeout=None,
+                                                   context='loky')
 
-        futures = [self._executor.submit(_init_gpu_in_process,
-                                         device_id=compute_device.id)
-                   for compute_device
-                   in self._compute_devices]
+            futures = [self._executor.submit(_init_gpu_in_process,
+                                             device_id=compute_device.id)
+                       for compute_device
+                       in self._compute_devices]
 
-        wait(futures)
+            wait(futures)
 
-        [future.result() for future in futures]
+            [future.result() for future in futures]
+        elif multiprocessing_pool_type == MultiprocessingPoolType.PATHOS:
+            self._executor = ProcessPool(nodes=self.number_of_devices)
+            futures = [self._executor.apipe(_init_gpu_in_process, device_id=compute_device.id)
+                       for compute_device
+                       in self._compute_devices]
+
+            for future in futures:
+                while not future.ready():
+                    pass
+        else:
+            raise ValueError(f'Multiprocessing pool type {multiprocessing_pool_type} not supported')
+
+        self._multiprocessing_pool_type = multiprocessing_pool_type
 
     @property
     def compute_devices(self) -> tp.FrozenSet[ComputeDevice]:
@@ -112,6 +136,10 @@ class ComputeDevicePool:
     @property
     def number_of_devices(self) -> int:
         return len(self.compute_devices)
+
+    @property
+    def multiprocessing_pool_type(self) -> MultiprocessingPoolType:
+        return self._multiprocessing_pool_type
 
     def sync(self):
         for compute_device in self._compute_devices:
@@ -197,12 +225,23 @@ class ComputeDevicePool:
             sync()
             return result
 
-        futures = [self._executor.submit(synced_f, *args, **kwargs)
-                   for i, (args, kwargs)
-                   in enumerate(zip(args_list, kwargs_list))]
+        if self.multiprocessing_pool_type == MultiprocessingPoolType.LOKY:
+            futures = [self._executor.submit(synced_f, *args, **kwargs)
+                       for i, (args, kwargs)
+                       in enumerate(zip(args_list, kwargs_list))]
 
-        result = initial_value
-        for future in as_completed(futures):
-            result = reduction(result, future.result())
+            result = initial_value
+            for future in as_completed(futures):
+                result = reduction(result, future.result())
+        elif self.multiprocessing_pool_type == MultiprocessingPoolType.PATHOS:
+            futures = [self._executor.apipe(synced_f, *args, **kwargs)
+                       for args, kwargs
+                       in zip(args_list, kwargs_list)]
+
+            result = initial_value
+            for future in futures:
+                result = reduction(result, future.get())
+        else:
+            raise ValueError(f'Multiprocessing pool type {self.multiprocessing_pool_type} not supported')
 
         return result

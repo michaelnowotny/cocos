@@ -27,6 +27,7 @@ REQUIRED = [
     "contexttimer",
     "loky",
     "numpy",
+    "pathos",
     "scipy",
     "sympy",
     "pytest"
