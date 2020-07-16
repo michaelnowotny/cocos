@@ -142,7 +142,7 @@ class ComputeDevicePool:
             self,
             f: tp.Callable[..., ResultType],
             reduction: tp.Callable[[ResultType, ResultType], ResultType],
-            initial_value: ResultType,
+            initial_value: tp.Optional[ResultType] = None,
             host_to_device_transfer_function:
             tp.Optional[ParameterTransferFunction] = None,
             device_to_host_transfer_function:
@@ -218,6 +218,7 @@ class ComputeDevicePool:
             sync()
             return result
 
+        result = initial_value
         if self.multiprocessing_pool_type == MultiprocessingPoolType.LOKY:
             from loky import as_completed
 
@@ -225,17 +226,23 @@ class ComputeDevicePool:
                        for i, (args, kwargs)
                        in enumerate(zip(args_list, kwargs_list))]
 
-            result = initial_value
             for future in as_completed(futures):
-                result = reduction(result, future.result())
+                new_part = future.result()
+                if result is None:
+                    result = new_part
+                else:
+                    result = reduction(result, new_part)
         elif self.multiprocessing_pool_type == MultiprocessingPoolType.PATHOS:
             futures = [self._executor.apipe(synced_f, *args, **kwargs)
                        for args, kwargs
                        in zip(args_list, kwargs_list)]
 
-            result = initial_value
             for future in futures:
-                result = reduction(result, future.get())
+                new_part = future.get()
+                if result is None:
+                    result = new_part
+                else:
+                    result = reduction(result, new_part)
         else:
             raise ValueError(f'Multiprocessing pool type {self.multiprocessing_pool_type} not supported')
 

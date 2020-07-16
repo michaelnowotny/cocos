@@ -64,10 +64,8 @@ def multi_core_benchmark(n: int, core_config: tp.Iterable[int], repetitions: int
                 pi = \
                     map_reduce_multicore(f=lambda: estimate_pi(n=math.ceil(n/number_of_cores), gpu=False),
                                          reduction=lambda x, y: x + y / number_of_cores,
-                                         initial_value=0.0,
+                                         # initial_value=0.0,
                                          number_of_batches=number_of_cores)
-
-                sync()
 
         number_of_cores_to_runtime_map[number_of_cores] = timer.elapsed / repetitions
 
@@ -86,6 +84,7 @@ def single_gpu_benchmark(n: int, batches: int, repetitions: int = 1) -> float:
     with Timer() as timer:
         for _ in range(repetitions):
             estimate_pi(n, batches=batches, gpu=True)
+            sync()
 
     return timer.elapsed / repetitions
 
