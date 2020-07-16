@@ -16,7 +16,7 @@ from cocos.device import (
     sync
 )
 
-from cocos.device_pool import ComputeDevicePool
+from cocos.multi_processing.device_pool import ComputeDevicePool
 
 
 def simulate_heston_model(

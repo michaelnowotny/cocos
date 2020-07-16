@@ -93,9 +93,9 @@ print(d)
 </pre>
 
 #### Multi-GPU Usage:
-To run the function 'my_gpu_function' over separate batches of input data on different GPUs in parallel, create a pool of GPU devices:
+To run the function `my_gpu_function` over separate batches of input data on different GPUs in parallel, create a pool of GPU devices:
 <pre>
-device_pool = cd.ComputeDevicePool()
+device_pool = cocos.multi_processing.device_pool.ComputeDevicePool()
 </pre>
 Put the arguments to the function into 
 *   a list of args lists and (one list per batch)
@@ -106,7 +106,7 @@ args_list = [args_list_1, arg_list_2, ..., arg_list_n]
 kwargs_list = [kwargs_dict_1, kwargs_dict_2, ..., kwargs_dict_n]
 </pre>
 
-Run your function in separate batches via map-reduce
+Run the function in separate batches via `map_reduce`
 <pre>
 result = \
     device_pool.map_reduce(f=my_gpu_function,
@@ -119,8 +119,8 @@ result = \
 
 </pre>
 
-Please refer to the documentation of 'cocos.device.ComputeDevicePool.map_reduce' for more details. 
-See 'examples/multi_gpu_heston_pricing_example.py' for a fully worked example. 
+Please refer to the documentation of `cocos.multi_processing.device_pool.ComputeDevicePool.map_reduce` for further details. 
+See 'examples/heston_pricing_multi_gpu_example.py' for a fully worked example. 
 
 
 

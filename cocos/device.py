@@ -1,5 +1,4 @@
 import arrayfire as af
-# from concurrent.futures import ProcessPoolExecutor, wait, as_completed
 import typing as tp
 
 

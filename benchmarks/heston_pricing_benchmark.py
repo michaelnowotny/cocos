@@ -1,5 +1,3 @@
-import concurrent
-from concurrent import futures
 import math
 import matplotlib.pyplot as plt
 import multiprocessing
@@ -9,14 +7,12 @@ import time
 import typing as tp
 
 import cocos.device
-from cocos.map_reduce import map_reduce_multicore
+from cocos.multi_processing.map_reduce import map_reduce_multicore
 from cocos.numerics.random import randn_antithetic
 from cocos.numerics.numerical_package_bundle import (
     get_available_numerical_packages,
     NumericalPackageBundle,
-    NumpyBundle,
-    CocosBundle,
-    CuPyBundle
+    NumpyBundle
 )
 
 

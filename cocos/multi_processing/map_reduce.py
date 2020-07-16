@@ -24,7 +24,7 @@ def map_reduce_multicore(
                              'both args_list and kwargs_list are empty')
 
     if args_list is None:
-        args_list = [list() for i in range(number_of_batches)]
+        args_list = number_of_batches * [list()]
     if kwargs_list is None:
         kwargs_list = number_of_batches * [dict()]
 

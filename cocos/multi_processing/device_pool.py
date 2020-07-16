@@ -1,4 +1,3 @@
-from enum import Enum
 import time
 import typing as tp
 
@@ -6,18 +5,11 @@ from pathos.pools import ProcessPool
 from loky import get_reusable_executor, wait, as_completed
 
 from cocos.device import ComputeDeviceManager, ComputeDevice, sync
-
-
-class MultiprocessingPoolType(Enum):
-    LOKY = 1
-    PATHOS = 2
-
+from cocos.multi_processing.utilities import MultiprocessingPoolType
 
 ResultType = tp.TypeVar('ResultType')
-ParameterTransferFunction = tp.Callable[[tp.Sequence,
-                                     tp.Dict[str, tp.Any]],
-                                    tp.Tuple[tp.Sequence,
-                                             tp.Dict[str, tp.Any]]]
+ParameterTransferFunction = tp.Callable[[tp.Sequence, tp.Dict[str, tp.Any]],
+                                        tp.Tuple[tp.Sequence, tp.Dict[str, tp.Any]]]
 
 
 def _init_gpu_in_process(device_id: int):
@@ -211,7 +203,7 @@ class ComputeDevicePool:
                                  'both args_list and kwargs_list are empty')
 
         if args_list is None:
-            args_list = [list() for i in range(number_of_batches)]
+            args_list = number_of_batches * [list()]
         if kwargs_list is None:
             kwargs_list = number_of_batches * [dict()]
 

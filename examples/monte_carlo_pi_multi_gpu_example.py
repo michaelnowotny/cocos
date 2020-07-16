@@ -5,11 +5,10 @@ import multiprocessing
 import numpy
 import typing as tp
 
-from cocos.map_reduce import map_reduce_multicore
-import cocos.numerics as cn
+from cocos.multi_processing.map_reduce import map_reduce_multicore
 from cocos.numerics.numerical_package_selector import select_num_pack
 from cocos.device import sync
-from cocos.device_pool import ComputeDevicePool
+from cocos.multi_processing.device_pool import ComputeDevicePool
 
 SINGLE_CORE_NUMPY = 'Single Core NumPy'
 
