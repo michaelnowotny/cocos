@@ -1,4 +1,7 @@
+import math
+import typing as tp
 from enum import Enum
+
 
 try:
     import pathos
@@ -35,3 +38,42 @@ class MultiprocessingPoolType(Enum):
         else:
             raise ValueError('No suitable multiprocessing package found. '
                              'Please install either loky or pathos.')
+
+
+def generate_slices_with_batch_size(n: int, batch_size: int) \
+        -> tp.Tuple[tp.Tuple[int, int]]:
+    """
+    Splits range(0, n) into a partition of sub-ranges with length <= batch_size.
+
+    Args:
+        n: length of the source range
+        batch_size: maximal length of each range in the partition
+
+    Returns:
+        tuple of two-element tuples following the pattern (begin_index, end_index)
+    """
+    begin_index = 0
+    result = []
+
+    while begin_index < n:
+        end_index = min(begin_index + batch_size, n)
+        result.append((begin_index, end_index))
+        begin_index += batch_size
+
+    return tuple(result)
+
+
+def generate_slices_with_number_of_batches(n: int, number_of_batches: int) \
+        -> tp.Tuple[tp.Tuple[int, int]]:
+    """
+    Splits range(0, n) into a partition of number_of_batches sub-ranges of equal length except for the last one.
+
+    Args:
+        n: length of the source range
+        number_of_batches: the number of sub-ranges in the partition
+
+    Returns:
+        tuple of two-element tuples following the pattern (begin_index, end_index)
+    """
+    batch_size = math.ceil(n/number_of_batches)
+    return generate_slices_with_batch_size(n=n, batch_size=batch_size)
