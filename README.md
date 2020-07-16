@@ -293,9 +293,13 @@ def simulate_heston_model(T: float,
     return x, v
 </pre>
 
-The following computes the option price from simulated price paths of the 
+The following code computes the option price from simulated price paths of the 
 underlying. It demonstrates how to dynamically choose between Cocos and NumPy 
-based on the type input array.
+based on the type input array. Note that in this particular setup, one would 
+typically use Fourier techniques to price the option rather than Monte Carlo simulation. 
+Simulation techniques can be useful when considering stochastic processes outside the 
+affine framework or more generally whenever the conditional characteristic function 
+of the transition density is costly to evaluate or when considering path-dependent options.  
 
 <pre>
 def compute_option_price(r: float,
