@@ -1,19 +1,12 @@
 import time
 import cocos.device as cd
+from cocos.numerics.numerical_package_selector import select_num_pack
 import cocos.numerics as cn
 import numpy
 
 
 def estimate_pi(n: int, gpu: bool = True) -> float:
-    # if gpu:
-    #     import cocos.numerics as np
-    # else:
-    #     import numpy as np
-
-    if gpu:
-        np = cn
-    else:
-        np = numpy
+    np = select_num_pack(gpu)
 
     x = np.random.rand(n)
     y = np.random.rand(n)
