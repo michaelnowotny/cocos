@@ -81,6 +81,9 @@ def generate_slices_with_number_of_batches(n: int, number_of_batches: int) \
 
 ResultType = tp.TypeVar('ResultType')
 
+ParameterTransferFunction = tp.Callable[[tp.Sequence, tp.Dict[str, tp.Any]],
+                                        tp.Tuple[tp.Sequence, tp.Dict[str, tp.Any]]]
+
 
 def reduce_with_none(x: tp.Optional[ResultType],
                      y: ResultType,

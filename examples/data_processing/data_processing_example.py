@@ -4,12 +4,18 @@ from cocos.multi_processing.utilities import (
 )
 
 from contexttimer import Timer
+from line_profiler import LineProfiler
 import multiprocessing
 import numpy
 import typing as tp
 
 from cocos.device import sync
-from cocos.multi_processing.map_reduce import map_reduce_multicore
+from cocos.multi_processing.map_reduce import (
+    map_reduce_single_gpu,
+    map_reduce_multicore
+)
+import cocos.numerics as cn
+
 from cocos.numerics.data_types import NumericArray
 from cocos.numerics.numerical_package_selector import select_num_pack
 from cocos.numerics.random import rand_with_dtype
@@ -52,7 +58,6 @@ def process_data(a: NumericArray,
                  c: NumericArray,
                  gpu: bool):
     np = select_num_pack(gpu)
-    # print(len(a))
 
     return (np.sin(a) + np.cos(b)) * np.arctan(c)
 
@@ -86,7 +91,6 @@ def multi_core_benchmark(n: int, core_config: tp.Iterable[int], repetitions: int
                 result = \
                     map_reduce_multicore(f=lambda a, b, c: process_data(a, b, c, gpu=False),
                                          reduction=lambda x, y: numpy.hstack((x, y)),
-                                         # initial_value=numpy.zeros((0, )),
                                          kwargs_list=kwargs_list)
                 assert isinstance(result, numpy.ndarray)
                 assert result.shape == (n,)
@@ -107,6 +111,39 @@ def single_gpu_benchmark(n: int, batches: int, repetitions: int = 1) -> float:
     return timer.elapsed / repetitions
 
 
+def host_to_device_transfer_function(a, b, c):
+    return [], {'a': cn.array(a), 'b': cn.array(b), 'c': cn.array(c)}
+
+
+def device_to_host_transfer_function(x):
+    if x is None:
+        return None
+    else:
+        return numpy.array(x)
+
+
+def batched_single_gpu_benchmark(n: int, batches: int, repetitions: int = 1) -> float:
+    a_complete, b_complete, c_complete = generate_data(n, gpu=False)
+
+    with Timer() as timer:
+        for _ in range(repetitions):
+            kwargs_list = split_arrays(a=a_complete,
+                                       b=b_complete,
+                                       c=c_complete,
+                                       number_of_batches=batches)
+
+            result = \
+                map_reduce_single_gpu(f=lambda a, b, c: process_data(a, b, c, gpu=True),
+                                      reduction=lambda x, y: numpy.hstack((x, y)),
+                                      host_to_device_transfer_function=host_to_device_transfer_function,
+                                      device_to_host_transfer_function=device_to_host_transfer_function,
+                                      kwargs_list=kwargs_list)
+
+            sync()
+
+    return timer.elapsed / repetitions
+
+
 def main():
     n = 200000000
     repetitions = 1
@@ -118,6 +155,12 @@ def main():
     single_gpu_runtime = single_gpu_benchmark(n=n, batches=batches, repetitions=repetitions)
     means_of_computation_to_runtime_map['Cocos Single GPU'] = single_gpu_runtime
     print(f'Data processing using single GPU Cocos performed in {single_gpu_runtime} seconds')
+
+    # batched single gpu
+    batched_single_gpu_benchmark(n=100, batches=1)
+    batched_single_gpu_runtime = batched_single_gpu_benchmark(n=n, batches=batches, repetitions=repetitions)
+    means_of_computation_to_runtime_map['Batched Cocos Single GPU'] = batched_single_gpu_runtime
+    print(f'Data processing using batched single GPU Cocos performed in {batched_single_gpu_runtime} seconds')
 
     # single core benchmark
     single_core_runtime = single_core_benchmark(n, repetitions=repetitions)
@@ -141,4 +184,19 @@ def process_data_in_infinite_loop():
 
 
 if __name__ == '__main__':
+    use_profiler = True
+    if use_profiler:
+        profile = LineProfiler(batched_single_gpu_benchmark,
+                               host_to_device_transfer_function,
+                               device_to_host_transfer_function,
+                               split_arrays,
+                               map_reduce_single_gpu,
+                               multi_core_benchmark,
+                               map_reduce_multicore)
+
+        profile.enable_by_count()
+
     main()
+
+    if use_profiler:
+        profile.print_stats()

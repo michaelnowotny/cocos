@@ -1,12 +1,18 @@
 import time
 import typing as tp
 
-from cocos.device import ComputeDeviceManager, ComputeDevice, sync
-from cocos.multi_processing.utilities import MultiprocessingPoolType, ResultType, reduce_with_none
+from cocos.device import (
+    ComputeDeviceManager,
+    ComputeDevice,
+    sync
+)
 
-# ResultType = tp.TypeVar('ResultType')
-ParameterTransferFunction = tp.Callable[[tp.Sequence, tp.Dict[str, tp.Any]],
-                                        tp.Tuple[tp.Sequence, tp.Dict[str, tp.Any]]]
+from cocos.multi_processing.utilities import (
+    MultiprocessingPoolType,
+    ResultType,
+    reduce_with_none,
+    ParameterTransferFunction
+)
 
 
 def _init_gpu_in_process(device_id: int):
