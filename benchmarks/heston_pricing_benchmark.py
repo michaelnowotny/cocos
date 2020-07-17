@@ -66,20 +66,20 @@ def simulate_heston_model(
              volatility
     """
     np = numerical_package_bundle.module()
-    random = numerical_package_bundle.random_module()
+    dtype = numpy.float32
 
     Delta_t = T / float(N - 1)
 
-    x = [np.full((R,), x0, dtype=numpy.float32),
-         np.zeros((R,), dtype=numpy.float32)]
+    x = [np.full((R,), x0, dtype=dtype),
+         np.zeros((R,), dtype=dtype)]
 
-    v = [np.full((R,), v0, dtype=numpy.float32),
-         np.zeros((R,), dtype=numpy.float32)]
+    v = [np.full((R,), v0, dtype=dtype),
+         np.zeros((R,), dtype=dtype)]
 
     sqrt_delta_t = math.sqrt(Delta_t)
     sqrt_one_minus_rho_square = math.sqrt(1 - rho ** 2)
 
-    m = np.zeros((2,), dtype=numpy.float32)
+    m = np.zeros((2,), dtype=dtype)
     m[0] = rho
     m[1] = sqrt_one_minus_rho_square
 
@@ -91,7 +91,8 @@ def simulate_heston_model(
         # generate antithetic standard normal random variables
         dBt = randn_antithetic(shape=(R, 2),
                                antithetic_dimension=0,
-                               num_pack=np) * sqrt_delta_t
+                               num_pack=np,
+                               dtype=dtype) * sqrt_delta_t
 
         sqrt_v_lag = np.sqrt(v[t_previous])
         x[t_current] = x[t_previous] \
@@ -171,8 +172,6 @@ def simulate_and_compute_option_price(
             numerical_package_bundle=numerical_package_bundle)
 
     return option_price
-
-
 
 
 def simulate_and_compute_option_price_multicore(

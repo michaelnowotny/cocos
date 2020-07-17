@@ -23,6 +23,11 @@ def estimate_pi(n: int, batches: int = 1, gpu: bool = True) -> float:
         x = np.random.rand(n_per_batch)
         y = np.random.rand(n_per_batch)
 
+        if x.dtype != numpy.float32:
+            x = x.astype(numpy.float32)
+        if y.dtype != numpy.float32:
+            y = y.astype(numpy.float32)
+
         in_quarter_circle = (x * x + y * y) <= 1.0
         del x, y
         pi += 4.0 * float(np.mean(in_quarter_circle))
@@ -31,20 +36,22 @@ def estimate_pi(n: int, batches: int = 1, gpu: bool = True) -> float:
     return pi / batches
 
 
-# def estimate_pi_cupy(n: int, batches: int = 1) -> float:
-#     import cupy as np
-#
-#     n_per_batch = math.ceil(n/batches)
-#
-#     pi = 0.0
-#     for _ in range(batches):
-#         x = np.random.rand(n_per_batch)
-#         y = np.random.rand(n_per_batch)
-#
-#         in_quarter_circle = (x * x + y * y) <= 1.0
-#         pi += 4.0 * float(np.mean(in_quarter_circle))
-#
-#     return pi / batches
+def estimate_pi_cupy(n: int, batches: int = 1) -> float:
+    import cupy as np
+
+    n_per_batch = math.ceil(n/batches)
+
+    pi = 0.0
+    for _ in range(batches):
+        x = np.random.rand(n_per_batch, dtype=numpy.float32)
+        y = np.random.rand(n_per_batch, dtype=numpy.float32)
+
+        in_quarter_circle = (x * x + y * y) <= 1.0
+        del x, y
+        pi += 4.0 * float(np.mean(in_quarter_circle))
+        del in_quarter_circle
+
+    return pi / batches
 
 
 def single_core_benchmark(n: int, repetitions: int = 1) -> float:
@@ -72,12 +79,14 @@ def multi_core_benchmark(n: int, core_config: tp.Iterable[int], repetitions: int
     return number_of_cores_to_runtime_map
 
 
-# def single_gpu_cupy_benchmark(n: int, batches: int, repetitions: int = 1) -> float:
-#     with Timer() as timer:
-#         for _ in range(repetitions):
-#             estimate_pi_cupy(n, batches=batches)
-#
-#     return timer.elapsed / repetitions
+def single_gpu_cupy_benchmark(n: int, batches: int, repetitions: int = 1) -> float:
+    import cupy
+    with Timer() as timer:
+        for _ in range(repetitions):
+            estimate_pi_cupy(n, batches=batches)
+            cupy.cuda.Stream.null.synchronize()
+
+    return timer.elapsed / repetitions
 
 
 def single_gpu_benchmark(n: int, batches: int, repetitions: int = 1) -> float:
@@ -194,15 +203,15 @@ def main():
                   f' {number_of_devices_to_runtime_map[1] / number_of_devices_to_runtime_map[number_of_devices_to_use]} '
                   f'over a single GPU.')
 
-    # # cupy single gpu
-    # try:
-    #     single_gpu_cupy_benchmark(n=100, batches=1)
-    #     single_gpu_cupy_runtime = single_gpu_cupy_benchmark(n=n, batches=batches, repetitions=repetitions)
-    #     means_of_computation_to_runtime_map['CuPy Single GPU'] = single_gpu_cupy_runtime
-    #     print(f'Estimation of pi using single GPU CuPy performed in {single_gpu_cupy_runtime} seconds')
-    # except Exception as e:
-    #     print(e)
-    #     print('CuPy is not installed or not working correctly.')
+    # cupy single gpu
+    try:
+        single_gpu_cupy_benchmark(n=100, batches=1)
+        single_gpu_cupy_runtime = single_gpu_cupy_benchmark(n=n, batches=batches, repetitions=repetitions)
+        means_of_computation_to_runtime_map['CuPy Single GPU'] = single_gpu_cupy_runtime
+        print(f'Estimation of pi using single GPU CuPy performed in {single_gpu_cupy_runtime} seconds')
+    except Exception as e:
+        print(e)
+        print('CuPy is not installed or not working correctly.')
 
     print(create_result_table(means_of_computation_to_runtime_map))
     create_bar_plot(means_of_computation_to_runtime_map)

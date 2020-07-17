@@ -111,9 +111,12 @@ def main():
         print(f'Data processing on {number_of_cores_to_use} core(s) using NumPy performed in {cpu_time} seconds')
 
 
+def process_data_in_infinite_loop():
+    a, b, c = generate_data(100000000)
+
+    while True:
+        process_data(a, b, c, gpu=False)
+
+
 if __name__ == '__main__':
     main()
-    # a, b, c = generate_data(100000000)
-    #
-    # while True:
-    #     process_data(a, b, c, gpu=False)

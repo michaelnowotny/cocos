@@ -168,6 +168,8 @@ def randn_antithetic(shape: tp.Sequence[int],
     # draw original random numbers
     if num_pack == np:
         z = num_pack.random.randn(*draw_shape)
+        if z.dtype != dtype:
+            z = z.astype(dtype)
     else:
         z = num_pack.random.randn(*draw_shape, dtype=dtype)
 
@@ -195,6 +197,8 @@ def rand_antithetic(shape: tp.Sequence[int],
     # draw original random numbers
     if num_pack == np:
         u = num_pack.random.rand(*draw_shape)
+        if u.dtype != dtype:
+            u = u.astype(dtype)
     else:
         u = num_pack.random.rand(*draw_shape, dtype=dtype)
 

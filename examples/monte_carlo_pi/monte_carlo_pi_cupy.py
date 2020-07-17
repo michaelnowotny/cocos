@@ -1,17 +1,16 @@
 from contexttimer import Timer
 import cupy
 import math
+import numpy
 
 
 def estimate_pi_cupy(n: int, batches: int = 1) -> float:
-    # import cupy as np
-
     n_per_batch = math.ceil(n/batches)
 
     pi = 0.0
     for _ in range(batches):
-        x = cupy.random.rand(n_per_batch)
-        y = cupy.random.rand(n_per_batch)
+        x = cupy.random.rand(n_per_batch, dtype=numpy.float32)
+        y = cupy.random.rand(n_per_batch, dtype=numpy.float32)
 
         in_quarter_circle = (x * x + y * y) <= 1.0
         del x, y
