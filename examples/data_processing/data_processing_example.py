@@ -39,10 +39,11 @@ def split_arrays(a: NumericArray,
     return tuple(kwargs_list)
 
 
-def generate_data(n: int) -> tp.Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]:
-    a = rand_with_dtype([n], dtype=numpy.float32)
-    b = rand_with_dtype([n], dtype=numpy.float32)
-    c = rand_with_dtype([n], dtype=numpy.float32)
+def generate_data(n: int, gpu: bool) -> tp.Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]:
+    num_pack = select_num_pack(gpu)
+    a = rand_with_dtype([n], dtype=numpy.float32, num_pack=num_pack)
+    b = rand_with_dtype([n], dtype=numpy.float32, num_pack=num_pack)
+    c = rand_with_dtype([n], dtype=numpy.float32, num_pack=num_pack)
     return a, b, c
 
 
@@ -57,7 +58,7 @@ def process_data(a: NumericArray,
 
 
 def single_core_benchmark(n: int, repetitions: int = 1) -> float:
-    a, b, c = generate_data(n)
+    a, b, c = generate_data(n, gpu=False)
 
     with Timer() as timer:
         for _ in range(repetitions):
@@ -72,7 +73,7 @@ def multi_core_benchmark(n: int, core_config: tp.Iterable[int], repetitions: int
     # operations seem to be multi-threaded to begin with.
 
     number_of_cores_to_runtime_map = {}
-    a_complete, b_complete, c_complete = generate_data(n)
+    a_complete, b_complete, c_complete = generate_data(n, gpu=False)
 
     for number_of_cores in core_config:
         with Timer() as timer:
@@ -95,11 +96,28 @@ def multi_core_benchmark(n: int, core_config: tp.Iterable[int], repetitions: int
     return number_of_cores_to_runtime_map
 
 
+def single_gpu_benchmark(n: int, batches: int, repetitions: int = 1) -> float:
+    a_complete, b_complete, c_complete = generate_data(n, gpu=True)
+
+    with Timer() as timer:
+        for _ in range(repetitions):
+            process_data(a_complete, b_complete, c_complete, gpu=True)
+            sync()
+
+    return timer.elapsed / repetitions
+
+
 def main():
-    n = 100000000
+    n = 200000000
     repetitions = 1
     batches = 20
     means_of_computation_to_runtime_map = {}
+
+    # single gpu
+    single_gpu_benchmark(n=100, batches=1)
+    single_gpu_runtime = single_gpu_benchmark(n=n, batches=batches, repetitions=repetitions)
+    means_of_computation_to_runtime_map['Cocos Single GPU'] = single_gpu_runtime
+    print(f'Data processing using single GPU Cocos performed in {single_gpu_runtime} seconds')
 
     # single core benchmark
     single_core_runtime = single_core_benchmark(n, repetitions=repetitions)
@@ -116,7 +134,7 @@ def main():
 
 
 def process_data_in_infinite_loop():
-    a, b, c = generate_data(100000000)
+    a, b, c = generate_data(100000000, gpu=False)
 
     while True:
         process_data(a, b, c, gpu=False)

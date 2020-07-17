@@ -24,7 +24,7 @@ def single_gpu_cupy_benchmark(n: int, batches: int, repetitions: int = 1) -> flo
     with Timer() as timer:
         for _ in range(repetitions):
             estimate_pi_cupy(n, batches=batches)
-            cupy.cuda.Stream.null.synchronize()
+            # cupy.cuda.Stream.null.synchronize()
 
     return timer.elapsed / repetitions
 

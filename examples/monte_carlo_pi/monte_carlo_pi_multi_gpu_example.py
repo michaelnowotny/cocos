@@ -75,11 +75,11 @@ def multi_core_benchmark(n: int, core_config: tp.Iterable[int], repetitions: int
 
 
 def single_gpu_cupy_benchmark(n: int, batches: int, repetitions: int = 1) -> float:
-    import cupy
+    # import cupy
     with Timer() as timer:
         for _ in range(repetitions):
             estimate_pi_cupy(n, batches=batches)
-            cupy.cuda.Stream.null.synchronize()
+            # cupy.cuda.Stream.null.synchronize()
 
     return timer.elapsed / repetitions
 

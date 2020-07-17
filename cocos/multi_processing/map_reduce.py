@@ -5,6 +5,16 @@ import typing as tp
 ResultType = tp.TypeVar('ResultType')
 
 
+def reduce_with_none(x: tp.Optional[ResultType],
+                     y: ResultType,
+                     reduction: tp.Callable[[ResultType, ResultType], ResultType]) \
+        -> ResultType:
+    if x is None:
+        return y
+    else:
+        return reduction(x, y)
+
+
 def map_reduce_multicore(
         f: tp.Callable[..., ResultType],
         reduction: tp.Callable[[ResultType, ResultType], ResultType],
