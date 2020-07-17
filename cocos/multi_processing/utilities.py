@@ -77,3 +77,16 @@ def generate_slices_with_number_of_batches(n: int, number_of_batches: int) \
     """
     batch_size = math.ceil(n/number_of_batches)
     return generate_slices_with_batch_size(n=n, batch_size=batch_size)
+
+
+ResultType = tp.TypeVar('ResultType')
+
+
+def reduce_with_none(x: tp.Optional[ResultType],
+                     y: ResultType,
+                     reduction: tp.Callable[[ResultType, ResultType], ResultType]) \
+        -> ResultType:
+    if x is None:
+        return y
+    else:
+        return reduction(x, y)

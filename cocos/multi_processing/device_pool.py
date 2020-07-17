@@ -2,9 +2,9 @@ import time
 import typing as tp
 
 from cocos.device import ComputeDeviceManager, ComputeDevice, sync
-from cocos.multi_processing.utilities import MultiprocessingPoolType
+from cocos.multi_processing.utilities import MultiprocessingPoolType, ResultType, reduce_with_none
 
-ResultType = tp.TypeVar('ResultType')
+# ResultType = tp.TypeVar('ResultType')
 ParameterTransferFunction = tp.Callable[[tp.Sequence, tp.Dict[str, tp.Any]],
                                         tp.Tuple[tp.Sequence, tp.Dict[str, tp.Any]]]
 
@@ -227,22 +227,14 @@ class ComputeDevicePool:
                        in enumerate(zip(args_list, kwargs_list))]
 
             for future in as_completed(futures):
-                new_part = future.result()
-                if result is None:
-                    result = new_part
-                else:
-                    result = reduction(result, new_part)
+                result = reduce_with_none(result, future.result(), reduction)
         elif self.multiprocessing_pool_type == MultiprocessingPoolType.PATHOS:
             futures = [self._executor.apipe(synced_f, *args, **kwargs)
                        for args, kwargs
                        in zip(args_list, kwargs_list)]
 
             for future in futures:
-                new_part = future.get()
-                if result is None:
-                    result = new_part
-                else:
-                    result = reduction(result, new_part)
+                result = reduce_with_none(result, future.get(), reduction)
         else:
             raise ValueError(f'Multiprocessing pool type {self.multiprocessing_pool_type} not supported')
 

@@ -1,18 +1,6 @@
-from cocos.multi_processing.utilities import MultiprocessingPoolType
+from cocos.multi_processing.utilities import MultiprocessingPoolType, ResultType, reduce_with_none
 
 import typing as tp
-
-ResultType = tp.TypeVar('ResultType')
-
-
-def reduce_with_none(x: tp.Optional[ResultType],
-                     y: ResultType,
-                     reduction: tp.Callable[[ResultType, ResultType], ResultType]) \
-        -> ResultType:
-    if x is None:
-        return y
-    else:
-        return reduction(x, y)
 
 
 def map_reduce_multicore(
@@ -53,11 +41,7 @@ def map_reduce_multicore(
                    in zip(args_list, kwargs_list)]
 
         for future in as_completed(futures):
-            new_part = future.result()
-            if result is None:
-                result = new_part
-            else:
-                result = reduction(result, new_part)
+            result = reduce_with_none(result, future.result(), reduction)
 
     elif multiprocessing_pool_type == MultiprocessingPoolType.PATHOS:
         from pathos.pools import ProcessPool
@@ -67,11 +51,7 @@ def map_reduce_multicore(
                    in zip(args_list, kwargs_list)]
 
         for future in futures:
-            new_part = future.get()
-            if result is None:
-                result = new_part
-            else:
-                result = reduction(result, new_part)
+            result = reduce_with_none(result, future.get(), reduction)
     else:
         raise ValueError(f'Multiprocessing pool type {multiprocessing_pool_type} not supported')
 
