@@ -2,6 +2,7 @@ from contexttimer import Timer
 import math
 import matplotlib.pyplot as plt
 import multiprocessing
+import numexpr as ne
 import numpy
 import typing as tp
 
@@ -11,7 +12,7 @@ from cocos.device import sync
 from cocos.numerics.random import rand_with_dtype
 from cocos.multi_processing.device_pool import ComputeDevicePool
 
-SINGLE_CORE_NUMPY = 'Single Core NumPy'
+SINGLE_CORE_NUMPY = 'NumPy Single Core'
 
 
 def estimate_pi(n: int, batches: int = 1, gpu: bool = True) -> float:
@@ -29,6 +30,19 @@ def estimate_pi(n: int, batches: int = 1, gpu: bool = True) -> float:
         del in_quarter_circle
 
     return pi / batches
+
+
+def estimate_pi_numexpr(n: int) -> float:
+    np = numpy
+
+    x = rand_with_dtype([n], dtype=numpy.float32, num_pack=np)
+    y = rand_with_dtype([n], dtype=numpy.float32, num_pack=np)
+
+    in_quarter_circle = ne.evaluate('x * x + y * y <= 1.0')
+    pi = 4.0 * float(np.mean(in_quarter_circle))
+    # pi = 4.0 * float(ne.evaluate('sum(x * x + y * y <= 1.0)')) / n
+
+    return pi
 
 
 def estimate_pi_cupy(n: int, batches: int = 1) -> float:
@@ -53,6 +67,14 @@ def single_core_benchmark(n: int, repetitions: int = 1) -> float:
     with Timer() as timer:
         for _ in range(repetitions):
             estimate_pi(n, gpu=False)
+
+    return timer.elapsed / repetitions
+
+
+def single_core_benchmark_numexpr(n: int, repetitions: int = 1) -> float:
+    with Timer() as timer:
+        for _ in range(repetitions):
+            estimate_pi_numexpr(n)
 
     return timer.elapsed / repetitions
 
@@ -162,11 +184,17 @@ def main():
     n = 1000000000
     repetitions = 1
     batches = 20
+    means_of_computation_to_runtime_map = {}
 
     # single core benchmark
     single_core_runtime = single_core_benchmark(n, repetitions=repetitions)
-    means_of_computation_to_runtime_map = {SINGLE_CORE_NUMPY: single_core_runtime}
+    means_of_computation_to_runtime_map[SINGLE_CORE_NUMPY] = single_core_runtime
     print(f'Estimation of pi using single core NumPy performed in {single_core_runtime} seconds')
+
+    # single core benchmark
+    single_core_runtime_numexpr = single_core_benchmark_numexpr(n, repetitions=repetitions)
+    means_of_computation_to_runtime_map['NumExpr Single Core'] = single_core_runtime_numexpr
+    print(f'Estimation of pi using single core Numexpr performed in {single_core_runtime_numexpr} seconds')
 
     # multi core benchmark
     multi_core_benchmark(n=100, core_config=range(1, multiprocessing.cpu_count() + 1), repetitions=repetitions)
