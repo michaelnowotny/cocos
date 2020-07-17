@@ -12,6 +12,7 @@ from cocos.device import sync
 from cocos.multi_processing.map_reduce import map_reduce_multicore
 from cocos.numerics.data_types import NumericArray
 from cocos.numerics.numerical_package_selector import select_num_pack
+from cocos.numerics.random import rand_with_dtype
 
 SINGLE_CORE_NUMPY = 'Single Core NumPy'
 
@@ -39,7 +40,10 @@ def split_arrays(a: NumericArray,
 
 
 def generate_data(n: int) -> tp.Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]:
-    return numpy.random.rand(n), numpy.random.rand(n), numpy.random.rand(n)
+    a = rand_with_dtype([n], dtype=numpy.float32)
+    b = rand_with_dtype([n], dtype=numpy.float32)
+    c = rand_with_dtype([n], dtype=numpy.float32)
+    return a, b, c
 
 
 def process_data(a: NumericArray,

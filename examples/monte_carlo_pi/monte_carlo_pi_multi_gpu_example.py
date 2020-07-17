@@ -8,6 +8,7 @@ import typing as tp
 from cocos.multi_processing.map_reduce import map_reduce_multicore
 from cocos.numerics.numerical_package_selector import select_num_pack
 from cocos.device import sync
+from cocos.numerics.random import rand_with_dtype
 from cocos.multi_processing.device_pool import ComputeDevicePool
 
 SINGLE_CORE_NUMPY = 'Single Core NumPy'
@@ -17,16 +18,10 @@ def estimate_pi(n: int, batches: int = 1, gpu: bool = True) -> float:
     np = select_num_pack(gpu)
 
     n_per_batch = math.ceil(n/batches)
-
     pi = 0.0
     for _ in range(batches):
-        x = np.random.rand(n_per_batch)
-        y = np.random.rand(n_per_batch)
-
-        if x.dtype != numpy.float32:
-            x = x.astype(numpy.float32)
-        if y.dtype != numpy.float32:
-            y = y.astype(numpy.float32)
+        x = rand_with_dtype([n_per_batch], dtype=numpy.float32, num_pack=np)
+        y = rand_with_dtype([n_per_batch], dtype=numpy.float32, num_pack=np)
 
         in_quarter_circle = (x * x + y * y) <= 1.0
         del x, y

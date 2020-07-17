@@ -153,6 +153,40 @@ def randn(d0: int,
     return ndarray(af_array)
 
 
+def _random_with_dtype_internal(shape: tp.Sequence[int],
+                                rng_function: tp.Callable,
+                                dtype: np.generic = np.float32,
+                                num_pack: ModuleType = np):
+    draw_shape = list(shape)
+
+    if num_pack == np:
+        x = rng_function(*draw_shape)
+        if x.dtype != dtype:
+            x = x.astype(dtype)
+    else:
+        x = rng_function(*draw_shape, dtype=dtype)
+
+    return x
+
+
+def rand_with_dtype(shape: tp.Sequence[int],
+                     dtype: np.generic = np.float32,
+                     num_pack: ModuleType = np):
+    return _random_with_dtype_internal(shape=shape,
+                                       rng_function=num_pack.random.rand,
+                                       dtype=dtype,
+                                       num_pack=num_pack)
+
+
+def randn_with_dtype(shape: tp.Sequence[int],
+                     dtype: np.generic = np.float32,
+                     num_pack: ModuleType = np):
+    return _random_with_dtype_internal(shape=shape,
+                                       rng_function=num_pack.random.randn,
+                                       dtype=dtype,
+                                       num_pack=num_pack)
+
+
 def randn_antithetic(shape: tp.Sequence[int],
                      antithetic_dimension: tp.Optional[int] = None,
                      dtype: np.generic = np.float32,

@@ -41,10 +41,8 @@ def simulate_heston_model(T: float,
     """
     if gpu:
         import cocos.numerics as np
-        import cocos.numerics.random as random
     else:
         import numpy as np
-        import numpy.random as random
 
     Delta_t = T / float(N - 1)
 
@@ -71,7 +69,8 @@ def simulate_heston_model(T: float,
         # generate antithetic standard normal random variables
         dBt = randn_antithetic(shape=(R, 2),
                                antithetic_dimension=0,
-                               num_pack=np) * sqrt_delta_t
+                               num_pack=np,
+                               dtype=numpy.float32) * sqrt_delta_t
 
         sqrt_v_lag = np.sqrt(v[t_previous])
         x[t_current] = x[t_previous] \
