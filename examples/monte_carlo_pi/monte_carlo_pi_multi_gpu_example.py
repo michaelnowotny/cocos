@@ -63,23 +63,49 @@ def estimate_pi_cupy(n: int, batches: int = 1) -> float:
     return pi / batches
 
 
-def single_core_benchmark(n: int, repetitions: int = 1) -> float:
+def single_core_benchmark(n: int,
+                          repetitions: int = 1,
+                          verbose: bool = False) -> float:
+    if verbose:
+        print('single core benchmark - begin')
+
     with Timer() as timer:
         for _ in range(repetitions):
-            estimate_pi(n, gpu=False)
+            pi = estimate_pi(n, gpu=False)
+            if verbose:
+                print(pi)
+
+    if verbose:
+        print('single core benchmark - end')
 
     return timer.elapsed / repetitions
 
 
-def single_core_benchmark_numexpr(n: int, repetitions: int = 1) -> float:
+def single_core_benchmark_numexpr(n: int,
+                                  repetitions: int = 1,
+                                  verbose: bool = False) -> float:
+    if verbose:
+        print('single core benchmark numexpr - begin')
+
     with Timer() as timer:
         for _ in range(repetitions):
-            estimate_pi_numexpr(n)
+            pi = estimate_pi_numexpr(n)
+            if verbose:
+                print(pi)
+
+    if verbose:
+        print('single core benchmark numexpr - end')
 
     return timer.elapsed / repetitions
 
 
-def multi_core_benchmark(n: int, core_config: tp.Iterable[int], repetitions: int = 1) -> tp.Dict[int, float]:
+def multi_core_benchmark(n: int,
+                         core_config: tp.Iterable[int],
+                         repetitions: int = 1,
+                         verbose: bool = False) -> tp.Dict[int, float]:
+    if verbose:
+        print('multi core benchmark - begin')
+
     number_of_cores_to_runtime_map = {}
 
     for number_of_cores in core_config:
@@ -88,34 +114,68 @@ def multi_core_benchmark(n: int, core_config: tp.Iterable[int], repetitions: int
                 pi = \
                     map_reduce_multicore(f=lambda: estimate_pi(n=math.ceil(n/number_of_cores), gpu=False),
                                          reduction=lambda x, y: x + y / number_of_cores,
-                                         # initial_value=0.0,
+                                         initial_value=0.0,
                                          number_of_batches=number_of_cores)
+                if verbose:
+                    print(pi)
 
         number_of_cores_to_runtime_map[number_of_cores] = timer.elapsed / repetitions
+
+    if verbose:
+        print('multi core benchmark - end')
 
     return number_of_cores_to_runtime_map
 
 
-def single_gpu_cupy_benchmark(n: int, batches: int, repetitions: int = 1) -> float:
+def single_gpu_cupy_benchmark(n: int,
+                              batches: int,
+                              repetitions: int = 1,
+                              verbose: bool = False) -> float:
+    if verbose:
+        print('single gpu cupy benchmark - begin')
+
     # import cupy
     with Timer() as timer:
         for _ in range(repetitions):
-            estimate_pi_cupy(n, batches=batches)
+            pi = estimate_pi_cupy(n, batches=batches)
             # cupy.cuda.Stream.null.synchronize()
+            if verbose:
+                print(pi)
+
+    if verbose:
+        print('single gpu cupy benchmark - end')
 
     return timer.elapsed / repetitions
 
 
-def single_gpu_benchmark(n: int, batches: int, repetitions: int = 1) -> float:
+def single_gpu_benchmark(n: int,
+                         batches: int,
+                         repetitions: int = 1,
+                         verbose: bool = False) -> float:
+    if verbose:
+        print('single gpu benchmark - begin')
+
     with Timer() as timer:
         for _ in range(repetitions):
-            estimate_pi(n, batches=batches, gpu=True)
+            pi = estimate_pi(n, batches=batches, gpu=True)
             sync()
+            if verbose:
+                print(pi)
+
+    if verbose:
+        print('single gpu benchmark - end')
 
     return timer.elapsed / repetitions
 
 
-def multi_gpu_benchmark(n: int, batches: int, gpu_pool: ComputeDevicePool, repetitions: int = 1) -> tp.Dict[int, float]:
+def multi_gpu_benchmark(n: int,
+                        batches: int,
+                        gpu_pool: ComputeDevicePool,
+                        repetitions: int = 1,
+                        verbose: bool = False) -> tp.Dict[int, float]:
+    if verbose:
+        print('multi gpu benchmark - begin')
+
     number_of_devices_to_runtime_map = {}
 
     for number_of_devices_to_use in range(1, gpu_pool.number_of_devices + 1):
@@ -127,9 +187,14 @@ def multi_gpu_benchmark(n: int, batches: int, gpu_pool: ComputeDevicePool, repet
                                          number_of_batches=number_of_devices_to_use)
 
                 sync()
+                if verbose:
+                    print(pi)
 
         gpu_time = timer.elapsed / repetitions
         number_of_devices_to_runtime_map[number_of_devices_to_use] = gpu_time
+
+    if verbose:
+        print('multi gpu benchmark - end')
 
     return number_of_devices_to_runtime_map
 
@@ -185,20 +250,24 @@ def main():
     repetitions = 1
     batches = 20
     means_of_computation_to_runtime_map = {}
+    verbose = True
 
     # single core benchmark
-    single_core_runtime = single_core_benchmark(n, repetitions=repetitions)
+    single_core_benchmark(n=100, repetitions=repetitions)
+    single_core_runtime = single_core_benchmark(n, repetitions=repetitions, verbose=verbose)
     means_of_computation_to_runtime_map[SINGLE_CORE_NUMPY] = single_core_runtime
     print(f'Estimation of pi using single core NumPy performed in {single_core_runtime} seconds')
 
-    # single core benchmark
-    single_core_runtime_numexpr = single_core_benchmark_numexpr(n, repetitions=repetitions)
+    # single core benchmark numexpr
+    single_core_benchmark_numexpr(n=100, repetitions=repetitions)
+    single_core_runtime_numexpr = single_core_benchmark_numexpr(n, repetitions=repetitions, verbose=verbose)
     means_of_computation_to_runtime_map['NumExpr Single Core'] = single_core_runtime_numexpr
     print(f'Estimation of pi using single core Numexpr performed in {single_core_runtime_numexpr} seconds')
 
     # multi core benchmark
     multi_core_benchmark(n=100, core_config=range(1, multiprocessing.cpu_count() + 1), repetitions=repetitions)
-    number_of_cores_to_runtime_map = multi_core_benchmark(n=n, core_config=range(1, multiprocessing.cpu_count() + 1))
+    number_of_cores_to_runtime_map = \
+        multi_core_benchmark(n=n, core_config=range(1, multiprocessing.cpu_count() + 1), verbose=verbose)
 
     for number_of_cores_to_use, cpu_time in number_of_cores_to_runtime_map.items():
         means_of_computation_to_runtime_map[f'NumPy with {number_of_cores_to_use} CPU core(s)'] = cpu_time
@@ -206,7 +275,7 @@ def main():
 
     # single gpu
     single_gpu_benchmark(n=100, batches=1)
-    single_gpu_runtime = single_gpu_benchmark(n=n, batches=batches, repetitions=repetitions)
+    single_gpu_runtime = single_gpu_benchmark(n=n, batches=batches, repetitions=repetitions, verbose=verbose)
     means_of_computation_to_runtime_map['Cocos Single GPU'] = single_gpu_runtime
     print(f'Estimation of pi using single GPU Cocos performed in {single_gpu_runtime} seconds')
 
@@ -214,7 +283,7 @@ def main():
     gpu_pool = ComputeDevicePool()
 
     multi_gpu_benchmark(n=100, batches=batches, gpu_pool=gpu_pool, repetitions=repetitions)
-    number_of_devices_to_runtime_map = multi_gpu_benchmark(n=n, batches=batches, gpu_pool=gpu_pool)
+    number_of_devices_to_runtime_map = multi_gpu_benchmark(n=n, batches=batches, gpu_pool=gpu_pool, verbose=verbose)
 
     for number_of_devices_to_use, gpu_time in number_of_devices_to_runtime_map.items():
         means_of_computation_to_runtime_map[f'Cocos with {number_of_devices_to_use} GPU(s)'] = gpu_time
@@ -229,7 +298,8 @@ def main():
     # cupy single gpu
     try:
         single_gpu_cupy_benchmark(n=100, batches=1)
-        single_gpu_cupy_runtime = single_gpu_cupy_benchmark(n=n, batches=batches, repetitions=repetitions)
+        single_gpu_cupy_runtime = \
+            single_gpu_cupy_benchmark(n=n, batches=batches, repetitions=repetitions, verbose=verbose)
         means_of_computation_to_runtime_map['CuPy Single GPU'] = single_gpu_cupy_runtime
         print(f'Estimation of pi using single GPU CuPy performed in {single_gpu_cupy_runtime} seconds')
     except Exception as e:

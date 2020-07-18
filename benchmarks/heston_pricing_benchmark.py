@@ -218,7 +218,7 @@ def simulate_and_compute_option_price_multicore(
         option_price = \
             map_reduce_multicore(f=simulate_and_compute_option_price,
                                  reduction=lambda x, y: x + y / number_of_cores,
-                                 # initial_value=0.0,
+                                 initial_value=0.0,
                                  kwargs_list=number_of_cores * [kwargs])
 
     return option_price

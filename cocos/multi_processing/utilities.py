@@ -83,13 +83,3 @@ ResultType = tp.TypeVar('ResultType')
 
 ParameterTransferFunction = tp.Callable[[tp.Sequence, tp.Dict[str, tp.Any]],
                                         tp.Tuple[tp.Sequence, tp.Dict[str, tp.Any]]]
-
-
-def reduce_with_none(x: tp.Optional[ResultType],
-                     y: ResultType,
-                     reduction: tp.Callable[[ResultType, ResultType], ResultType]) \
-        -> ResultType:
-    if x is None:
-        return y
-    else:
-        return reduction(x, y)

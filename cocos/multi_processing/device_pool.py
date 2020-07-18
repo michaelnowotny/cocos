@@ -10,7 +10,6 @@ from cocos.device import (
 from cocos.multi_processing.utilities import (
     MultiprocessingPoolType,
     ResultType,
-    reduce_with_none,
     ParameterTransferFunction
 )
 
@@ -148,7 +147,7 @@ class ComputeDevicePool:
             self,
             f: tp.Callable[..., ResultType],
             reduction: tp.Callable[[ResultType, ResultType], ResultType],
-            initial_value: tp.Optional[ResultType] = None,
+            initial_value: ResultType,
             host_to_device_transfer_function:
             tp.Optional[ParameterTransferFunction] = None,
             device_to_host_transfer_function:
@@ -233,14 +232,16 @@ class ComputeDevicePool:
                        in enumerate(zip(args_list, kwargs_list))]
 
             for future in as_completed(futures):
-                result = reduce_with_none(result, future.result(), reduction)
+                result = reduction(result, future.result())
+                # result = reduce_with_none(result, future.result(), reduction)
         elif self.multiprocessing_pool_type == MultiprocessingPoolType.PATHOS:
             futures = [self._executor.apipe(synced_f, *args, **kwargs)
                        for args, kwargs
                        in zip(args_list, kwargs_list)]
 
             for future in futures:
-                result = reduce_with_none(result, future.get(), reduction)
+                result = reduction(result, future.get())
+                # result = reduce_with_none(result, future.get(), reduction)
         else:
             raise ValueError(f'Multiprocessing pool type {self.multiprocessing_pool_type} not supported')
 

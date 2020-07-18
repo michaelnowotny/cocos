@@ -5,14 +5,13 @@ from cocos.multi_processing.utilities import (
     MultiprocessingPoolType,
     ResultType,
     ParameterTransferFunction,
-    reduce_with_none,
 )
 
 
 def map_reduce_single_gpu(
         f: tp.Callable[..., ResultType],
         reduction: tp.Callable[[ResultType, ResultType], ResultType],
-        initial_value: tp.Optional[ResultType] = None,
+        initial_value: ResultType,
         host_to_device_transfer_function:
         tp.Optional[ParameterTransferFunction] = None,
         device_to_host_transfer_function:
@@ -47,7 +46,7 @@ def map_reduce_single_gpu(
             result = device_to_host_transfer_function(result)
         sync()
 
-        result = reduce_with_none(result, new_part, reduction)
+        result = reduction(result, new_part)
 
     return result
 
@@ -55,7 +54,7 @@ def map_reduce_single_gpu(
 def map_reduce_multicore(
         f: tp.Callable[..., ResultType],
         reduction: tp.Callable[[ResultType, ResultType], ResultType],
-        initial_value: tp.Optional[ResultType] = None,
+        initial_value: ResultType,
         args_list: tp.Optional[tp.Sequence[tp.Sequence]] = None,
         kwargs_list: tp.Optional[tp.Sequence[tp.Dict[str, tp.Any]]] = None,
         number_of_batches: tp.Optional[int] = None,
@@ -102,7 +101,7 @@ def map_reduce_multicore(
         raise ValueError(f'Multiprocessing pool type {multiprocessing_pool_type} not supported')
 
     for future in futures:
-        result = reduce_with_none(result, result_from_future(future), reduction)
+        result = reduction(result, result_from_future(future))
 
     return result
 

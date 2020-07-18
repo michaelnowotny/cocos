@@ -91,6 +91,7 @@ def multi_core_benchmark(n: int, core_config: tp.Iterable[int], repetitions: int
                 result = \
                     map_reduce_multicore(f=lambda a, b, c: process_data(a, b, c, gpu=False),
                                          reduction=lambda x, y: numpy.hstack((x, y)),
+                                         initial_value=numpy.zeros((0, )),
                                          kwargs_list=kwargs_list)
                 assert isinstance(result, numpy.ndarray)
                 assert result.shape == (n,)
@@ -137,6 +138,7 @@ def batched_single_gpu_benchmark(n: int, batches: int, repetitions: int = 1) -> 
                                       reduction=lambda x, y: numpy.hstack((x, y)),
                                       host_to_device_transfer_function=host_to_device_transfer_function,
                                       device_to_host_transfer_function=device_to_host_transfer_function,
+                                      initial_value=numpy.zeros((0,)),
                                       kwargs_list=kwargs_list)
 
             sync()
