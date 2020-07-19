@@ -83,3 +83,24 @@ ResultType = tp.TypeVar('ResultType')
 
 ParameterTransferFunction = tp.Callable[[tp.Sequence, tp.Dict[str, tp.Any]],
                                         tp.Tuple[tp.Sequence, tp.Dict[str, tp.Any]]]
+
+
+def _extract_arguments_and_number_of_batches(
+        args_list: tp.Optional[tp.Sequence[tp.Sequence]] = None,
+        kwargs_list: tp.Optional[tp.Sequence[tp.Dict[str, tp.Any]]] = None,
+        number_of_batches: tp.Optional[int] = None):
+    if number_of_batches is None:
+        if args_list is not None:
+            number_of_batches = len(args_list)
+        elif kwargs_list is not None:
+            number_of_batches = len(kwargs_list)
+        else:
+            raise ValueError('Number_of_batches must be defined if '
+                             'both args_list and kwargs_list are empty')
+
+    if args_list is None:
+        args_list = number_of_batches * [list()]
+    if kwargs_list is None:
+        kwargs_list = number_of_batches * [dict()]
+
+    return args_list, kwargs_list, number_of_batches

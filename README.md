@@ -119,8 +119,8 @@ result = \
 
 </pre>
 
-Please refer to the documentation of `cocos.multi_processing.device_pool.ComputeDevicePool.map_reduce` for further details. 
-See 'examples/heston_pricing_multi_gpu_example.py' for a fully worked example. 
+Please refer to the documentation of `cocos.multi_processing.device_pool.ComputeDevicePool.map_reduce` for further 
+details. See 'examples/heston_pricing_multi_gpu_example.py' for a fully worked example. 
 
 
 

@@ -10,10 +10,15 @@ import numpy
 import typing as tp
 
 from cocos.device import sync
-from cocos.multi_processing.map_reduce import (
+from cocos.multi_processing.single_gpu_batch_processing import (
     map_reduce_single_gpu,
-    map_reduce_multicore
+    map_combine_single_gpu
 )
+from cocos.multi_processing.multi_core_batch_processing import (
+    map_reduce_multicore,
+    map_combine_multicore
+)
+
 import cocos.numerics as cn
 
 from cocos.numerics.data_types import NumericArray
@@ -89,11 +94,13 @@ def multi_core_benchmark(n: int, core_config: tp.Iterable[int], repetitions: int
                                            number_of_batches=number_of_cores)
 
                 result = \
-                    map_reduce_multicore(f=lambda a, b, c: process_data(a, b, c, gpu=False),
-                                         reduction=lambda x, y: numpy.hstack((x, y)),
-                                         initial_value=numpy.zeros((0, )),
-                                         kwargs_list=kwargs_list)
+                    map_combine_multicore(f=lambda a, b, c: process_data(a, b, c, gpu=False),
+                                          combination=lambda x: numpy.hstack(x),
+                                          kwargs_list=kwargs_list)
+
+                # print(type(result))
                 assert isinstance(result, numpy.ndarray)
+                # print(result.shape)
                 assert result.shape == (n,)
 
         number_of_cores_to_runtime_map[number_of_cores] = timer.elapsed / repetitions
@@ -123,7 +130,10 @@ def device_to_host_transfer_function(x):
         return numpy.array(x)
 
 
-def batched_single_gpu_benchmark(n: int, batches: int, repetitions: int = 1) -> float:
+def batched_single_gpu_benchmark(n: int,
+                                 batches: int,
+                                 repetitions: int = 1,
+                                 use_map_combine: bool = False) -> float:
     a_complete, b_complete, c_complete = generate_data(n, gpu=False)
 
     with Timer() as timer:
@@ -133,7 +143,13 @@ def batched_single_gpu_benchmark(n: int, batches: int, repetitions: int = 1) -> 
                                        c=c_complete,
                                        number_of_batches=batches)
 
-            result = \
+            if use_map_combine:
+                map_combine_single_gpu(f=lambda a, b, c: process_data(a, b, c, gpu=True),
+                                       combination=lambda x: numpy.hstack(x),
+                                       host_to_device_transfer_function=host_to_device_transfer_function,
+                                       device_to_host_transfer_function=device_to_host_transfer_function,
+                                       kwargs_list=kwargs_list)
+            else:
                 map_reduce_single_gpu(f=lambda a, b, c: process_data(a, b, c, gpu=True),
                                       reduction=lambda x, y: numpy.hstack((x, y)),
                                       host_to_device_transfer_function=host_to_device_transfer_function,
@@ -158,11 +174,24 @@ def main():
     means_of_computation_to_runtime_map['Cocos Single GPU'] = single_gpu_runtime
     print(f'Data processing using single GPU Cocos performed in {single_gpu_runtime} seconds')
 
-    # batched single gpu
+    # batched single gpu using map-reduce
     batched_single_gpu_benchmark(n=100, batches=1)
-    batched_single_gpu_runtime = batched_single_gpu_benchmark(n=n, batches=batches, repetitions=repetitions)
-    means_of_computation_to_runtime_map['Batched Cocos Single GPU'] = batched_single_gpu_runtime
-    print(f'Data processing using batched single GPU Cocos performed in {batched_single_gpu_runtime} seconds')
+    batched_single_gpu_runtime = batched_single_gpu_benchmark(n=n,
+                                                              batches=batches,
+                                                              repetitions=repetitions)
+    means_of_computation_to_runtime_map['Batched Cocos Single GPU Map Reduce'] = batched_single_gpu_runtime
+    print(f'Data processing using batched single GPU using Cocos map-reduce performed in '
+          f'{batched_single_gpu_runtime} seconds')
+
+    # batched single gpu using map-combine
+    batched_single_gpu_benchmark(n=100, batches=1, use_map_combine=True)
+    batched_single_gpu_runtime = batched_single_gpu_benchmark(n=n,
+                                                              batches=batches,
+                                                              repetitions=repetitions,
+                                                              use_map_combine=True)
+    means_of_computation_to_runtime_map['Batched Cocos Single GPU Map Combine'] = batched_single_gpu_runtime
+    print(f'Data processing using batched single GPU using Cocos map-combine performed in '
+          f'{batched_single_gpu_runtime} seconds')
 
     # single core benchmark
     single_core_runtime = single_core_benchmark(n, repetitions=repetitions)
@@ -178,11 +207,11 @@ def main():
         print(f'Data processing on {number_of_cores_to_use} core(s) using NumPy performed in {cpu_time} seconds')
 
 
-def process_data_in_infinite_loop():
-    a, b, c = generate_data(100000000, gpu=False)
-
-    while True:
-        process_data(a, b, c, gpu=False)
+# def process_data_in_infinite_loop():
+#     a, b, c = generate_data(100000000, gpu=False)
+#
+#     while True:
+#         process_data(a, b, c, gpu=False)
 
 
 if __name__ == '__main__':
@@ -193,8 +222,9 @@ if __name__ == '__main__':
                                device_to_host_transfer_function,
                                split_arrays,
                                map_reduce_single_gpu,
+                               map_combine_single_gpu,
                                multi_core_benchmark,
-                               map_reduce_multicore)
+                               map_combine_multicore)
 
         profile.enable_by_count()
 

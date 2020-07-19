@@ -10,7 +10,8 @@ from cocos.device import (
 from cocos.multi_processing.utilities import (
     MultiprocessingPoolType,
     ResultType,
-    ParameterTransferFunction
+    ParameterTransferFunction,
+    _extract_arguments_and_number_of_batches
 )
 
 
@@ -143,6 +144,27 @@ class ComputeDevicePool:
         for compute_device in self._compute_devices:
             compute_device.sync()
 
+    # @staticmethod
+    # def _extract_arguments_and_number_of_batches(
+    #         args_list: tp.Optional[tp.Sequence[tp.Sequence]] = None,
+    #         kwargs_list: tp.Optional[tp.Sequence[tp.Dict[str, tp.Any]]] = None,
+    #         number_of_batches: tp.Optional[int] = None):
+    #     if number_of_batches is None:
+    #         if args_list is not None:
+    #             number_of_batches = len(args_list)
+    #         elif kwargs_list is not None:
+    #             number_of_batches = len(kwargs_list)
+    #         else:
+    #             raise ValueError('Number_of_batches must be defined if '
+    #                              'both args_list and kwargs_list are empty')
+    #
+    #     if args_list is None:
+    #         args_list = number_of_batches * [list()]
+    #     if kwargs_list is None:
+    #         kwargs_list = number_of_batches * [dict()]
+    #
+    #     return args_list, kwargs_list, number_of_batches
+
     def map_reduce(
             self,
             f: tp.Callable[..., ResultType],
@@ -199,19 +221,11 @@ class ComputeDevicePool:
 
         """
 
-        if number_of_batches is None:
-            if args_list is not None:
-                number_of_batches = len(args_list)
-            elif kwargs_list is not None:
-                number_of_batches = len(kwargs_list)
-            else:
-                raise ValueError('Number_of_batches must be defined if '
-                                 'both args_list and kwargs_list are empty')
-
-        if args_list is None:
-            args_list = number_of_batches * [list()]
-        if kwargs_list is None:
-            kwargs_list = number_of_batches * [dict()]
+        args_list, kwargs_list, number_of_batches = \
+            _extract_arguments_and_number_of_batches(
+                args_list=args_list,
+                kwargs_list=kwargs_list,
+                number_of_batches=number_of_batches)
 
         def synced_f(*args, **kwargs) -> ResultType:
             if host_to_device_transfer_function is not None:
@@ -233,7 +247,6 @@ class ComputeDevicePool:
 
             for future in as_completed(futures):
                 result = reduction(result, future.result())
-                # result = reduce_with_none(result, future.result(), reduction)
         elif self.multiprocessing_pool_type == MultiprocessingPoolType.PATHOS:
             futures = [self._executor.apipe(synced_f, *args, **kwargs)
                        for args, kwargs
@@ -241,8 +254,55 @@ class ComputeDevicePool:
 
             for future in futures:
                 result = reduction(result, future.get())
-                # result = reduce_with_none(result, future.get(), reduction)
         else:
             raise ValueError(f'Multiprocessing pool type {self.multiprocessing_pool_type} not supported')
 
         return result
+
+    def map_combine(self,
+                    f: tp.Callable[..., ResultType],
+                    combination: tp.Callable[[tp.Iterable[ResultType]], ResultType],
+                    host_to_device_transfer_function:
+                    tp.Optional[ParameterTransferFunction] = None,
+                    device_to_host_transfer_function:
+                    tp.Optional[tp.Callable[[ResultType], ResultType]] = None,
+                    args_list: tp.Optional[tp.Sequence[tp.Sequence]] = None,
+                    kwargs_list: tp.Optional[tp.Sequence[tp.Dict[str, tp.Any]]] = None,
+                    number_of_batches: tp.Optional[int] = None) -> ResultType:
+        args_list, kwargs_list, number_of_batches = \
+            _extract_arguments_and_number_of_batches(
+                args_list=args_list,
+                kwargs_list=kwargs_list,
+                number_of_batches=number_of_batches)
+
+        def synced_f(index, *args, **kwargs) -> ResultType:
+            if host_to_device_transfer_function is not None:
+                args, kwargs = host_to_device_transfer_function(*args, **kwargs)
+            sync()
+            result = f(*args, **kwargs)
+            if device_to_host_transfer_function is not None:
+                result = device_to_host_transfer_function(result)
+            sync()
+            return index, result
+
+        results = []
+        if self.multiprocessing_pool_type == MultiprocessingPoolType.LOKY:
+            from loky import as_completed
+
+            futures = [self._executor.submit(synced_f, i, *args, **kwargs)
+                       for i, (args, kwargs)
+                       in enumerate(zip(args_list, kwargs_list))]
+
+            for future in as_completed(futures):
+                results.append(future.result())
+        elif self.multiprocessing_pool_type == MultiprocessingPoolType.PATHOS:
+            futures = [self._executor.apipe(synced_f, i, *args, **kwargs)
+                       for i, (args, kwargs)
+                       in enumerate(zip(args_list, kwargs_list))]
+
+            for future in futures:
+                results.append(future.get())
+        else:
+            raise ValueError(f'Multiprocessing pool type {self.multiprocessing_pool_type} not supported')
+
+        return combination(sorted(results, key=lambda x: x[0]))
