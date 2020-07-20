@@ -49,7 +49,7 @@ def exclude_intel_devices(compute_device: ComputeDevice) -> bool:
     Some Intel processors feature a GPU integrated on the chip of the CPU. The
     integrated GPU is typically less performant than discrete GPUs in the
     system. This parameter can be used to automatically exclude any device whose
-    name containts 'Intel'.
+    name contains 'Intel'.
     """
 
     return 'intel' not in compute_device.name.lower()
