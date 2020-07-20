@@ -108,17 +108,6 @@ def multi_core_benchmark(n: int, core_config: tp.Iterable[int], repetitions: int
     return number_of_cores_to_runtime_map
 
 
-def single_gpu_benchmark(n: int, batches: int, repetitions: int = 1) -> float:
-    a_complete, b_complete, c_complete = generate_data(n, gpu=True)
-
-    with Timer() as timer:
-        for _ in range(repetitions):
-            process_data(a_complete, b_complete, c_complete, gpu=True)
-            sync()
-
-    return timer.elapsed / repetitions
-
-
 def host_to_device_transfer_function(a, b, c):
     return [], {'a': cn.array(a), 'b': cn.array(b), 'c': cn.array(c)}
 
@@ -128,6 +117,32 @@ def device_to_host_transfer_function(x):
         return None
     else:
         return numpy.array(x)
+
+
+def single_gpu_benchmark(n: int,
+                         batches: int,
+                         repetitions: int = 1,
+                         host_to_device_transfer: bool = False) -> float:
+    gpu = not host_to_device_transfer
+    a_complete, b_complete, c_complete = generate_data(n, gpu=gpu)
+
+    with Timer() as timer:
+        for _ in range(repetitions):
+            if host_to_device_transfer:
+                a, b, c = cn.array(a_complete), cn.array(b_complete), cn.array(c_complete)
+            else:
+                a, b, c = a_complete, b_complete, c_complete
+
+            result = process_data(a, b, c, gpu=True)
+
+            del a, b, c
+
+            if host_to_device_transfer:
+                result = numpy.array(result)
+
+            sync()
+
+    return timer.elapsed / repetitions
 
 
 def batched_single_gpu_benchmark(n: int,
@@ -168,28 +183,62 @@ def main():
     batches = 20
     means_of_computation_to_runtime_map = {}
 
-    # single gpu
-    single_gpu_benchmark(n=100, batches=1)
-    single_gpu_runtime = single_gpu_benchmark(n=n, batches=batches, repetitions=repetitions)
-    means_of_computation_to_runtime_map['Cocos Single GPU'] = single_gpu_runtime
+    # single gpu - without host to device transfer
+    single_gpu_benchmark(n=100,
+                         batches=1,
+                         host_to_device_transfer=False)
+
+    single_gpu_runtime = single_gpu_benchmark(n=n,
+                                              batches=batches,
+                                              repetitions=repetitions,
+                                              host_to_device_transfer=False)
+
+    means_of_computation_to_runtime_map['Cocos Single GPU - Without Host to Device Transfer'] = \
+        single_gpu_runtime
+
     print(f'Data processing using single GPU Cocos performed in {single_gpu_runtime} seconds')
+
+    # single gpu - without host to device transfer
+    single_gpu_benchmark(n=100,
+                         batches=1,
+                         host_to_device_transfer=True)
+
+    single_gpu_runtime_with_transfer = single_gpu_benchmark(n=n,
+                                                            batches=batches,
+                                                            repetitions=repetitions,
+                                                            host_to_device_transfer=True)
+
+    means_of_computation_to_runtime_map['Cocos Single GPU - With Host to Device Transfer'] = \
+        single_gpu_runtime_with_transfer
+
+    print(f'Data processing using single GPU Cocos with host to device transfer '
+          f'performed in {single_gpu_runtime_with_transfer} seconds')
 
     # batched single gpu using map-reduce
     batched_single_gpu_benchmark(n=100, batches=1)
     batched_single_gpu_runtime = batched_single_gpu_benchmark(n=n,
                                                               batches=batches,
                                                               repetitions=repetitions)
-    means_of_computation_to_runtime_map['Batched Cocos Single GPU Map Reduce'] = batched_single_gpu_runtime
+
+    means_of_computation_to_runtime_map['Batched Cocos Single GPU Map Reduce'] = \
+        batched_single_gpu_runtime
+
     print(f'Data processing using batched single GPU using Cocos map-reduce performed in '
           f'{batched_single_gpu_runtime} seconds')
 
     # batched single gpu using map-combine
-    batched_single_gpu_benchmark(n=100, batches=1, use_map_combine=True)
+    batched_single_gpu_benchmark(n=100,
+                                 batches=1,
+                                 use_map_combine=True)
+
     batched_single_gpu_runtime = batched_single_gpu_benchmark(n=n,
                                                               batches=batches,
                                                               repetitions=repetitions,
                                                               use_map_combine=True)
-    means_of_computation_to_runtime_map['Batched Cocos Single GPU Map Combine'] = batched_single_gpu_runtime
+
+    means_of_computation_to_runtime_map['Batched Cocos Single GPU Map Combine'] = \
+        batched_single_gpu_runtime
+
     print(f'Data processing using batched single GPU using Cocos map-combine performed in '
           f'{batched_single_gpu_runtime} seconds')
 
@@ -199,8 +248,12 @@ def main():
     print(f'Data processing using single core NumPy performed in {single_core_runtime} seconds')
 
     # multi core benchmark (does not make sense on Windows and Anaconda)
-    multi_core_benchmark(n=100, core_config=range(1, multiprocessing.cpu_count() + 1), repetitions=repetitions)
-    number_of_cores_to_runtime_map = multi_core_benchmark(n=n, core_config=range(1, multiprocessing.cpu_count() + 1))
+    multi_core_benchmark(n=100,
+                         core_config=range(1, multiprocessing.cpu_count() + 1),
+                         repetitions=repetitions)
+
+    number_of_cores_to_runtime_map = multi_core_benchmark(n=n,
+                                                          core_config=range(1, multiprocessing.cpu_count() + 1))
 
     for number_of_cores_to_use, cpu_time in number_of_cores_to_runtime_map.items():
         means_of_computation_to_runtime_map[f'NumPy with {number_of_cores_to_use} CPU core(s)'] = cpu_time
