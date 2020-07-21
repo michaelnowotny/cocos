@@ -508,14 +508,14 @@ Package versions used:
 - Python: 3.7.3
 
 
-### Single GPU Stochastic Volatility Model Benchmark
+### Stochastic Volatility Model Benchmark
 This benchmark compares the runtime performance of the option pricing example 
 under a Heston stochastic volatility model on the CPU using NumPy on a single 
 core as well as on all cores simultaneously and the GPU using Cocos and CuPy. 
 CuPy is another package that provides a NumPy-like API for GPU computing.
 
 The results were produced on a machine with an Intel Core i7 9700K with 128GB of 
-RAM and a NVidia GeForce GTX 1060 running Windows 10. Two Million paths are being simulated with 
+RAM and two NVidia GeForce GTX 1060 running Windows 10. Two Million paths are being simulated with 
 500 time steps per year.
 
 <table>
@@ -527,23 +527,33 @@ RAM and a NVidia GeForce GTX 1060 running Windows 10. Two Million paths are bein
 </tr>
 <tr>
 <td>NumPy</td>
-<td>45.31574273109436</td>
+<td>32.782310247421265</td>
 <td>1.0</td>
 </tr>
 <tr>
 <td>Cocos</td>
-<td>1.8577601909637451</td>
-<td>24.39267616536989</td>
+<td>1.856126070022583</td>
+<td>17.661682994960795</td>
 </tr>
 <tr>
 <td>CuPy</td>
-<td>2.8235089778900146</td>
-<td>16.049441700361953</td>
+<td>2.815166473388672</td>
+<td>11.64489224964396</td>
 </tr>
 <tr>
 <td>NumPy Multicore</td>
-<td>11.038469791412354</td>
-<td>4.10525585406311</td>
+<td>7.143897294998169</td>
+<td>4.588855199580479</td>
+</tr>
+<tr>
+<td>Cocos on 1 GPU</td>
+<td>1.8460988998413086</td>
+<td>17.757613229843344</td>
+</tr>
+<tr>
+<td>Cocos on 2 GPUs</td>
+<td>0.9753890037536621</td>
+<td>33.60947285776512</td>
 </tr>
 </table>
 
@@ -557,44 +567,6 @@ Package versions used:
 - cupy-cuda92: 6.2.0 
 - NumPy: 1.16.4
 - Python: 3.7.3
-
-
-### Multi-GPU Stochastic Volatility Model Benchmark
-This benchmark compares the runtime performance of the option pricing example 
-under a Heston stochastic volatility model for different numbers of GPU devices.
-
-The results were produced on a machine with an Intel Core i7 9700K with 128GB of 
-RAM and two NVidia GeForce GTX 1060 GPUs running Windows 10. Two Million paths are being simulated with 
-500 time steps per year.
-
-<table>
-<tbody>
-<tr>
-<th>Number of GPUs</th>
-<th>Total Time in Seconds</th>
-<th>Speedup Compared to Single GPU</th>
-</tr>
-<tr>
-<td>1</td>
-<td>1.8540585041046143</td>
-<td>1.0</td>
-</tr>
-<tr>
-<td>2</td>
-<td>0.9664418697357178</td>
-<td>1.9184376858709808</td>
-</tr>
-</table>
-
-
-Package versions used:
-- arrayfire: 3.6.4
-- arrayfire-python: 3.6.20181017
-- cocos: 0.1.14
-- CUDA: 10.1
-- NumPy: 1.16.4
-- Python: 3.7.3
-
 
 ## Functionality
 
