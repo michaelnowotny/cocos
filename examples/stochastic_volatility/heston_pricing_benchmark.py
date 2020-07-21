@@ -1,3 +1,4 @@
+from contexttimer import Timer
 import math
 import matplotlib.pyplot as plt
 import multiprocessing
@@ -117,33 +118,35 @@ def run_benchmark(x0: float,
                               numerical_package_bundle=numerical_package_bundle)
 
     # actual simulation run to price plain vanilla call option
-    tic = time.time()
-    (x_simulated, v_simulated) \
-        = simulate_heston_model(
-            T=T,
-            N=nT,
-            R=R,
-            mu=r,
-            kappa=kappa,
-            v_bar=v_bar,
-            sigma_v=sigma_v,
-            rho=rho,
-            x0=x0,
-            v0=v0,
-            numerical_package_bundle=numerical_package_bundle)
+    with Timer() as timer:
+    # tic = time.time()
+        (x_simulated, v_simulated) \
+            = simulate_heston_model(
+                T=T,
+                N=nT,
+                R=R,
+                mu=r,
+                kappa=kappa,
+                v_bar=v_bar,
+                sigma_v=sigma_v,
+                rho=rho,
+                x0=x0,
+                v0=v0,
+                numerical_package_bundle=numerical_package_bundle)
 
-    # compute option price
-    option_price \
-        = compute_option_price_from_simulated_paths(
-            r=r,
-            T=T,
-            K=K,
-            x_simulated=x_simulated,
-            numerical_package_bundle=numerical_package_bundle)
+        # compute option price
+        option_price \
+            = compute_option_price_from_simulated_paths(
+                r=r,
+                T=T,
+                K=K,
+                x_simulated=x_simulated,
+                numerical_package_bundle=numerical_package_bundle)
 
     # print(option_price)
     numerical_package_bundle.synchronize()
-    total_time = time.time() - tic
+    # total_time = time.time() - tic
+    total_time = timer.elapsed
 
     return HestonBenchmarkResults(numerical_package_bundle,
                                   total_time=total_time,
@@ -206,16 +209,20 @@ def run_benchmarks(
         # multi core benchmarks
         kwargs['numerical_package_bundle'] = NumpyMulticoreBundle
         # initialize Python processes
-        tic = time.time()
-        _ \
-            = simulate_and_compute_option_price_multicore(**kwargs)
-        print(f'time in first run={time.time() - tic}')
+        with Timer() as timer:
+        # tic = time.time()
+            _ \
+                = simulate_and_compute_option_price_multicore(**kwargs)
+            print(f'time in first run={timer.elapsed}')
 
-        tic = time.time()
-        option_price \
-            = simulate_and_compute_option_price_multicore(**kwargs)
+        with Timer() as timer:
+            # tic = time.time()
+            option_price \
+                = simulate_and_compute_option_price_multicore(**kwargs)
 
-        total_time = time.time() - tic
+        # total_time = time.time() - tic
+        total_time = timer.elapsed
+
         numpy_multicore_results = \
             HestonBenchmarkResults(
                 numerical_package_bundle=NumpyMulticoreBundle,
@@ -245,13 +252,16 @@ def run_benchmarks(
         for number_of_gpus in range(1, gpu_pool.number_of_devices + 1):
             cocos_multi_gpu_bundle = CocosMultiGPUBundle(number_of_gpus=number_of_gpus)
 
-            tic = time.time()
-            option_price = \
-                simulate_and_compute_option_price_gpu(gpu_pool=gpu_pool,
-                                                      number_of_batches=number_of_gpus,
-                                                      **kwargs)
-            cocos.device.sync()
-            total_time = time.time() - tic
+            with Timer() as timer:
+                tic = time.time()
+                option_price = \
+                    simulate_and_compute_option_price_gpu(gpu_pool=gpu_pool,
+                                                          number_of_batches=number_of_gpus,
+                                                          **kwargs)
+                cocos.device.sync()
+
+            # total_time = time.time() - tic
+            total_time = timer.elapsed
 
             cocos_multi_gpu_results = \
                 HestonBenchmarkResults(
