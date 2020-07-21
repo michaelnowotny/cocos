@@ -70,6 +70,9 @@ class ComputeDevicePool:
         :param compute_devices: a collection of device ids or compute devices
         :param compute_device_filter: provide a predicate used to filter devices 
                                       to include in the pool
+        :param multiprocessing_pool_type: the type of multi-processing pool 
+                                          (see class MultiprocessingPoolType)
+
         """
         if compute_devices is None:
             compute_devices = ComputeDeviceManager.get_compute_devices()

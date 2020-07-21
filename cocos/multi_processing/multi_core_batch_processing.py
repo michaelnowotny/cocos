@@ -16,6 +16,39 @@ def map_reduce_multicore(
         number_of_batches: tp.Optional[int] = None,
         multiprocessing_pool_type: MultiprocessingPoolType = MultiprocessingPoolType.default()) \
         -> ResultType:
+    """
+    This function evaluates the function 'f' on elements of 'args_list' and
+    'kwargs_list' in parallel on multiple cpu cores and performs the reduction
+    by calling the function 'reduction' on the result and the result of the
+    reductions so far to eventually produce one final result of type
+    'ResultType'. The reduce step is performed from the left and results are
+    being processed in the same order as they appear in `args_list` and
+    `kwargs_list`.
+
+    If the arguments for each run of 'f' are identical and they have already
+    been applied to the function that is passed then 'args_list' and
+    'kwargs_list' may both be None but the argument 'number_of_batches' must
+    be specified so the method knows how many times to run the function 'f'.
+
+    Args:
+        f: The map function to be evaluated over elements of 'args_list' and
+               'kwargs_list'.
+
+        reduction: The reduction to be performed on the results of 'f'.
+                       This is done on the host (not the device).
+
+        initial_value: The initial value of the reduction
+                           (i.e. the neutral element).
+
+        args_list: A sequence of sequences of positional arguments.
+        kwargs_list: A sequence of dictionaries of keyword arguments.
+        number_of_batches:
+            The number of function evaluations is required if 'args_list'
+            and 'kwargs_list' are both empty.
+
+        multiprocessing_pool_type:
+            the type of multi-processing pool (see class MultiprocessingPoolType)
+    """
     args_list, kwargs_list, number_of_batches = \
         _extract_arguments_and_number_of_batches(
             args_list=args_list,
@@ -69,6 +102,32 @@ def map_combine_multicore(
         number_of_batches: tp.Optional[int] = None,
         multiprocessing_pool_type: MultiprocessingPoolType = MultiprocessingPoolType.default()) \
         -> ResultType:
+    """
+    This function evaluates the function `f` on elements of `args_list` and
+    `kwargs_list` in parallel on multiple cpu cores and aggregates results
+    in a single step by calling the function `combination` with a list of all
+    results. Results provided to `combination` are in the same order as
+    they appear in `args_list` and `kwargs_list`.
+
+    If the arguments for each run of 'f' are identical and they have already
+    been applied to the function that is passed then 'args_list' and
+    'kwargs_list' may both be None but the argument 'number_of_batches' must
+    be specified so the method knows how many times to run the function 'f'.
+
+    Args:
+        f: The map function to be evaluated over elements of 'args_list' and
+               'kwargs_list'.
+
+        combination: A function that aggregates a list of all results in a single step
+        args_list: A sequence of sequences of positional arguments.
+        kwargs_list: A sequence of dictionaries of keyword arguments.
+        number_of_batches:
+            The number of function evaluations is required if 'args_list'
+            and 'kwargs_list' are both empty.
+
+        multiprocessing_pool_type:
+            the type of multi-processing pool (see class MultiprocessingPoolType)
+    """
     args_list, kwargs_list, number_of_batches = \
         _extract_arguments_and_number_of_batches(
             args_list=args_list,
