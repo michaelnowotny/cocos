@@ -298,9 +298,6 @@ class ComputeDevicePool:
             number_of_batches: 
                 The number of function evaluations is required if 'args_list' 
                 and 'kwargs_list' are both empty.
-
-        Returns:
-
         """
         args_list, kwargs_list, number_of_batches = \
             _extract_arguments_and_number_of_batches(

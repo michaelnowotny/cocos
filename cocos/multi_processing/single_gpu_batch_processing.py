@@ -21,6 +21,48 @@ def map_reduce_single_gpu(
         kwargs_list: tp.Optional[tp.Sequence[tp.Dict[str, tp.Any]]] = None,
         number_of_batches: tp.Optional[int] = None) \
         -> ResultType:
+    """
+    This method function the function 'f' on elements of 'args_list' and 
+    'kwargs_list' sequentially on a single device and performs the reduction 
+    by calling the function 'reduction' on the result and the result of the 
+    reductions so far to eventually produce one final result of type 
+    'ResultType'. The reduce step is performed from the left and results are 
+    being processed in the same order as they appear in `args_list` and 
+    `kwargs_list`. 
+
+    Input data to the function f must initially reside in host memory and 
+    the user must provide functions 'host_to_device_transfer_function' and 
+    'device_to_host_transfer_function' to transfer the data to and results 
+    from device memory respectively.
+
+    If the arguments for each run of 'f' are identical and they have already 
+    been applied to the function that is passed then 'args_list' and 
+    'kwargs_list' may both be None but the argument 'number_of_batches' must 
+    be specified so the method knows how many times to run the function 'f'.
+    
+    Args:
+        f: The map function to be evaluated over elements of 'args_list' and 
+           'kwargs_list'.
+           
+        reduction: The reduction to be performed on the results of 'f'. 
+                   This is done on the host (not the device).
+                   
+        initial_value: The initial value of the reduction 
+                       (i.e. the neutral element).
+                       
+        host_to_device_transfer_function: 
+            A function that transfers elements of args_list and kwargs_list 
+            from host memory to device memory.
+            
+        device_to_host_transfer_function: 
+            A function that transfers results from device to host memory.
+            
+        args_list: A sequence of sequences of positional arguments.
+        kwargs_list: A sequence of dictionaries of keyword arguments.
+        number_of_batches: 
+            The number of function evaluations is required if 'args_list' 
+            and 'kwargs_list' are both empty.
+    """
     args_list, kwargs_list, number_of_batches = \
         _extract_arguments_and_number_of_batches(
             args_list=args_list,
@@ -54,14 +96,48 @@ def map_combine_single_gpu(
         kwargs_list: tp.Optional[tp.Sequence[tp.Dict[str, tp.Any]]] = None,
         number_of_batches: tp.Optional[int] = None) \
         -> ResultType:
+    """
+    This function evaluates the function `f` on elements of `args_list` and 
+    `kwargs_list` sequentially on a single device and aggregates results 
+    in a single step by calling the function `combination` with a list of all 
+    results. Results provided to `combination` are in the same order as 
+    they appear in `args_list` and `kwargs_list`. 
+    
+    Input data to the function f must initially reside in host memory and 
+    the user must provide functions 'host_to_device_transfer_function' and 
+    'device_to_host_transfer_function' to transfer the data to and results 
+    from device memory respectively.
+    
+    If the arguments for each run of 'f' are identical and they have already 
+    been applied to the function that is passed then 'args_list' and 
+    'kwargs_list' may both be None but the argument 'number_of_batches' must 
+    be specified so the method knows how many times to run the function 'f'.
+    
+    Args:
+        f: The map function to be evaluated over elements of 'args_list' and 
+           'kwargs_list'.
+           
+        combination: 
+            A function that aggregates a list of all results in a single step
+            
+        host_to_device_transfer_function: 
+            A function that transfers elements of args_list and kwargs_list 
+            from host memory to device memory.
+            
+        device_to_host_transfer_function:
+             A function that transfers results from device to host memory.
+             
+        args_list: A sequence of sequences of positional arguments.
+        kwargs_list: A sequence of dictionaries of keyword arguments.
+        number_of_batches: 
+            The number of function evaluations is required if 'args_list' 
+            and 'kwargs_list' are both empty.
+    """
     args_list, kwargs_list, number_of_batches = \
         _extract_arguments_and_number_of_batches(
             args_list=args_list,
             kwargs_list=kwargs_list,
             number_of_batches=number_of_batches)
-
-    # def synced_f(index, *args, **kwargs) -> ResultType:
-    #     return index, f(*args, **kwargs)
 
     results = []
 
