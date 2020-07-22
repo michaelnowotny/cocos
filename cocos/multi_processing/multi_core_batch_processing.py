@@ -25,7 +25,6 @@ def map_reduce_multicore(
     def wrapped_f(index, *args, **kwargs) -> ResultType:
         return index, f(*args, **kwargs)
 
-    result = initial_value
     if multiprocessing_pool_type == MultiprocessingPoolType.LOKY:
         from concurrent.futures import as_completed
         from loky import get_reusable_executor
@@ -55,11 +54,9 @@ def map_reduce_multicore(
     results = sorted(results, key=lambda x: x[0])
     results = [result[1] for result in results]
 
+    result = initial_value
     for new_result in results:
         result = reduction(result, new_result)
-
-    # for future in futures:
-    #     result = reduction(result, result_from_future(future)[1])
 
     return result
 

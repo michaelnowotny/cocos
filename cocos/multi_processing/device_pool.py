@@ -206,7 +206,7 @@ class ComputeDevicePool:
                 kwargs_list=kwargs_list,
                 number_of_batches=number_of_batches)
 
-        def synced_f(*args, **kwargs) -> ResultType:
+        def synced_f(index, *args, **kwargs) -> ResultType:
             if host_to_device_transfer_function is not None:
                 args, kwargs = host_to_device_transfer_function(*args, **kwargs)
             sync()
@@ -214,27 +214,36 @@ class ComputeDevicePool:
             if device_to_host_transfer_function is not None:
                 result = device_to_host_transfer_function(result)
             sync()
-            return result
+            return index, result
 
-        result = initial_value
+        results = []
         if self.multiprocessing_pool_type == MultiprocessingPoolType.LOKY:
             from loky import as_completed
 
-            futures = [self._executor.submit(synced_f, *args, **kwargs)
+            futures = [self._executor.submit(synced_f, i, *args, **kwargs)
                        for i, (args, kwargs)
                        in enumerate(zip(args_list, kwargs_list))]
 
             for future in as_completed(futures):
-                result = reduction(result, future.result())
+                results.append(future.result())
+                # result = reduction(result, future.result())
         elif self.multiprocessing_pool_type == MultiprocessingPoolType.PATHOS:
-            futures = [self._executor.apipe(synced_f, *args, **kwargs)
-                       for args, kwargs
-                       in zip(args_list, kwargs_list)]
+            futures = [self._executor.apipe(synced_f, i, *args, **kwargs)
+                       for i, (args, kwargs)
+                       in enumerate(zip(args_list, kwargs_list))]
 
             for future in futures:
-                result = reduction(result, future.get())
+                results.append(future.get())
+                # result = reduction(result, future.get())
         else:
             raise ValueError(f'Multiprocessing pool type {self.multiprocessing_pool_type} not supported')
+
+        results = sorted(results, key=lambda x: x[0])
+        results = [result[1] for result in results]
+
+        result = initial_value
+        for new_result in results:
+            result = reduction(result, new_result)
 
         return result
 
@@ -284,4 +293,7 @@ class ComputeDevicePool:
         else:
             raise ValueError(f'Multiprocessing pool type {self.multiprocessing_pool_type} not supported')
 
-        return combination(sorted(results, key=lambda x: x[0]))
+        results = sorted(results, key=lambda x: x[0])
+        results = [result[1] for result in results]
+
+        return combination(results)
