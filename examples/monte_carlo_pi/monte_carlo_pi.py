@@ -20,7 +20,7 @@ def estimate_pi(n: int, gpu: bool = True) -> float:
 #   'cpu', 'cuda', and 'opencl'
 cd.init()
 
-# print information regarding the available devices in the machine
+# print information regarding the available devices on the machine
 cd.info()
 
 # number of draws

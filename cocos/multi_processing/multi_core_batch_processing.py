@@ -22,20 +22,6 @@ def map_reduce_multicore(
             kwargs_list=kwargs_list,
             number_of_batches=number_of_batches)
 
-    # if number_of_batches is None:
-    #     if args_list is not None:
-    #         number_of_batches = len(args_list)
-    #     elif kwargs_list is not None:
-    #         number_of_batches = len(kwargs_list)
-    #     else:
-    #         raise ValueError('Number_of_batches must be defined if '
-    #                          'both args_list and kwargs_list are empty')
-    #
-    # if args_list is None:
-    #     args_list = number_of_batches * [list()]
-    # if kwargs_list is None:
-    #     kwargs_list = number_of_batches * [dict()]
-
     result = initial_value
     if multiprocessing_pool_type == MultiprocessingPoolType.LOKY:
         from concurrent.futures import as_completed
