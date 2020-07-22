@@ -163,7 +163,9 @@ class ComputeDevicePool:
         'kwargs_list' in parallel on multiple devices and performs the reduction 
         by calling the function 'reduction' on the result and the result of the 
         reductions so far to eventually produce one final result of type 
-        'ResultType'. 
+        'ResultType'. The reduce step is performed from the left and results are 
+        being processed in the same order as they appear in `args_list` and 
+        `kwargs_list`. 
     
         Input data to the function f must initially reside in host memory and 
         the user must provide functions 'host_to_device_transfer_function' and 
@@ -257,6 +259,46 @@ class ComputeDevicePool:
                     args_list: tp.Optional[tp.Sequence[tp.Sequence]] = None,
                     kwargs_list: tp.Optional[tp.Sequence[tp.Dict[str, tp.Any]]] = None,
                     number_of_batches: tp.Optional[int] = None) -> ResultType:
+        """
+        This method evaluates the function `f` on elements of `args_list` and 
+        `kwargs_list` in parallel on multiple devices and aggregates results 
+        in a single step by calling the function `combination` with a list of all 
+        results. Results provided to `combination` are in the same order as 
+        they appear in `args_list` and `kwargs_list`. 
+    
+        Input data to the function f must initially reside in host memory and 
+        the user must provide functions 'host_to_device_transfer_function' and 
+        'device_to_host_transfer_function' to transfer the data to and results 
+        from device memory respectively.
+    
+        If the arguments for each run of 'f' are identical and they have already 
+        been applied to the function that is passed then 'args_list' and 
+        'kwargs_list' may both be None but the argument 'number_of_batches' must 
+        be specified so the method knows how many times to run the function 'f'.
+
+        Args:
+            f: The map function to be evaluated over elements of 'args_list' and 
+               'kwargs_list'.
+               
+            combination: 
+                A function that aggregates a list of all results in a single step
+                
+            host_to_device_transfer_function: 
+                A function that transfers elements of args_list and kwargs_list 
+                from host memory to device memory.
+                
+            device_to_host_transfer_function:
+                 A function that transfers results from device to host memory.
+                 
+            args_list: A sequence of sequences of positional arguments.
+            kwargs_list: A sequence of dictionaries of keyword arguments.
+            number_of_batches: 
+                The number of function evaluations is required if 'args_list' 
+                and 'kwargs_list' are both empty.
+
+        Returns:
+
+        """
         args_list, kwargs_list, number_of_batches = \
             _extract_arguments_and_number_of_batches(
                 args_list=args_list,
