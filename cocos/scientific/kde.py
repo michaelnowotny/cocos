@@ -79,12 +79,17 @@ import numpy as np
 __all__ = ['gaussian_kde']
 
 
-def _check_array_at_right_location_and_convert(array, gpu: bool):
+def _check_array_at_right_location_and_convert(array,
+                                               gpu: bool,
+                                               dtype: np.generic = np.float32):
     if isinstance(array, np.ndarray) and gpu:
-        return cn.array(array)
+        array = cn.array(array)
 
     if isinstance(array, cn.ndarray) and not gpu:
-        return np.array(array)
+        array = np.array(array)
+
+    if array.dtype != dtype:
+        array = array.astype(dtype)
 
     return array
 
@@ -972,6 +977,8 @@ class gaussian_kde:
         points = \
             ensure_consistent_numeric_arrays((self.dataset.T, ), gpu)[0]
 
+        # print(f'{type(points)=}, {points.dtype=}')
+        # print(f'{type(self.whitening)}, {self.whitening.dtype=}')
         return num_pack.dot(points, self.whitening)
 
     @cached_property
