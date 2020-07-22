@@ -559,17 +559,25 @@ class gaussian_kde:
         self.d, self.n = self.dataset.shape
 
         if weights is not None:
-            self._weights = atleast_1d(weights).astype(float)
-            self._weights /= np.sum(self._weights)
-            if self.weights.ndim != 1:
+            weights = atleast_1d(weights).astype(float)
+            weights /= np.sum(weights)
+            if weights.ndim != 1:
                 raise ValueError("`weights` input should be one-dimensional.")
-            if len(self._weights) != self.n:
+            if len(weights) != self.n:
                 raise ValueError("`weights` input should be of length n")
-            self._neff = 1.0/np.sum(self._weights**2)
+            self._neff = 1.0/np.sum(weights**2)
         else:
-            self._weights = ones(self.n) / self.n
+            weights = ones(self.n) / self.n
 
-        self._covariance_factor = self._get_covariance_factor_function_from_bandwidth_type(bw_method)
+        if gpu:
+            dtype = np.float32
+            weights = weights.astype(dtype)
+            self.dataset = self.dataset.astype(dtype)
+
+        self._weights = weights
+        self._covariance_factor = \
+            self._get_covariance_factor_function_from_bandwidth_type(bw_method)
+
         self._compute_covariance()
 
     def evaluate(self, points):
@@ -890,9 +898,11 @@ class gaussian_kde:
 
         # Cache covariance and inverse covariance of the data
         if not hasattr(self, '_data_inv_cov'):
-            self._data_covariance = atleast_2d(cov(self.dataset, rowvar=1,
-                                               bias=False,
-                                               aweights=self.weights))
+            self._data_covariance = \
+                atleast_2d(cov(self.dataset,
+                               rowvar=True,
+                               bias=False,
+                               aweights=self.weights))
             self._data_inv_cov = linalg.inv(self._data_covariance)
 
         self.covariance = self._data_covariance * self.factor**2
