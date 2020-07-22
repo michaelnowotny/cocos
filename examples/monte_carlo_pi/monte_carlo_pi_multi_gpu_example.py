@@ -283,24 +283,37 @@ def main():
     # multi gpu benchmark
     gpu_pool = ComputeDevicePool()
 
-    multi_gpu_benchmark(n=100, batches=batches, gpu_pool=gpu_pool, repetitions=repetitions)
-    number_of_devices_to_runtime_map = multi_gpu_benchmark(n=n, batches=batches, gpu_pool=gpu_pool, verbose=verbose)
-
-    for number_of_devices_to_use, gpu_time in number_of_devices_to_runtime_map.items():
-        means_of_computation_to_runtime_map[f'Cocos with {number_of_devices_to_use} GPU(s)'] = gpu_time
-        print(f'Estimation of pi on {number_of_devices_to_use} GPUs in {gpu_time} seconds')
-
     if gpu_pool.number_of_devices > 1:
-        for number_of_devices_to_use in range(2, gpu_pool.number_of_devices + 1):
-            print(f'Performance on {number_of_devices_to_use} GPUs increased by a factor of'
-                  f' {number_of_devices_to_runtime_map[1] / number_of_devices_to_runtime_map[number_of_devices_to_use]} '
-                  f'over a single GPU.')
+        multi_gpu_benchmark(n=100,
+                            batches=batches,
+                            gpu_pool=gpu_pool,
+                            repetitions=repetitions)
 
-    # cupy single gpu
+        number_of_devices_to_runtime_map = \
+            multi_gpu_benchmark(n=n,
+                                batches=batches,
+                                gpu_pool=gpu_pool,
+                                verbose=verbose)
+
+        for number_of_devices_to_use, gpu_time in number_of_devices_to_runtime_map.items():
+            means_of_computation_to_runtime_map[f'Cocos with {number_of_devices_to_use} GPU(s)'] = \
+                gpu_time
+            print(f'Estimation of pi on {number_of_devices_to_use} GPUs in {gpu_time} seconds')
+
+        if gpu_pool.number_of_devices > 1:
+            for number_of_devices_to_use in range(2, gpu_pool.number_of_devices + 1):
+                print(f'Performance on {number_of_devices_to_use} GPUs increased by a factor of'
+                      f' {number_of_devices_to_runtime_map[1] / number_of_devices_to_runtime_map[number_of_devices_to_use]} '
+                      f'over a single GPU.')
+
+    # CuPy single gpu
     try:
         single_gpu_cupy_benchmark(n=100, batches=1)
         single_gpu_cupy_runtime = \
-            single_gpu_cupy_benchmark(n=n, batches=batches, repetitions=repetitions, verbose=verbose)
+            single_gpu_cupy_benchmark(n=n,
+                                      batches=batches,
+                                      repetitions=repetitions,
+                                      verbose=verbose)
         means_of_computation_to_runtime_map['CuPy Single GPU'] = single_gpu_cupy_runtime
         print(f'Estimation of pi using single GPU CuPy performed in {single_gpu_cupy_runtime} seconds')
     except Exception as e:

@@ -17,7 +17,7 @@ from cocos.numerics.numerical_package_bundle import (
     CocosBundle
 )
 
-from stochastic_volatility.heston_utilities import (
+from examples.stochastic_volatility.heston_utilities import (
     simulate_and_compute_option_price_gpu,
     simulate_and_compute_option_price_multicore,
     simulate_and_compute_option_price,
@@ -233,38 +233,38 @@ def run_benchmarks(
             kwargs.pop('numerical_package_bundle')
 
         gpu_pool = ComputeDevicePool()
+        if gpu_pool.number_of_devices > 1:
+            # warm up
+            kwargs['R'] = 20000
+            option_price = \
+                simulate_and_compute_option_price_gpu(gpu_pool=gpu_pool,
+                                                      **kwargs)
 
-        # warm up
-        kwargs['R'] = 20000
-        option_price = \
-            simulate_and_compute_option_price_gpu(gpu_pool=gpu_pool,
-                                                  **kwargs)
+            # actual benchmark
+            kwargs['R'] = R
 
-        # actual benchmark
-        kwargs['R'] = R
+            for number_of_gpus in range(1, gpu_pool.number_of_devices + 1):
+                cocos_multi_gpu_bundle = CocosMultiGPUBundle(number_of_gpus=number_of_gpus)
 
-        for number_of_gpus in range(1, gpu_pool.number_of_devices + 1):
-            cocos_multi_gpu_bundle = CocosMultiGPUBundle(number_of_gpus=number_of_gpus)
+                with Timer() as timer:
+                    option_price = \
+                        simulate_and_compute_option_price_gpu(gpu_pool=gpu_pool,
+                                                              number_of_batches=number_of_gpus,
+                                                              **kwargs)
+                    cocos.device.sync()
 
-            with Timer() as timer:
-                option_price = \
-                    simulate_and_compute_option_price_gpu(gpu_pool=gpu_pool,
-                                                          number_of_batches=number_of_gpus,
-                                                          **kwargs)
-                cocos.device.sync()
+                total_time = timer.elapsed
 
-            total_time = timer.elapsed
+                cocos_multi_gpu_results = \
+                    HestonBenchmarkResults(
+                        numerical_package_bundle=cocos_multi_gpu_bundle,
+                        total_time=total_time,
+                        option_price=option_price)
 
-            cocos_multi_gpu_results = \
-                HestonBenchmarkResults(
-                    numerical_package_bundle=cocos_multi_gpu_bundle,
-                    total_time=total_time,
-                    option_price=option_price)
+                cocos_multi_gpu_results.print_results()
 
-            cocos_multi_gpu_results.print_results()
-
-            numerical_package_bundle_to_result_map[cocos_multi_gpu_bundle] \
-                = cocos_multi_gpu_results
+                numerical_package_bundle_to_result_map[cocos_multi_gpu_bundle] \
+                    = cocos_multi_gpu_results
     else:
         print(f'Please install loky to enable multi core and multi gpu benchmarks')
 
