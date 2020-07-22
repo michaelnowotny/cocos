@@ -95,8 +95,9 @@ def _check_array_at_right_location_and_convert(array,
 
 
 def ensure_consistent_numeric_arrays(arrays: tp.Iterable[tp.Optional[NumericArray]],
-                                     gpu: bool):
-    return tuple(_check_array_at_right_location_and_convert(array, gpu)
+                                     gpu: bool,
+                                     dtype: np.generic = np.float32):
+    return tuple(_check_array_at_right_location_and_convert(array=array, gpu=gpu, dtype=dtype)
                  if array is not None
                  else None
                  for array
