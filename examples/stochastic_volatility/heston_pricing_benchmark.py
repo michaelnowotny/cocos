@@ -119,7 +119,6 @@ def run_benchmark(x0: float,
 
     # actual simulation run to price plain vanilla call option
     with Timer() as timer:
-    # tic = time.time()
         (x_simulated, v_simulated) \
             = simulate_heston_model(
                 T=T,
@@ -145,7 +144,6 @@ def run_benchmark(x0: float,
 
     # print(option_price)
     numerical_package_bundle.synchronize()
-    # total_time = time.time() - tic
     total_time = timer.elapsed
 
     return HestonBenchmarkResults(numerical_package_bundle,
@@ -177,7 +175,6 @@ def run_benchmarks(
     # simulation parameters
     nT = int(math.ceil(500 * T))  # number of time-steps to simulate
     R = 2000000  # actual number of paths to simulate for pricing
-    # R = 20000  # actual number of paths to simulate for pricing
 
     kwargs = \
         dict(x0=x0,
@@ -210,17 +207,14 @@ def run_benchmarks(
         kwargs['numerical_package_bundle'] = NumpyMulticoreBundle
         # initialize Python processes
         with Timer() as timer:
-        # tic = time.time()
             _ \
                 = simulate_and_compute_option_price_multicore(**kwargs)
             print(f'time in first run={timer.elapsed}')
 
         with Timer() as timer:
-            # tic = time.time()
             option_price \
                 = simulate_and_compute_option_price_multicore(**kwargs)
 
-        # total_time = time.time() - tic
         total_time = timer.elapsed
 
         numpy_multicore_results = \
@@ -253,14 +247,12 @@ def run_benchmarks(
             cocos_multi_gpu_bundle = CocosMultiGPUBundle(number_of_gpus=number_of_gpus)
 
             with Timer() as timer:
-                tic = time.time()
                 option_price = \
                     simulate_and_compute_option_price_gpu(gpu_pool=gpu_pool,
                                                           number_of_batches=number_of_gpus,
                                                           **kwargs)
                 cocos.device.sync()
 
-            # total_time = time.time() - tic
             total_time = timer.elapsed
 
             cocos_multi_gpu_results = \
@@ -327,8 +319,6 @@ def create_bar_plot(
         numerical_package_bundle_to_result_map:
         tp.Dict[type(NumericalPackageBundle), HestonBenchmarkResults]):
     numpy_results = numerical_package_bundle_to_result_map[NumpyBundle]
-    device_name \
-       = cocos.device.ComputeDeviceManager.get_current_compute_device().name
 
     objects = [numerical_package_bundle.label()
                for numerical_package_bundle

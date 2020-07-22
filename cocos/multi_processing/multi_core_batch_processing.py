@@ -22,6 +22,9 @@ def map_reduce_multicore(
             kwargs_list=kwargs_list,
             number_of_batches=number_of_batches)
 
+    def wrapped_f(index, *args, **kwargs) -> ResultType:
+        return index, f(*args, **kwargs)
+
     result = initial_value
     if multiprocessing_pool_type == MultiprocessingPoolType.LOKY:
         from concurrent.futures import as_completed
@@ -31,25 +34,32 @@ def map_reduce_multicore(
             get_reusable_executor(timeout=None,
                                   context='loky')
 
-        futures = [executor.submit(f, *args, **kwargs)
-                   for args, kwargs
-                   in zip(args_list, kwargs_list)]
+        futures = [executor.submit(wrapped_f, i, *args, **kwargs)
+                   for i, (args, kwargs)
+                   in enumerate(zip(args_list, kwargs_list))]
 
         result_from_future = lambda x: x.result()
     elif multiprocessing_pool_type == MultiprocessingPoolType.PATHOS:
         from pathos.pools import ProcessPool
         pool = ProcessPool()
 
-        futures = [pool.apipe(f, *args, **kwargs)
-                   for args, kwargs
-                   in zip(args_list, kwargs_list)]
+        futures = [pool.apipe(wrapped_f, i, *args, **kwargs)
+                   for i, (args, kwargs)
+                   in enumerate(zip(args_list, kwargs_list))]
 
         result_from_future = lambda x: x.get()
     else:
         raise ValueError(f'Multiprocessing pool type {multiprocessing_pool_type} not supported')
 
-    for future in futures:
-        result = reduction(result, result_from_future(future))
+    results = [result_from_future(future) for future in futures]
+    results = sorted(results, key=lambda x: x[0])
+    results = [result[1] for result in results]
+
+    for new_result in results:
+        result = reduction(result, new_result)
+
+    # for future in futures:
+    #     result = reduction(result, result_from_future(future)[1])
 
     return result
 
