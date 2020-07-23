@@ -54,6 +54,7 @@ import numbers
 import typing as tp
 import warnings
 
+from cocos.multi_processing.single_gpu_batch_processing import map_combine_single_gpu
 import cocos.numerics as cn
 from cocos.numerics.data_types import NumericArray
 import cocos.device as cd
@@ -137,10 +138,6 @@ def gaussian_kernel_estimate_vectorized_whitened(whitening: NumericArray,
                                                  norm: float,
                                                  dtype: np.generic,
                                                  gpu: bool) -> NumericArray:
-    # print(f'whitened_points.shape = {whitened_points.shape}')
-    # print(f'values.shape = {xi.shape}')
-    # print(f'xi.shape = {xi.shape}')
-
     n, m, d = \
         _verify_and_get_shape_of_datapoints_datavalues_and_evaluation_points(points=whitened_points,
                                                                              values=values,
@@ -165,7 +162,6 @@ def gaussian_kernel_estimate_vectorized_whitened(whitening: NumericArray,
         arg = num_pack.sum(arg, axis=2)
     else:
         arg = arg.reshape((n, m))
-    # print(arg.shape)
     if not gpu:
         assert arg.shape == (n, m)
     arg = num_pack.exp(- 0.5 * arg) * norm
@@ -988,8 +984,6 @@ class gaussian_kde:
         points = \
             ensure_consistent_numeric_arrays((self.dataset.T, ), gpu)[0]
 
-        # print(f'{type(points)=}, {points.dtype=}')
-        # print(f'{type(self.whitening)}, {self.whitening.dtype=}')
         return num_pack.dot(points, self.whitening)
 
     @cached_property
@@ -998,6 +992,39 @@ class gaussian_kde:
         num_pack = select_num_pack(gpu)
 
         return (2 * np.pi) ** (- self.d / 2) * num_pack.prod(num_pack.diag(self.whitening))
+
+
+# def evaluate_gaussian_kde_in_batches(kde: gaussian_kde,
+#                                      points: NumericArray,
+#                                      maximum_number_of_elements_per_batch: int) \
+#         -> np.ndarray:
+#     """
+#     Evaluates a Gaussian KDE in batches and stores the results in main memory.
+#
+#     Args:
+#         kde: a gaussian_kde object
+#         points:
+#             numeric array with shape (d, m) containing the points at which to evaluate the kernel
+#             density estimate
+#         maximum_number_of_elements_per_batch:
+#             maximum number of data points times evaluation points to process in a single batch
+#
+#     Returns:
+#         a m-dimensional NumPy array of kernel density estimates
+#     """
+#     number_of_points = points.shape[1]
+#     points_per_batch = math.floor(maximum_number_of_elements_per_batch / (kde.n * kde.d))
+#
+#     n_begin = 0
+#
+#     output_array = np.zeros((number_of_points, ), dtype=points.dtype)
+#
+#     while n_begin < number_of_points:
+#         n_end = min(n_begin + points_per_batch, number_of_points)
+#         output_array[n_begin:n_end] = np.array(kde.evaluate(points[:, n_begin:n_end]))
+#         n_begin = n_end
+#
+#     return output_array
 
 
 def evaluate_gaussian_kde_in_batches(kde: gaussian_kde,
@@ -1023,11 +1050,15 @@ def evaluate_gaussian_kde_in_batches(kde: gaussian_kde,
 
     n_begin = 0
 
-    output_array = np.zeros((number_of_points, ), dtype=points.dtype)
-
+    args_list = []
     while n_begin < number_of_points:
         n_end = min(n_begin + points_per_batch, number_of_points)
-        output_array[n_begin:n_end] = np.array(kde.evaluate(points[:, n_begin:n_end]))
+        args_list.append([points[:, n_begin:n_end]])
         n_begin = n_end
 
-    return output_array
+    result = \
+        map_combine_single_gpu(f=kde.evaluate,
+                               combination=lambda x: np.hstack(x),
+                               args_list=args_list)
+
+    return result
