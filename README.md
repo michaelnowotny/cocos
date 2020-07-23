@@ -423,7 +423,7 @@ print(f'numerical results from cpu and gpu match: '
 </pre>
 
 ### Kernel Density Estimation
-`cocos.scientific.kde import gaussian_kde` os a replacement for SciPy's 
+`cocos.scientific.kde import gaussian_kde` is a replacement for SciPy's 
 `scipy.stats.kde.gaussian_kde` class that works on the GPU. 
 GPU support is turned on by setting `gpu=True` in its constructor. 
 Evaluating a kernel density estimate from a dataset in the NumPy array `points` 
