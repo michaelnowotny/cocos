@@ -19,14 +19,18 @@ In addition to its numeric functionality, it allows parallel computation of SymP
 
 ## Table of Contents
 
-1.  [Installation](#installation)
-2.  [Getting Started](#getting-started)
-3.  [Examples](#packaged-examples)
-4.  [Benchmark](#benchmark)
-5.  [Functionality](#functionality)
-6.  [Limitations and Differences with NumPy](#limitations-and-differences-with-numpy)
-7.  [A Note on Hardware Configurations for Multi-GPU Computing](#a-note-on-hardware-configurations-for-multi-gpu-computing)
-8.  [License](#license)
+1.  [Installation](#installation)  
+2.  [Getting Started](#getting-started)  
+3.  [Examples](#packaged-examples)  
+3.1. [Estimating Pi via Monte Carlo](#estimating-pi-via-monte-carlo)  
+3.2. [Option Pricing in a Stochastic Volatility Model via Monte Carlo](#option-pricing-in-a-stochastic-volatility-model-via-monte-carlo)  
+3.3. [Numeric evaluation of SymPy array expressions on the GPU](#numeric-evaluation-of-sympy-array-expressions-on-the-gpu)  
+3.4. [Kernel Density Estimation](#kernel-density-estimation)  
+4.  [Benchmark](#benchmark)  
+5.  [Functionality](#functionality)  
+6.  [Limitations and Differences with NumPy](#limitations-and-differences-with-numpy)  
+7.  [A Note on Hardware Configurations for Multi-GPU Computing](#a-note-on-hardware-configurations-for-multi-gpu-computing)  
+8.  [License](#license)  
 
 ## Installation
 
@@ -125,9 +129,10 @@ details. See 'examples/heston_pricing_multi_gpu_example.py' for a fully worked e
 
 
 ## Packaged examples:
-1.  [Estimating Pi via Monte Carlo](#estimating-pi-via-monte-carlo)
-2.  [Option Pricing in a Stochastic Volatility Model via Monte Carlo](#option-pricing-in-a-stochastic-volatility-model-via-monte-carlo)
-3.  [Numeric evaluation of SymPy array expressions on the GPU](#numeric-evaluation-of-sympy-array-expressions-on-the-gpu)
+1.  [Estimating Pi via Monte Carlo](#estimating-pi-via-monte-carlo)  
+2.  [Option Pricing in a Stochastic Volatility Model via Monte Carlo](#option-pricing-in-a-stochastic-volatility-model-via-monte-carlo)  
+3.  [Numeric evaluation of SymPy array expressions on the GPU](#numeric-evaluation-of-sympy-array-expressions-on-the-gpu)  
+4.  [Kernel Density Estimation](#kernel-density-estimation)  
 
 ### Estimating Pi via Monte-Carlo
 
@@ -415,6 +420,18 @@ Verify that the results match
 <pre>
 print(f'numerical results from cpu and gpu match: '
       f'{np.allclose(jacobian_f_numeric_gpu, jacobian_f_numeric_cpu)}')
+</pre>
+
+### Kernel Density Estimation
+`cocos.scientific.kde import gaussian_kde` os a replacement for SciPy's 
+`scipy.stats.kde.gaussian_kde` class that works on the GPU. 
+GPU support is turned on by setting `gpu=True` in its constructor. 
+Evaluating a kernel density estimate from a dataset in the NumPy array `points` 
+on a grid in the NumPy array `grid` works as follows:
+<pre>
+from cocos.scientific.kde import gaussian_kde
+gaussian_kde = gaussian_kde(points, gpu=True)
+density_estimate = gaussian_kde_cocos.evaluate(grid)
 </pre>
 
 
