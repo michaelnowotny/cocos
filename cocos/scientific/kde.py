@@ -56,6 +56,7 @@ import warnings
 
 from cocos.multi_processing.device_pool import ComputeDevicePool
 from cocos.multi_processing.single_gpu_batch_processing import map_combine_single_gpu
+from cocos.multi_processing.utilities import generate_slices_with_number_of_batches
 import cocos.numerics as cn
 from cocos.numerics.data_types import NumericArray
 import cocos.device as cd
@@ -79,6 +80,22 @@ import numpy as np
 # from scipy.stats._stats import gaussian_kernel_estimate
 
 __all__ = ['gaussian_kde']
+
+
+def _split_points_into_batches(points: NumericArray,
+                               number_of_points_per_batch: int) \
+        -> tp.List[tp.List[NumericArray]]:
+    number_of_points = points.shape[1]
+
+    n_begin = 0
+    args_list = []
+
+    while n_begin < number_of_points:
+        n_end = min(n_begin + number_of_points_per_batch, number_of_points)
+        args_list.append([points[:, n_begin:n_end]])
+        n_begin = n_end
+
+    return args_list
 
 
 def _check_array_at_right_location_and_convert(array,
@@ -701,29 +718,100 @@ class gaussian_kde:
 
         points = self._check_and_adjust_dimensions_of_points(points)
 
-        # number_of_points = points.shape[1]
-        points_per_batch = math.floor(maximum_number_of_elements_per_batch / (self.n * self.d))
+        number_of_points = points.shape[1]
 
-        args_list = _split_points_into_batches(points, points_per_batch)
+        args_list = []
+        for begin_index, end_index in generate_slices_with_number_of_batches(number_of_points,
+                                                                             gpu_pool.number_of_devices):
+            args_list.append([points[:, begin_index:end_index]])
 
-        def f(x):
-            result = gaussian_kernel_estimate_vectorized_whitened(
-                whitening=self.whitening,
-                whitened_points=self.whitened_points,
-                values=self.weights[:, None],
-                xi=x.T,
-                norm=self.normalization_constant,
-                dtype=np.float32,
-                gpu=True)
+        # points_per_device = math.floor(number_of_points / gpu_pool.number_of_devices)
+        # args_list = _split_points_into_batches(points, points_per_device)
+        kwargs_list = gpu_pool.number_of_devices * \
+                      [
+                          {'maximum_number_of_elements_per_batch': maximum_number_of_elements_per_batch,
+                           'n': self.n,
+                           'd': self.d}
+                      ]
+
+        def f(points_internal,
+              maximum_number_of_elements_per_batch: int,
+              n: int,
+              d: int):
+            points_per_batch = math.floor(maximum_number_of_elements_per_batch / (n * d))
+            args_list_internal = _split_points_into_batches(points_internal, points_per_batch)
+
+            def f_internal(points_internal_internal):
+                return gaussian_kernel_estimate_vectorized_whitened(
+                        whitening=self.whitening,
+                        whitened_points=self.whitened_points,
+                        values=self.weights[:, None],
+                        xi=points_internal_internal.T,
+                        norm=self.normalization_constant,
+                        dtype=np.float32,
+                        gpu=True)
+
+            result = \
+                map_combine_single_gpu(f=f_internal,
+                                       combination=lambda x: np.hstack(x),
+                                       args_list=args_list_internal)
 
             return result
 
         result = \
             gpu_pool.map_combine(f=f,
                                  combination=lambda x: np.hstack(x),
-                                 args_list=args_list)
+                                 args_list=args_list,
+                                 kwargs_list=kwargs_list)
 
         return result
+
+    # def evaluate_in_batches_on_multiple_gpus(self,
+    #                                          points: NumericArray,
+    #                                          maximum_number_of_elements_per_batch: int,
+    #                                          gpu_pool: ComputeDevicePool) \
+    #         -> np.ndarray:
+    #     """
+    #     Evaluates a Gaussian KDE in batches on multiple gpus and stores the results in main memory.
+    #
+    #     Args:
+    #         points:
+    #             numeric array with shape (d, m) containing the points at which to evaluate the kernel
+    #             density estimate
+    #         maximum_number_of_elements_per_batch:
+    #             maximum number of data points times evaluation points to process in a single batch
+    #
+    #     Returns:
+    #         a m-dimensional NumPy array of kernel density estimates
+    #     """
+    #     if self.gpu:
+    #         raise ValueError('Multi GPU evaluation requires gaussian_kde.gpu = False.')
+    #
+    #     points = self._check_and_adjust_dimensions_of_points(points)
+    #
+    #     # number_of_points = points.shape[1]
+    #     points_per_batch = math.floor(maximum_number_of_elements_per_batch / (self.n * self.d))
+    #
+    #     args_list = _split_points_into_batches(points, points_per_batch)
+    #
+    #     def f(x):
+    #         result = gaussian_kernel_estimate_vectorized_whitened(
+    #             whitening=self.whitening,
+    #             whitened_points=self.whitened_points,
+    #             values=self.weights[:, None],
+    #             xi=x.T,
+    #             norm=self.normalization_constant,
+    #             dtype=np.float32,
+    #             gpu=True)
+    #
+    #         return result
+    #
+    #     result = \
+    #         gpu_pool.map_combine(f=f,
+    #                              combination=lambda x: np.hstack(x),
+    #                              args_list=args_list)
+    #
+    #     return result
 
     def integrate_gaussian(self, mean, cov):
         """
@@ -1112,22 +1200,6 @@ class gaussian_kde:
 #         n_begin = n_end
 #
 #     return output_array
-
-
-def _split_points_into_batches(points: NumericArray,
-                               number_of_points_per_batch: int) \
-        -> tp.List[tp.List[NumericArray]]:
-    number_of_points = points.shape[1]
-
-    n_begin = 0
-    args_list = []
-
-    while n_begin < number_of_points:
-        n_end = min(n_begin + number_of_points_per_batch, number_of_points)
-        args_list.append([points[:, n_begin:n_end]])
-        n_begin = n_end
-
-    return args_list
 
 
 def evaluate_gaussian_kde_in_batches(kde: gaussian_kde,
