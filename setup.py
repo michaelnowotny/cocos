@@ -25,6 +25,7 @@ REQUIRED = [
     "arrayfire",
     "cached_property",
     "contexttimer",
+    "line_profiler",
     "loky",
     "numpy",
     "pathos",
