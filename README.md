@@ -15,22 +15,23 @@ In addition to its numeric functionality, it allows parallel computation of SymP
 *   Multi GPU support via map-reduce.
 *   High-performance random number generators for beta, chi-square, exponential, gamma, logistic, lognormal, normal, uniform, and Wald distributions. Antithetic random numbers for uniform and normal distributions.
 *   Provides a GPU equivalent to SymPy's lambdify, which enables numeric evaluation of symbolic SymPy (multi-dimensional array) expressions on the GPU for vectors of input parameters in parallel.
-*   Adaptation of SciPy's gaussian_kde for the GPU
+*   Adaptation of SciPy's gaussian_kde to the GPU
 
 ## Table of Contents
 
 1.  [Installation](#installation)  
 2.  [Getting Started](#getting-started)  
-3.  [Examples](#packaged-examples)  
-3.1. [Estimating Pi via Monte Carlo](#estimating-pi-via-monte-carlo)  
-3.2. [Option Pricing in a Stochastic Volatility Model via Monte Carlo](#option-pricing-in-a-stochastic-volatility-model-via-monte-carlo)  
-3.3. [Numeric evaluation of SymPy array expressions on the GPU](#numeric-evaluation-of-sympy-array-expressions-on-the-gpu)  
-3.4. [Kernel Density Estimation](#kernel-density-estimation)  
-4.  [Benchmark](#benchmark)  
-5.  [Functionality](#functionality)  
-6.  [Limitations and Differences with NumPy](#limitations-and-differences-with-numpy)  
-7.  [A Note on Hardware Configurations for Multi-GPU Computing](#a-note-on-hardware-configurations-for-multi-gpu-computing)  
-8.  [License](#license)  
+3.  [Multi-GPU Computing](#multi-gpu-computing)
+4.  [Examples](#packaged-examples)  
+4.1. [Estimating Pi via Monte Carlo](#estimating-pi-via-monte-carlo)  
+4.2. [Option Pricing in a Stochastic Volatility Model via Monte Carlo](#option-pricing-in-a-stochastic-volatility-model-via-monte-carlo)  
+4.3. [Numeric evaluation of SymPy array expressions on the GPU](#numeric-evaluation-of-sympy-array-expressions-on-the-gpu)  
+4.4. [Kernel Density Estimation](#kernel-density-estimation)  
+5.  [Benchmark](#benchmark)  
+6.  [Functionality](#functionality)  
+7.  [Limitations and Differences with NumPy](#limitations-and-differences-with-numpy)  
+8.  [A Note on Hardware Configurations for Multi-GPU Computing](#a-note-on-hardware-configurations-for-multi-gpu-computing)  
+9.  [License](#license)  
 
 ## Installation
 
@@ -96,7 +97,7 @@ d = cn.random.randn(2, 2)
 print(d)
 </pre>
 
-#### Multi-GPU Usage:
+### Multi-GPU Computing:
 Cocos provides `map-reduce` as well as the related `map-combine` as multi-GPU 
 programming models. The computations are separated into 'batches' and then distributed 
 across GPU devices in a pool. Cocos implements multi-GPU support via process-based parallelism. 
@@ -107,7 +108,7 @@ GPUs in parallel, first create a `ComputeDevicePool`:
 device_pool = cocos.multi_processing.device_pool.ComputeDevicePool()
 </pre>
 
-To construct the batches, separate the arguments to the function into 
+To construct the batches, separate the arguments of the function into 
 *   a list of args lists and (one list per batch)
 *   a list of kwargs dictionaries (one dictionary per batch)
 
@@ -145,10 +146,9 @@ reduction takes place.
 `map_combine` is a variation of `map_reduce`, in which a `combination` function aggregates the 
 list of results in a single step. 
 
-Please refer to the documentation of `cocos.multi_processing.device_pool.ComputeDevicePool.map_reduce` for further 
-details. See 'examples/heston_pricing_multi_gpu_example.py' for a fully worked example. 
-
-
+Please refer to the documentation of `cocos.multi_processing.device_pool.ComputeDevicePool.map_reduce` as well as 
+`cocos.multi_processing.device_pool.ComputeDevicePool.map_combine` for further details. 
+See 'examples/heston_pricing_multi_gpu_example.py' for a fully worked example. 
 
 ## Packaged examples:
 1.  [Estimating Pi via Monte Carlo](#estimating-pi-via-monte-carlo)  
@@ -455,6 +455,26 @@ from cocos.scientific.kde import gaussian_kde
 gaussian_kde = gaussian_kde(points, gpu=True)
 density_estimate = gaussian_kde_cocos.evaluate(grid)
 </pre>
+
+To preserve GPU memory, the evaluation of the KDE can proceed sequentially in batches as follows
+<pre>
+density_estimate = gaussian_kde_cocos.evaluate_in_batches(grid, maximum_number_of_elements_per_batch)
+</pre> 
+where the `maximum_number_of_elements_per_batch` is the maximum number of data points times 
+evaluation points to process in a single batch.
+
+The Kernel density estimate can be computed on different points on multiple GPUs in parallel 
+using the method `evaluate_in_batches_on_multiple_gpus` as follows
+<pre>
+gpu_pool = ComputeDevicePool()
+gaussian_kde = gaussian_kde(points, gpu=False)
+density_estimate = \
+    gaussian_kde_cocos.evaluate_in_batches_on_multiple_gpus(grid, 
+                                                            maximum_number_of_elements_per_batch, 
+                                                            gpu_pool)
+</pre> 
+Note that the `gpu` parameter in the `gaussian_kde` constructor must be set to `false` for multi gpu 
+support and `points` must be a a NumPy array.
 
 
 ## Benchmark
