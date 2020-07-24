@@ -55,7 +55,7 @@ import typing as tp
 import warnings
 
 from cocos.multi_processing.device_pool import ComputeDevicePool
-from cocos.multi_processing.single_gpu_batch_processing import map_combine_single_gpu
+from cocos.multi_processing.single_device_batch_processing import map_combine_single_device
 from cocos.multi_processing.utilities import generate_slices_with_number_of_batches
 import cocos.numerics as cn
 from cocos.numerics.data_types import NumericArray
@@ -689,16 +689,16 @@ class gaussian_kde:
         args_list = _split_points_into_batches(points, points_per_batch)
 
         result = \
-            map_combine_single_gpu(f=self.evaluate,
-                                   combination=lambda x: np.hstack(x),
-                                   args_list=args_list)
+            map_combine_single_device(f=self.evaluate,
+                                      combination=lambda x: np.hstack(x),
+                                      args_list=args_list)
 
         return result
 
-    def evaluate_in_batches_on_multiple_gpus(self,
-                                             points: NumericArray,
-                                             maximum_number_of_elements_per_batch: int,
-                                             gpu_pool: ComputeDevicePool) \
+    def evaluate_in_batches_on_multiple_devices(self,
+                                                points: NumericArray,
+                                                maximum_number_of_elements_per_batch: int,
+                                                compute_device_pool: ComputeDevicePool) \
             -> np.ndarray:
         """
         Evaluates a Gaussian KDE in batches on multiple gpus and stores the results in main memory.
@@ -722,12 +722,12 @@ class gaussian_kde:
 
         args_list = []
         for begin_index, end_index in generate_slices_with_number_of_batches(number_of_points,
-                                                                             gpu_pool.number_of_devices):
+                                                                             compute_device_pool.number_of_devices):
             args_list.append([points[:, begin_index:end_index]])
 
         # points_per_device = math.floor(number_of_points / gpu_pool.number_of_devices)
         # args_list = _split_points_into_batches(points, points_per_device)
-        kwargs_list = gpu_pool.number_of_devices * \
+        kwargs_list = compute_device_pool.number_of_devices * \
                       [
                           {'maximum_number_of_elements_per_batch': maximum_number_of_elements_per_batch,
                            'n': self.n,
@@ -752,17 +752,17 @@ class gaussian_kde:
                         gpu=True)
 
             result = \
-                map_combine_single_gpu(f=f_internal,
-                                       combination=lambda x: np.hstack(x),
-                                       args_list=args_list_internal)
+                map_combine_single_device(f=f_internal,
+                                          combination=lambda x: np.hstack(x),
+                                          args_list=args_list_internal)
 
             return result
 
         result = \
-            gpu_pool.map_combine(f=f,
-                                 combination=lambda x: np.hstack(x),
-                                 args_list=args_list,
-                                 kwargs_list=kwargs_list)
+            compute_device_pool.map_combine(f=f,
+                                            combination=lambda x: np.hstack(x),
+                                            args_list=args_list,
+                                            kwargs_list=kwargs_list)
 
         return result
 
@@ -1225,8 +1225,8 @@ def evaluate_gaussian_kde_in_batches(kde: gaussian_kde,
     args_list = _split_points_into_batches(points, points_per_batch)
 
     result = \
-        map_combine_single_gpu(f=kde.evaluate,
-                               combination=lambda x: np.hstack(x),
-                               args_list=args_list)
+        map_combine_single_device(f=kde.evaluate,
+                                  combination=lambda x: np.hstack(x),
+                                  args_list=args_list)
 
     return result

@@ -226,14 +226,14 @@ def simulate_and_compute_option_price_gpu(
         K: float,
         nT: int,
         R: int,
-        gpu_pool: tp.Optional[ComputeDevicePool] = None,
+        compute_device_pool: tp.Optional[ComputeDevicePool] = None,
         number_of_batches: tp.Optional[int] = None) -> float:
     numerical_package_bundle = CocosBundle
     if number_of_batches is None:
-        if gpu_pool is None:
+        if compute_device_pool is None:
             number_of_batches = 1
         else:
-            number_of_batches = gpu_pool.number_of_devices
+            number_of_batches = compute_device_pool.number_of_devices
 
     kwargs = \
         dict(x0=x0,
@@ -248,7 +248,7 @@ def simulate_and_compute_option_price_gpu(
              nT=nT,
              numerical_package_bundle=numerical_package_bundle)
 
-    if gpu_pool is None:
+    if compute_device_pool is None:
         kwargs['R'] = R
         print(f'computing {kwargs["R"]} paths on single GPU')
 
@@ -258,13 +258,13 @@ def simulate_and_compute_option_price_gpu(
 
     else:
         kwargs['R'] = math.ceil(R / number_of_batches)
-        print(f'computing {R} paths on {gpu_pool.number_of_devices} GPUs in '
+        print(f'computing {R} paths on {compute_device_pool.number_of_devices} GPUs in '
               f'{number_of_batches} batches of {kwargs["R"]} paths')
 
         option_price = \
-            gpu_pool.map_reduce(f=simulate_and_compute_option_price,
-                                reduction=lambda x, y: x + y / number_of_batches,
-                                initial_value=0.0,
-                                kwargs_list=number_of_batches * [kwargs])
+            compute_device_pool.map_reduce(f=simulate_and_compute_option_price,
+                                           reduction=lambda x, y: x + y / number_of_batches,
+                                           initial_value=0.0,
+                                           kwargs_list=number_of_batches * [kwargs])
 
     return option_price

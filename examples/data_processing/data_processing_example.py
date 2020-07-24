@@ -16,9 +16,9 @@ from cocos.multi_processing.multi_core_batch_processing import (
     map_combine_multicore
 )
 
-from cocos.multi_processing.single_gpu_batch_processing import (
-    map_reduce_single_gpu,
-    map_combine_single_gpu
+from cocos.multi_processing.single_device_batch_processing import (
+    map_reduce_single_device,
+    map_combine_single_device
 )
 
 import cocos.numerics as cn
@@ -172,18 +172,22 @@ def batched_single_gpu_benchmark(n: int,
                                        number_of_batches=batches)
 
             if use_map_combine:
-                map_combine_single_gpu(f=lambda a, b, c: process_data(a, b, c, gpu=True),
-                                       combination=lambda x: numpy.hstack(x),
-                                       host_to_device_transfer_function=host_to_device_transfer_function,
-                                       device_to_host_transfer_function=device_to_host_transfer_function,
-                                       kwargs_list=kwargs_list)
+                map_combine_single_device(f=lambda a, b, c: process_data(a, b, c, gpu=True),
+                                          combination=lambda x: numpy.hstack(x),
+                                          host_to_device_transfer_function
+                                          =host_to_device_transfer_function,
+                                          device_to_host_transfer_function
+                                          =device_to_host_transfer_function,
+                                          kwargs_list=kwargs_list)
             else:
-                map_reduce_single_gpu(f=lambda a, b, c: process_data(a, b, c, gpu=True),
-                                      reduction=lambda x, y: numpy.hstack((x, y)),
-                                      host_to_device_transfer_function=host_to_device_transfer_function,
-                                      device_to_host_transfer_function=device_to_host_transfer_function,
-                                      initial_value=numpy.zeros((0,)),
-                                      kwargs_list=kwargs_list)
+                map_reduce_single_device(f=lambda a, b, c: process_data(a, b, c, gpu=True),
+                                         reduction=lambda x, y: numpy.hstack((x, y)),
+                                         host_to_device_transfer_function
+                                         =host_to_device_transfer_function,
+                                         device_to_host_transfer_function
+                                         =device_to_host_transfer_function,
+                                         initial_value=numpy.zeros((0,)),
+                                         kwargs_list=kwargs_list)
 
             sync()
 
@@ -192,7 +196,7 @@ def batched_single_gpu_benchmark(n: int,
 
 def multi_gpu_benchmark(n: int, repetitions: int = 1, use_map_combine: bool = False) \
         -> tp.Dict[int, float]:
-    gpu_pool = ComputeDevicePool()
+    compute_device_pool = ComputeDevicePool()
 
     number_of_gpus_to_runtime_map = {}
     a_complete, b_complete, c_complete = generate_data(n, gpu=False)
@@ -201,24 +205,26 @@ def multi_gpu_benchmark(n: int, repetitions: int = 1, use_map_combine: bool = Fa
     kwargs_list = split_arrays(a=a_complete,
                                b=b_complete,
                                c=c_complete,
-                               number_of_batches=gpu_pool.number_of_devices)
+                               number_of_batches=compute_device_pool.number_of_devices)
 
     if use_map_combine:
-        gpu_pool.map_combine(f=lambda a, b, c: process_data(a, b, c, gpu=True),
-                             combination=lambda x: numpy.hstack(x),
-                             kwargs_list=kwargs_list,
-                             host_to_device_transfer_function=host_to_device_transfer_function,
-                             device_to_host_transfer_function=device_to_host_transfer_function)
+        (compute_device_pool
+         .map_combine(f=lambda a, b, c: process_data(a, b, c, gpu=True),
+                      combination=lambda x: numpy.hstack(x),
+                      kwargs_list=kwargs_list,
+                      host_to_device_transfer_function=host_to_device_transfer_function,
+                      device_to_host_transfer_function=device_to_host_transfer_function))
     else:
-        gpu_pool.map_reduce(f=lambda a, b, c: process_data(a, b, c, gpu=True),
-                            reduction=lambda x, y: numpy.hstack((x, y)),
-                            initial_value=numpy.zeros((0,)),
-                            kwargs_list=kwargs_list,
-                            host_to_device_transfer_function=host_to_device_transfer_function,
-                            device_to_host_transfer_function=device_to_host_transfer_function)
+        (compute_device_pool
+         .map_reduce(f=lambda a, b, c: process_data(a, b, c, gpu=True),
+                     reduction=lambda x, y: numpy.hstack((x, y)),
+                     initial_value=numpy.zeros((0,)),
+                     kwargs_list=kwargs_list,
+                     host_to_device_transfer_function=host_to_device_transfer_function,
+                     device_to_host_transfer_function=device_to_host_transfer_function))
 
     # actual benchmark
-    for number_of_gpus in range(1, gpu_pool.number_of_devices + 1):
+    for number_of_gpus in range(1, compute_device_pool.number_of_devices + 1):
         with Timer() as timer:
             for _ in range(repetitions):
                 kwargs_list = split_arrays(a=a_complete,
@@ -228,19 +234,25 @@ def multi_gpu_benchmark(n: int, repetitions: int = 1, use_map_combine: bool = Fa
 
                 if use_map_combine:
                     result = \
-                        gpu_pool.map_combine(f=lambda a, b, c: process_data(a, b, c, gpu=True),
-                                             combination=lambda x: numpy.hstack(x),
-                                             kwargs_list=kwargs_list,
-                                             host_to_device_transfer_function=host_to_device_transfer_function,
-                                             device_to_host_transfer_function=device_to_host_transfer_function)
+                        (compute_device_pool
+                         .map_combine(f=lambda a, b, c: process_data(a, b, c, gpu=True),
+                                      combination=lambda x: numpy.hstack(x),
+                                      kwargs_list=kwargs_list,
+                                      host_to_device_transfer_function
+                                      =host_to_device_transfer_function,
+                                      device_to_host_transfer_function
+                                      =device_to_host_transfer_function))
                 else:
                     result = \
-                        gpu_pool.map_reduce(f=lambda a, b, c: process_data(a, b, c, gpu=True),
-                                            reduction=lambda x, y: numpy.hstack((x, y)),
-                                            initial_value=numpy.zeros((0,)),
-                                            kwargs_list=kwargs_list,
-                                            host_to_device_transfer_function=host_to_device_transfer_function,
-                                            device_to_host_transfer_function=device_to_host_transfer_function)
+                        (compute_device_pool
+                         .map_reduce(f=lambda a, b, c: process_data(a, b, c, gpu=True),
+                                     reduction=lambda x, y: numpy.hstack((x, y)),
+                                     initial_value=numpy.zeros((0,)),
+                                     kwargs_list=kwargs_list,
+                                     host_to_device_transfer_function
+                                     =host_to_device_transfer_function,
+                                     device_to_host_transfer_function
+                                     =device_to_host_transfer_function))
 
 
                 # print(type(result))
@@ -328,12 +340,13 @@ def main():
                          core_config=range(1, multiprocessing.cpu_count() + 1),
                          repetitions=repetitions)
 
-    number_of_cores_to_runtime_map = multi_core_benchmark(n=n,
-                                                          core_config=range(1, multiprocessing.cpu_count() + 1))
+    number_of_cores_to_runtime_map = \
+        multi_core_benchmark(n=n, core_config=range(1, multiprocessing.cpu_count() + 1))
 
     for number_of_cores_to_use, cpu_time in number_of_cores_to_runtime_map.items():
         means_of_computation_to_runtime_map[f'NumPy with {number_of_cores_to_use} CPU core(s)'] = cpu_time
-        print(f'Data processing on {number_of_cores_to_use} core(s) using NumPy performed in {cpu_time} seconds')
+        print(f'Data processing on {number_of_cores_to_use} core(s) '
+              f'using NumPy performed in {cpu_time} seconds')
 
     # multi gpu benchmark
     multi_gpu_benchmark(n=100)
@@ -341,7 +354,8 @@ def main():
 
     for number_of_gpus_to_use, gpu_time in number_of_gpus_to_runtime_map.items():
         means_of_computation_to_runtime_map[f'Cocos with {number_of_gpus_to_use} GPU(s)'] = gpu_time
-        print(f'Data processing on {number_of_gpus_to_use} GPU(s) using Cocos performed in {gpu_time} seconds')
+        print(f'Data processing on {number_of_gpus_to_use} GPU(s) '
+              f'using Cocos performed in {gpu_time} seconds')
 
 
 # def process_data_in_infinite_loop():
@@ -358,8 +372,8 @@ if __name__ == '__main__':
                                host_to_device_transfer_function,
                                device_to_host_transfer_function,
                                split_arrays,
-                               map_reduce_single_gpu,
-                               map_combine_single_gpu,
+                               map_reduce_single_device,
+                               map_combine_single_device,
                                multi_core_benchmark,
                                map_combine_multicore)
 

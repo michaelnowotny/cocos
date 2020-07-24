@@ -78,7 +78,7 @@ def create_bar_plot(number_of_devices_to_runtime_map: tp.Dict[int, float]):
 if __name__ == '__main__':
     info()
 
-    gpu_pool = ComputeDevicePool()
+    compute_device_pool = ComputeDevicePool()
 
     # model parameters
     x0 = 0.0  # initial log stock price
@@ -114,7 +114,7 @@ if __name__ == '__main__':
 
     print('warm-up')
     # tic = time.time()
-    option_price = simulate_and_compute_option_price_gpu(gpu_pool=gpu_pool,
+    option_price = simulate_and_compute_option_price_gpu(compute_device_pool=compute_device_pool,
                                                          **kwargs)
     # toc = time.time() - tic
     # print(f'option price = {option_price} computed in {toc} seconds')
@@ -138,11 +138,11 @@ if __name__ == '__main__':
 
     number_of_devices_to_runtime_map = {}
 
-    for i in range(1, gpu_pool.number_of_devices + 1):
+    for i in range(1, compute_device_pool.number_of_devices + 1):
         print(f'computing on {i} GPUs')
         tic = time.time()
         option_price = \
-            simulate_and_compute_option_price_gpu(gpu_pool=gpu_pool,
+            simulate_and_compute_option_price_gpu(compute_device_pool=compute_device_pool,
                                                   number_of_batches=i,
                                                   **kwargs)
         sync()
@@ -152,8 +152,8 @@ if __name__ == '__main__':
 
         number_of_devices_to_runtime_map[i] = gpu_time
 
-    if gpu_pool.number_of_devices > 1:
-        for i in range(2, gpu_pool.number_of_devices + 1):
+    if compute_device_pool.number_of_devices > 1:
+        for i in range(2, compute_device_pool.number_of_devices + 1):
             print(f'Performance on {i} GPUs increased by a factor of'
                   f' {number_of_devices_to_runtime_map[1] / number_of_devices_to_runtime_map[i]} '
                   f'over a single GPU.')

@@ -171,7 +171,7 @@ def single_gpu_benchmark(n: int,
 
 def multi_gpu_benchmark(n: int,
                         batches: int,
-                        gpu_pool: ComputeDevicePool,
+                        compute_device_pool: ComputeDevicePool,
                         repetitions: int = 1,
                         verbose: bool = False) -> tp.Dict[int, float]:
     if verbose:
@@ -179,13 +179,13 @@ def multi_gpu_benchmark(n: int,
 
     number_of_devices_to_runtime_map = {}
 
-    for number_of_devices_to_use in range(1, gpu_pool.number_of_devices + 1):
+    for number_of_devices_to_use in range(1, compute_device_pool.number_of_devices + 1):
         with Timer() as timer:
             for _ in range(repetitions):
-                pi = gpu_pool.map_reduce(lambda: estimate_pi(n=math.ceil(n / number_of_devices_to_use), batches=batches, gpu=True),
-                                         reduction=lambda x, y: x + y / number_of_devices_to_use,
-                                         initial_value=0.0,
-                                         number_of_batches=number_of_devices_to_use)
+                pi = compute_device_pool.map_reduce(lambda: estimate_pi(n=math.ceil(n / number_of_devices_to_use), batches=batches, gpu=True),
+                                                    reduction=lambda x, y: x + y / number_of_devices_to_use,
+                                                    initial_value=0.0,
+                                                    number_of_batches=number_of_devices_to_use)
 
                 sync()
                 if verbose:
@@ -281,18 +281,18 @@ def main():
     print(f'Estimation of pi using single GPU Cocos performed in {single_gpu_runtime} seconds')
 
     # multi gpu benchmark
-    gpu_pool = ComputeDevicePool()
+    compute_device_pool = ComputeDevicePool()
 
-    if gpu_pool.number_of_devices > 1:
+    if compute_device_pool.number_of_devices > 1:
         multi_gpu_benchmark(n=100,
                             batches=batches,
-                            gpu_pool=gpu_pool,
+                            compute_device_pool=compute_device_pool,
                             repetitions=repetitions)
 
         number_of_devices_to_runtime_map = \
             multi_gpu_benchmark(n=n,
                                 batches=batches,
-                                gpu_pool=gpu_pool,
+                                compute_device_pool=compute_device_pool,
                                 verbose=verbose)
 
         for number_of_devices_to_use, gpu_time in number_of_devices_to_runtime_map.items():
@@ -300,8 +300,8 @@ def main():
                 gpu_time
             print(f'Estimation of pi on {number_of_devices_to_use} GPUs in {gpu_time} seconds')
 
-        if gpu_pool.number_of_devices > 1:
-            for number_of_devices_to_use in range(2, gpu_pool.number_of_devices + 1):
+        if compute_device_pool.number_of_devices > 1:
+            for number_of_devices_to_use in range(2, compute_device_pool.number_of_devices + 1):
                 print(f'Performance on {number_of_devices_to_use} GPUs increased by a factor of'
                       f' {number_of_devices_to_runtime_map[1] / number_of_devices_to_runtime_map[number_of_devices_to_use]} '
                       f'over a single GPU.')

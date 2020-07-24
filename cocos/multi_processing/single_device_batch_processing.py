@@ -9,7 +9,7 @@ from cocos.multi_processing.utilities import (
 )
 
 
-def map_reduce_single_gpu(
+def map_reduce_single_device(
         f: tp.Callable[..., ResultType],
         reduction: tp.Callable[[ResultType, ResultType], ResultType],
         initial_value: ResultType,
@@ -85,7 +85,7 @@ def map_reduce_single_gpu(
     return result
 
 
-def map_combine_single_gpu(
+def map_combine_single_device(
         f: tp.Callable[..., ResultType],
         combination: tp.Callable[[tp.Iterable[ResultType]], ResultType],
         host_to_device_transfer_function:

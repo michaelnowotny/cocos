@@ -232,23 +232,23 @@ def run_benchmarks(
         if 'numerical_package_bundle' in kwargs:
             kwargs.pop('numerical_package_bundle')
 
-        gpu_pool = ComputeDevicePool()
-        if gpu_pool.number_of_devices > 1:
+        compute_device_pool = ComputeDevicePool()
+        if compute_device_pool.number_of_devices > 1:
             # warm up
             kwargs['R'] = 20000
             option_price = \
-                simulate_and_compute_option_price_gpu(gpu_pool=gpu_pool,
+                simulate_and_compute_option_price_gpu(compute_device_pool=compute_device_pool,
                                                       **kwargs)
 
             # actual benchmark
             kwargs['R'] = R
 
-            for number_of_gpus in range(1, gpu_pool.number_of_devices + 1):
+            for number_of_gpus in range(1, compute_device_pool.number_of_devices + 1):
                 cocos_multi_gpu_bundle = CocosMultiGPUBundle(number_of_gpus=number_of_gpus)
 
                 with Timer() as timer:
                     option_price = \
-                        simulate_and_compute_option_price_gpu(gpu_pool=gpu_pool,
+                        simulate_and_compute_option_price_gpu(compute_device_pool=compute_device_pool,
                                                               number_of_batches=number_of_gpus,
                                                               **kwargs)
                     cocos.device.sync()
