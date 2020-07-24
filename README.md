@@ -22,16 +22,17 @@ In addition to its numeric functionality, it allows parallel computation of SymP
 1.  [Installation](#installation)  
 2.  [Getting Started](#getting-started)  
 3.  [Multi-GPU Computing](#multi-gpu-computing)
-4.  [Examples](#packaged-examples)  
-4.1. [Estimating Pi via Monte Carlo](#estimating-pi-via-monte-carlo)  
-4.2. [Option Pricing in a Stochastic Volatility Model via Monte Carlo](#option-pricing-in-a-stochastic-volatility-model-via-monte-carlo)  
-4.3. [Numeric evaluation of SymPy array expressions on the GPU](#numeric-evaluation-of-sympy-array-expressions-on-the-gpu)  
-4.4. [Kernel Density Estimation](#kernel-density-estimation)  
-5.  [Benchmark](#benchmark)  
-6.  [Functionality](#functionality)  
-7.  [Limitations and Differences with NumPy](#limitations-and-differences-with-numpy)  
-8.  [A Note on Hardware Configurations for Multi-GPU Computing](#a-note-on-hardware-configurations-for-multi-gpu-computing)  
-9.  [License](#license)  
+4.  [Memory Limitations on the GPU Device](#memory-limitations-on-the-gpu-device)
+5.  [Examples](#packaged-examples)  
+5.1. [Estimating Pi via Monte Carlo](#estimating-pi-via-monte-carlo)  
+5.2. [Option Pricing in a Stochastic Volatility Model via Monte Carlo](#option-pricing-in-a-stochastic-volatility-model-via-monte-carlo)  
+5.3. [Numeric evaluation of SymPy array expressions on the GPU](#numeric-evaluation-of-sympy-array-expressions-on-the-gpu)  
+5.4. [Kernel Density Estimation](#kernel-density-estimation)  
+6.  [Benchmark](#benchmark)  
+7.  [Functionality](#functionality)  
+8.  [Limitations and Differences with NumPy](#limitations-and-differences-with-numpy)  
+9.  [A Note on Hardware Configurations for Multi-GPU Computing](#a-note-on-hardware-configurations-for-multi-gpu-computing)  
+10.  [License](#license)  
 
 ## Installation
 
@@ -61,9 +62,7 @@ In addition to its numeric functionality, it allows parallel computation of SymP
     if not using Anaconda.
 
 ## Getting Started
-
-### Using Cocos is as easy as using NumPy
-#### Platform Information:
+### Platform Information:
 Print available devices
 <pre>
 import cocos.device as cd
@@ -75,7 +74,7 @@ Select a device
 cd.ComputeDeviceManager.set_compute_device(0)
 </pre>
 
-#### First Steps:
+### First Steps:
 <pre>    
 # begin by importing the numerics package
 import cocos.numerics as cn
@@ -97,7 +96,7 @@ d = cn.random.randn(2, 2)
 print(d)
 </pre>
 
-### Multi-GPU Computing:
+## Multi-GPU Computing:
 Cocos provides `map-reduce` as well as the related `map-combine` as multi-GPU 
 programming models. The computations are separated into 'batches' and then distributed 
 across GPU devices in a pool. Cocos implements multi-GPU support via process-based parallelism. 
@@ -150,7 +149,7 @@ Please refer to the documentation of `cocos.multi_processing.device_pool.Compute
 `cocos.multi_processing.device_pool.ComputeDevicePool.map_combine` for further details. 
 See 'examples/heston_pricing_multi_gpu_example.py' for a fully worked example. 
 
-### Memory Limitations on the GPU Device
+## Memory Limitations on the GPU Device
 It is common for modern standard desktop computers to support up to support up to 128GB of RAM. 
 Video cards by contrast only feature a small fraction of VRAM. The consequence is that algorithms that 
 work well on a CPU can experience into memory limitations when run on a GPU device.
