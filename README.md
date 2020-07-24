@@ -150,6 +150,21 @@ Please refer to the documentation of `cocos.multi_processing.device_pool.Compute
 `cocos.multi_processing.device_pool.ComputeDevicePool.map_combine` for further details. 
 See 'examples/heston_pricing_multi_gpu_example.py' for a fully worked example. 
 
+### Memory Limitations on the GPU Device
+It is common for modern standard desktop computers to support up to support up to 128GB of RAM. 
+Video cards by contrast only feature a small fraction of VRAM. The consequence is that algorithms that 
+work well on a CPU can experience into memory limitations when run on a GPU device.
+
+In some cases this problem can be resolved by running the computation in batches or chunks and transferring results 
+from the GPU to the host after each batch has been processed.
+
+Using `map_reduce_single_gpu` and `map_combine_single_gpu`, computations on a single GPU can be split into chunks 
+and run sequentially. The interface is modeled after the multi GPU functionality described in the previous section. 
+
+Calls to `map_reduce_single_gpu` and `map_combine_single_gpu` can  be nested in a multi GPU computation, 
+which is how multi GPU evaluation of kernel density estimates is realized in Cocos 
+(see `cocos.scientific.kde.gaussian_kde.evaluate_in_batches_on_multiple_gpus`).
+
 ## Packaged examples:
 1.  [Estimating Pi via Monte Carlo](#estimating-pi-via-monte-carlo)  
 2.  [Option Pricing in a Stochastic Volatility Model via Monte Carlo](#option-pricing-in-a-stochastic-volatility-model-via-monte-carlo)  

@@ -1,8 +1,5 @@
 import cocos.numerics as cn
-from cocos.scientific.kde import (
-    gaussian_kde,
-    evaluate_gaussian_kde_in_batches
-)
+from cocos.scientific.kde import gaussian_kde
 
 from contexttimer import Timer
 import matplotlib.pyplot as plt
@@ -43,7 +40,7 @@ if __name__ == '__main__':
 
     # evaluate cocos gaussian kde object using gpu evaluation in batches
     batched_density_estimate_cocos = \
-        evaluate_gaussian_kde_in_batches(gaussian_kde_cocos, xy_grid, 10 * n * n)
+        gaussian_kde_cocos.evaluate_in_batches(xy_grid, 10 * n * n)
     # print(f'batched_density_estimate_cocos.shape = {batched_density_estimate_cocos.shape}')
 
     # verify that results are numerically close
@@ -101,8 +98,7 @@ if __name__ == '__main__':
 
     with Timer() as batched_cocos_timer:
         for _ in range(R):
-            evaluate_gaussian_kde_in_batches(
-                kde=gaussian_kde_cocos,
+            gaussian_kde_cocos.evaluate_in_batches(
                 points=xy_grid,
                 maximum_number_of_elements_per_batch=maximum_number_of_elements_per_batch)
 
