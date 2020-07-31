@@ -36,40 +36,40 @@ In addition to its numeric functionality, it allows parallel computation of SymP
 
 ## Installation
 
-1.  Download and install 
-    - Windows or Linux: [ArrayFire 3.6.4](http://arrayfire.s3.amazonaws.com/index.html#!/3.6.4%2F)
-    - MacOS: [ArrayFire 3.5.1](http://arrayfire.s3.amazonaws.com/index.html#!/3.5.1%2F)
+### 1.  Download and install 
+- Windows or Linux: [ArrayFire 3.6.4](http://arrayfire.s3.amazonaws.com/index.html#!/3.6.4%2F)
+- MacOS: [ArrayFire 3.5.1](http://arrayfire.s3.amazonaws.com/index.html#!/3.5.1%2F)  
 
-2. Make sure that your System can locate ArrayFire's libraries
-    ArrayFire's functionality is contained in dynamic libries, 
-    dynamic link libraries (.dll) on Windows and shared objects (.so) on Unix.
+### 2. Make sure that your System is able to locate ArrayFire's libraries
+ArrayFire's functionality is contained in dynamic libries, 
+dynamic link libraries (.dll) on Windows and shared objects (.so) on Unix.  
+
+This step is to ensure that these library files can be located on your system. 
+On Windows, this can be done by adding `%AF_PATH%\lib` to the path environment variable. 
+On Linux and Mac, one can either install (or copy) the ArrayFire libraries and their dependencies 
+to `/usr/local/lib` or modify the environment variable `LD_LIBRARY_PATH` (Linux) or 
+`DYLD_LIBRARY_PATH` (MacOS) to include the ArrayFire library directory.  
     
-    This step is to ensure that the operating system knows where to find these library files. 
-    On Windows, this can be done by adding `%AF_PATH%\lib` to the path environment variable. 
-    On Linux and Mac, one can either install (or copy) the ArrayFire libraries and their dependencies 
-    to `/usr/local/lib` or modify the environment variable `LD_LIBRARY_PATH` (Linux) or 
-    `DYLD_LIBRARY_PATH` (MacOS) to include the ArrayFire library directory. 
-    
-2.  Install Cocos via PIP: 
-    <pre>
-    pip install cocos 
-    </pre>
-    or 
-    <pre>
-    pip3 install cocos 
-    </pre>
-    if not using Anaconda.
-    
-    To get the latest version, clone the repository from github, 
-    open a terminal/command prompt, navigate to the root folder and install via
-    <pre>
-    pip install .
-    </pre>
-    or 
-    <pre>
-    pip3 install . 
-    </pre>
-    if not using Anaconda.
+### 3.  Install Cocos via PIP: 
+<pre>
+pip install cocos 
+</pre>
+or 
+<pre>
+pip3 install cocos 
+</pre>
+if not using Anaconda.
+
+To get the latest version, clone the repository from github, 
+open a terminal/command prompt, navigate to the root folder and install via
+<pre>
+pip install .
+</pre>
+or 
+<pre>
+pip3 install . 
+</pre>
+if not using Anaconda.
 
 ## Getting Started
 ### Platform Information:
