@@ -39,6 +39,16 @@ In addition to its numeric functionality, it allows parallel computation of SymP
 1.  Download and install 
     - Windows or Linux: [ArrayFire 3.6.4](http://arrayfire.s3.amazonaws.com/index.html#!/3.6.4%2F)
     - MacOS: [ArrayFire 3.5.1](http://arrayfire.s3.amazonaws.com/index.html#!/3.5.1%2F)
+
+2. Make sure that your System can locate ArrayFire's libraries
+    ArrayFire's functionality is contained in dynamic libries, 
+    dynamic link libraries (.dll) on Windows and shared objects (.so) on Unix.
+    
+    This step is to ensure that the operating system knows where to find these library files. 
+    On Windows, this can be done by adding `%AF_PATH%\lib` to the path environment variable. 
+    On Linux and Mac, one can either install (or copy) the ArrayFire libraries and their dependencies 
+    to `/usr/local/lib` or modify the environment variable `LD_LIBRARY_PATH` (Linux) or 
+    `DYLD_LIBRARY_PATH` (MacOS) to include the ArrayFire library directory. 
     
 2.  Install Cocos via PIP: 
     <pre>
@@ -5592,7 +5602,7 @@ Most differences between NumPy and Cocos stem from two sources:
 
 ## Limitations and Differences with NumPy
 
-*   Requires Python 3.6 or higher.
+*   Requires Python 3.7 or higher.
 *   Arrays may have no more than 4 axes.
 *   Cocos provides only a subset of NumPy's functions and methods. In many cases, Cocos does not support all of the parameters of its corresponding NumPy function or method.
 *   Trailing singleton dimensions are cut off, e.g. there is no difference between an array with shape (2, 2, 1) and an array with shape (2, 2) in Cocos.
