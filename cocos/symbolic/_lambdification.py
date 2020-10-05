@@ -16,6 +16,7 @@ from cocos.symbolic.utilities import find_length_of_state_vectors
 
 DUMMY_TIME_SYMBOL = sym.Symbol('t')
 
+
 ################################################################################
 # Works for both Matrices and Arrays
 ################################################################################
