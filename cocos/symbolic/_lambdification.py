@@ -122,7 +122,7 @@ def lambdify_array_with_modules(
                                    expr=array_expression[index],
                                    modules
                                    =[symbolic_time_function_name_to_numeric_time_function_map] +
-                                    modules))
+                                     modules))
 
     return tuple(result)
 
