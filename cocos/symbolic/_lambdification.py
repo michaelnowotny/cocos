@@ -1,4 +1,5 @@
 import collections
+import numbers
 import typing as tp
 
 import numpy as np
@@ -7,9 +8,11 @@ import sympy as sym
 from cocos import numerics as cn
 from cocos.numerics.data_types import NumericArray, NumericArrayOrScalar
 from cocos.utilities import check_and_make_sequence
-from cocos.numerics.numerical_package_selector import \
-    select_num_pack, \
+from cocos.numerics.numerical_package_selector import (
+    select_num_pack,
     get_gpu_and_num_pack_by_dtype_from_iterable
+)
+
 from cocos.symbolic.translations import COCOS_TRANSLATIONS
 from cocos.symbolic.utilities import find_length_of_state_vectors
 
@@ -611,7 +614,9 @@ class LambdifiedArrayExpressions:
         # If a state matrix has more than one axis, it is separated it into a
         # list of vectors and appended to the list of vector arguments.
         for state_matrix in state_matrices:
-            if state_matrix.ndim > 1:
+            if np.isscalar(state_matrix) or isinstance(state_matrix, numbers.Number):
+                list_of_state_vectors.append(state_matrix)
+            elif state_matrix.ndim > 1:
                 for i in range(state_matrix.shape[1]):
                     list_of_state_vectors.append((state_matrix[:, i]))
             else:
