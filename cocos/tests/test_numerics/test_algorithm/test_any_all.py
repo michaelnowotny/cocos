@@ -19,11 +19,29 @@ test_data = [(np.array([[1.0, -2.0], [-3.0, 4.0]], dtype=np.float32),
 
 
 def compare_numpy_and_cocos(cocos_array: cn.ndarray, numpy_array: np.ndarray):
+    """
+    Compares two numpy arrays.
+
+    Args:
+        cocos_array: (todo): write your description
+        cn: (todo): write your description
+        ndarray: (array): write your description
+        numpy_array: (array): write your description
+        np: (todo): write your description
+        ndarray: (array): write your description
+    """
     return np.allclose(np.array(cocos_array).astype(bool), numpy_array)
 
 
 @pytest.mark.parametrize("x, y", test_data)
 def test_any_all(x, y):
+    """
+    Determine all cocities in the cocities.
+
+    Args:
+        x: (todo): write your description
+        y: (todo): write your description
+    """
     cocos.device.init(backend)
     cocos.device.info()
 

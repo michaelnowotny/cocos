@@ -69,6 +69,12 @@ def svd(a: ndarray,
 
 
 def _convert_pivot_matrix(pivot: ndarray):
+    """
+    Convert a matrix to a matrix.
+
+    Args:
+        pivot: (todo): write your description
+    """
     if not isvector(pivot):
         raise ValueError("pivot must be a vector")
 
@@ -130,6 +136,15 @@ def _lu_internal(a: ndarray,
                  overwrite_a: bool = False,
                  is_lapack_piv: bool = True) \
         -> tp.Union[tp.Tuple[ndarray, ndarray],
+    """
+    Lu_internal implementation.
+
+    Args:
+        a: (todo): write your description
+        permute_l: (bool): write your description
+        overwrite_a: (bool): write your description
+        is_lapack_piv: (todo): write your description
+    """
                     tp.Tuple[ndarray, ndarray, ndarray]]:
     if overwrite_a:
         if permute_l:

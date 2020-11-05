@@ -16,6 +16,13 @@ test_data = [(np.array([[True, True, False],
 
 @pytest.mark.parametrize("A_numpy, B_numpy", test_data)
 def test_logical(A_numpy, B_numpy):
+    """
+    Determine the test sets of all devices.
+
+    Args:
+        A_numpy: (int): write your description
+        B_numpy: (int): write your description
+    """
     cocos.device.init()
     A_cocos = cn.array(A_numpy)
     B_cocos = cn.array(B_numpy)

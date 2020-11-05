@@ -19,6 +19,12 @@ test_data = [np.array([[1, 2, 3],
 
 @pytest.mark.parametrize("A_numpy", test_data)
 def test_diag_trace(A_numpy):
+    """
+    Determine the diagonal of the diacency matrix.
+
+    Args:
+        A_numpy: (int): write your description
+    """
     if A_numpy.ndim != 2:
         raise ValueError("A_numpy must be a matrix")
     if A_numpy.shape[0] != A_numpy.shape[1]:

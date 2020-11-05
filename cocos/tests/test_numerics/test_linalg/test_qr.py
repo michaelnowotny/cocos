@@ -5,10 +5,22 @@ import numpy as np
 
 
 def compare_cocos_numpy(cocos_array, numpy_array):
+    """
+    Compute cocos_array.
+
+    Args:
+        cocos_array: (todo): write your description
+        numpy_array: (int): write your description
+    """
     return np.allclose(np.array(cocos_array), numpy_array)
 
 
 def test_qr():
+    """
+    Perform the cocos.
+
+    Args:
+    """
     cocos.device.init()
 
     A_numpy = np.array([[1 + 2j, 2, 3], [4, 5 + 1j, 6], [7, 8, 20 + 7j]],

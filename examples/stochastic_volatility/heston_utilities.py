@@ -133,6 +133,27 @@ def simulate_and_compute_option_price(
         R: int,
         numerical_package_bundle: tp.Type[NumericalPackageBundle],
         verbose: bool = False) -> float:
+    """
+    Simulates the price of the approximate option
+
+    Args:
+        x0: (array): write your description
+        v0: (todo): write your description
+        r: (todo): write your description
+        rho: (todo): write your description
+        sigma_v: (float): write your description
+        kappa: (todo): write your description
+        v_bar: (todo): write your description
+        T: (todo): write your description
+        K: (todo): write your description
+        nT: (todo): write your description
+        R: (todo): write your description
+        numerical_package_bundle: (int): write your description
+        tp: (todo): write your description
+        Type: (str): write your description
+        NumericalPackageBundle: (int): write your description
+        verbose: (str): write your description
+    """
 
     if verbose:
         print(f'computing on device={ComputeDeviceManager.get_current_compute_device_id()}')
@@ -178,6 +199,29 @@ def simulate_and_compute_option_price_multicore(
         R: int,
         numerical_package_bundle: tp.Type[NumericalPackageBundle],
         number_of_cores: tp.Optional[int] = None) -> float:
+    """
+    Calculate option price of the option.
+
+    Args:
+        x0: (array): write your description
+        v0: (todo): write your description
+        r: (todo): write your description
+        rho: (todo): write your description
+        sigma_v: (float): write your description
+        kappa: (todo): write your description
+        v_bar: (todo): write your description
+        T: (todo): write your description
+        K: (todo): write your description
+        nT: (todo): write your description
+        R: (todo): write your description
+        numerical_package_bundle: (int): write your description
+        tp: (todo): write your description
+        Type: (todo): write your description
+        NumericalPackageBundle: (int): write your description
+        number_of_cores: (int): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+    """
     if number_of_cores is None:
         # number_of_cores = 5 * multiprocessing.cpu_count()
         number_of_cores = 5 * multiprocessing.cpu_count()
@@ -228,6 +272,29 @@ def simulate_and_compute_option_price_gpu(
         R: int,
         compute_device_pool: tp.Optional[ComputeDevicePool] = None,
         number_of_batches: tp.Optional[int] = None) -> float:
+    """
+    Calculate and set of options for the options.
+
+    Args:
+        x0: (array): write your description
+        v0: (todo): write your description
+        r: (todo): write your description
+        rho: (todo): write your description
+        sigma_v: (float): write your description
+        kappa: (todo): write your description
+        v_bar: (todo): write your description
+        T: (todo): write your description
+        K: (todo): write your description
+        nT: (todo): write your description
+        R: (todo): write your description
+        compute_device_pool: (bool): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        ComputeDevicePool: (bool): write your description
+        number_of_batches: (int): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+    """
     numerical_package_bundle = CocosBundle
     if number_of_batches is None:
         if compute_device_pool is None:

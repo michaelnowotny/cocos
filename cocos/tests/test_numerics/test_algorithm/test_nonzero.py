@@ -16,6 +16,12 @@ test_data = [np.array([[1 + 2j, 2, 3],
 
 @pytest.mark.parametrize("A_numpy", test_data)
 def test_nonzero(A_numpy):
+    """
+    Test if a non - zero zero - zero.
+
+    Args:
+        A_numpy: (int): write your description
+    """
     cocos.device.init()
 
     A_cocos = cn.array(A_numpy)

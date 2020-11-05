@@ -4,6 +4,11 @@ import numpy as np
 
 
 def test_union_intersection():
+    """
+    Compute union of union union of two sets.
+
+    Args:
+    """
     cocos.device.init()
 
     A_numpy = np.array([1, 2, 3], dtype=np.int32)

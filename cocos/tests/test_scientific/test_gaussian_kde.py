@@ -14,12 +14,22 @@ xi_1d = np.linspace(-5, 5, grid_size)
 
 
 def generate_points_2d():
+    """
+    Generate a set of 2d
+
+    Args:
+    """
     points_x = np.random.randn(1, n)
     points_y = np.random.randn(1, n)
     return np.vstack((points_x, points_y))
 
 
 def generate_xi_2d():
+    """
+    Generate 2d 2d 2d grid with the 2d.
+
+    Args:
+    """
     x_grid = np.linspace(-5.0, 5.0, grid_size)
     y_grid = np.linspace(-5.0, 5.0, grid_size)
     xy_grid_x, xy_grid_y = np.meshgrid(x_grid, y_grid)
@@ -34,6 +44,17 @@ xi_2d = generate_xi_2d()
                                         (points_2d, xi_2d)])
 def test_gaussian_kde_scipy_vs_cocos(points: np.ndarray,
                                      xi: np.ndarray):
+    """
+    R computes the kde - gaussian kernel.
+
+    Args:
+        points: (array): write your description
+        np: (todo): write your description
+        ndarray: (array): write your description
+        xi: (todo): write your description
+        np: (todo): write your description
+        ndarray: (array): write your description
+    """
     gkde_cocos = gaussian_kde(points)
     gkde_scipy = ss.kde.gaussian_kde(points)
 
@@ -48,6 +69,17 @@ def test_gaussian_kde_scipy_vs_cocos(points: np.ndarray,
                                         (points_2d, xi_2d)])
 def test_gaussian_kde_scipy_vs_cocos_gpu(points: np.ndarray,
                                          xi: np.ndarray):
+    """
+    R computes the kde - gaussian kernel.
+
+    Args:
+        points: (array): write your description
+        np: (todo): write your description
+        ndarray: (array): write your description
+        xi: (int): write your description
+        np: (todo): write your description
+        ndarray: (array): write your description
+    """
     gkde_cocos = gaussian_kde(cn.array(points.squeeze()),
                               gpu=True)
     gkde_scipy = ss.kde.gaussian_kde(points)

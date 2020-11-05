@@ -7,6 +7,16 @@ from ._array import ndarray, _wrap_af_array
 def count_nonzero(a: ndarray,
                   axis: tp.Optional[int] = None) \
         -> tp.Union[int, ndarray]:
+    """
+    Count the number of nonzero elements in the array.
+
+    Args:
+        a: (todo): write your description
+        axis: (int): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        int: (todo): write your description
+    """
     return _wrap_af_array(af.count(a._af_array, dim=axis))
 
 
@@ -54,6 +64,12 @@ def diff(a: ndarray,
 
 
 def flatnonzero(a: ndarray) -> ndarray:
+    """
+    Convert a numpy array to a nd array.
+
+    Args:
+        a: (int): write your description
+    """
     return ndarray(af.where(a._af_array))
 
 
@@ -61,6 +77,15 @@ def sort_by_keys(keys: ndarray,
                  values: ndarray,
                  axis: int = -1,
                  ascending: bool = True) -> tp.Tuple[ndarray, ndarray]:
+    """
+    Sort a key by a given axis.
+
+    Args:
+        keys: (str): write your description
+        values: (str): write your description
+        axis: (int): write your description
+        ascending: (bool): write your description
+    """
     if keys.shape != values.shape:
         raise ValueError("Keys and values must have the same dimensions.")
     elif axis is None:
@@ -84,6 +109,15 @@ def unique(ar: ndarray,
            return_index: bool = False,
            return_inverse: bool = False,
            return_counts: bool = False) -> ndarray:
+    """
+    Return unique values in args array.
+
+    Args:
+        ar: (array): write your description
+        return_index: (bool): write your description
+        return_inverse: (bool): write your description
+        return_counts: (bool): write your description
+    """
     if return_index:
         raise ValueError("return_index=True is not supported")
     if return_inverse:
@@ -102,6 +136,13 @@ def unique(ar: ndarray,
 
 
 def union1d(ar1: ndarray, ar2: ndarray) -> ndarray:
+    """
+    Return the union of two arrays.
+
+    Args:
+        ar1: (array): write your description
+        ar2: (todo): write your description
+    """
     new_af_array = af.set_union(ar1._af_array,
                                 ar2._af_array,
                                 is_unique=False)
@@ -110,6 +151,13 @@ def union1d(ar1: ndarray, ar2: ndarray) -> ndarray:
 
 
 def intersect1d(ar1: ndarray, ar2: ndarray) -> ndarray:
+    """
+    Intersect two ar1darray.
+
+    Args:
+        ar1: (array): write your description
+        ar2: (int): write your description
+    """
     new_af_array = af.set_intersect(ar1._af_array,
                                     ar2._af_array,
                                     is_unique=False)

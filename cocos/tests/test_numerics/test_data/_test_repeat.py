@@ -9,6 +9,12 @@ y_cocos = cn.array(y_numpy)
 
 @pytest.mark.parametrize('axis', (0, 1))
 def test_repeat(axis: int):
+    """
+    Test if the next test.
+
+    Args:
+        axis: (int): write your description
+    """
     pass
     # result_numpy = np.repeat(y_numpy, repeats=2, axis=axis)
     # result_cocos = cn.repeat(y_cocos, repeats=2, axis=axis)

@@ -13,6 +13,14 @@ import sympy as sym
 
 
 def jacobian_direct(x1, x2, x3) -> NumericArray:
+    """
+    Returns the jacobian of the jacobian.
+
+    Args:
+        x1: (array): write your description
+        x2: (array): write your description
+        x3: (array): write your description
+    """
     state_vectors = (x1, x2, x3)
     R = find_length_of_state_vectors(state_vectors)
     num_pack = select_num_pack_by_dtype_from_iterable(state_vectors)
@@ -34,6 +42,11 @@ def jacobian_direct(x1, x2, x3) -> NumericArray:
 
 
 def test_lambdified_array_expression():
+    """
+    Evaluate the jacobian matrix.
+
+    Args:
+    """
     # define symbolic arguments to the function
     x1, x2, x3, t = sym.symbols('x1, x2, x3, t')
     argument_symbols = (x1, x2, x3)

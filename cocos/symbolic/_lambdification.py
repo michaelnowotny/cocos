@@ -137,6 +137,31 @@ def lambdify_array(
         symbolic_time_function_name_to_numeric_time_function_map:
         tp.Optional[tp.Dict[str, tp.Callable]] = None) \
         -> tp.Tuple[tp.Tuple[tp.Callable, ...], tp.Tuple[tp.Callable, ...]]:
+    """
+    Eval of a : ~gw.
+
+    Args:
+        symbols: (array): write your description
+        tp: (array): write your description
+        Tuple: (array): write your description
+        sym: (array): write your description
+        Symbol: (array): write your description
+        array_expression: (bool): write your description
+        tp: (array): write your description
+        Union: (str): write your description
+        sym: (array): write your description
+        Array: (array): write your description
+        sym: (array): write your description
+        MatrixBase: (array): write your description
+        symbolic_time_function_name_to_numeric_time_function_map: (todo): write your description
+        tp: (array): write your description
+        Optional: (todo): write your description
+        tp: (array): write your description
+        Dict: (todo): write your description
+        str: (todo): write your description
+        tp: (array): write your description
+        Callable: (str): write your description
+    """
 
     if symbolic_time_function_name_to_numeric_time_function_map is None:
         symbolic_time_function_name_to_numeric_time_function_map = dict()
@@ -242,6 +267,56 @@ class LambdifiedArrayExpressions:
             lazy_initialization: bool = False,
             pre_attach: tp.Optional[tp.Tuple[bool, ...]] = None,
             dtype: np.generic = np.float32):
+        """
+        Initialize a symbol.
+
+        Args:
+            self: (todo): write your description
+            symbolic_array_expressions: (todo): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            tp: (int): write your description
+            Union: (todo): write your description
+            sym: (todo): write your description
+            Array: (array): write your description
+            sym: (todo): write your description
+            MatrixBase: (str): write your description
+            argument_symbols: (str): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            sym: (todo): write your description
+            Symbol: (str): write your description
+            time_symbol: (int): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            sym: (todo): write your description
+            Symbol: (str): write your description
+            symbolic_time_function_name_to_numeric_time_function_map: (todo): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            tp: (int): write your description
+            Dict: (todo): write your description
+            str: (todo): write your description
+            tp: (int): write your description
+            Callable: (todo): write your description
+            squeeze_column_vectors: (todo): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            perform_cse: (todo): write your description
+            lazy_initialization: (todo): write your description
+            pre_attach: (todo): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            dtype: (todo): write your description
+            np: (int): write your description
+            generic: (todo): write your description
+            np: (int): write your description
+            float32: (todo): write your description
+        """
 
         if time_symbol is None:
             if symbolic_time_function_name_to_numeric_time_function_map is not None and \
@@ -320,6 +395,12 @@ class LambdifiedArrayExpressions:
             self._perform_initialization()
 
     def _perform_initialization(self):
+        """
+        Perform initial function.
+
+        Args:
+            self: (todo): write your description
+        """
         self._functions_cpu = []
         self._functions_gpu = []
         if self._perform_cse:
@@ -374,9 +455,22 @@ class LambdifiedArrayExpressions:
 
     @property
     def shapes(self) -> tp.Tuple[tp.Tuple[int, ...], ...]:
+        """
+        A tuple of shapes of this shape.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._shapes
 
     def is_column_vector(self, i: int) -> bool:
+        """
+        Returns true if i is a vector.
+
+        Args:
+            self: (todo): write your description
+            i: (todo): write your description
+        """
         shape = self._symbolic_array_expressions[i].shape
         return len(shape) == 1 \
                or all([dim == 1
@@ -384,6 +478,13 @@ class LambdifiedArrayExpressions:
                        in shape[1:]])
 
     def is_row_vector(self, i: int) -> bool:
+        """
+        Returns true if i is a vector.
+
+        Args:
+            self: (todo): write your description
+            i: (todo): write your description
+        """
         shape = self._symbolic_array_expressions[i].shape
         if len(shape < 2):
             return False
@@ -396,35 +497,83 @@ class LambdifiedArrayExpressions:
 
     @property
     def argument_symbols(self) -> tp.Tuple[sym.Symbol, ...]:
+        """
+        Returns the symbol symbols for the argument.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._argument_symbols
 
     @property
     def number_of_state_variables(self) -> int:
+        """
+        Returns the number of number of symbols.
+
+        Args:
+            self: (todo): write your description
+        """
         return len(self._argument_symbols)
 
     @property
     def time_symbol(self) -> sym.Symbol:
+        """
+        Returns the symbol symbol.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._time_symbol
 
     @property
     def symbolic_array_expressions(self) -> tp.Tuple[sym.ImmutableMatrix, ...]:
+        """
+        A tuple of all the symbolic symbols.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._symbolic_array_expressions
 
     @property
     def symbolic_time_function_name_to_numeric_time_function_map(self) \
             -> tp.Dict[str, tp.Callable]:
+        """
+        Returns the name of a name to which represents.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._symbolic_time_function_name_to_numeric_time_function_map
 
     @property
     def symbols(self) -> tp.Tuple[sym.Symbol, ...]:
+        """
+        A tuple of symbols of the symbols.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._symbols
 
     @property
     def number_of_variables(self) -> int:
+        """
+        Returns number of symbols.
+
+        Args:
+            self: (todo): write your description
+        """
         return len(self._symbols)
 
     @property
     def dtype(self) -> np.generic:
+        """
+        The dtype of this dtype.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._dtype
 
     def evaluate_with_list_of_state_vectors(
@@ -641,6 +790,52 @@ class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
          lazy_initialization: bool = False,
          pre_attach: tp.Optional[tp.Tuple[bool, ...]] = None,
          dtype: np.generic = np.float32):
+        """
+        Initialize the matrix.
+
+        Args:
+            self: (todo): write your description
+            symbolic_matrix_expressions: (todo): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            sym: (todo): write your description
+            MatrixBase: (str): write your description
+            argument_symbols: (str): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            sym: (todo): write your description
+            Symbol: (str): write your description
+            time_symbol: (int): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            sym: (todo): write your description
+            Symbol: (str): write your description
+            symbolic_time_function_name_to_numeric_time_function_map: (todo): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            tp: (int): write your description
+            Dict: (todo): write your description
+            str: (todo): write your description
+            tp: (int): write your description
+            Callable: (todo): write your description
+            squeeze_column_vectors: (todo): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            perform_cse: (todo): write your description
+            lazy_initialization: (todo): write your description
+            pre_attach: (todo): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            dtype: (todo): write your description
+            np: (int): write your description
+            generic: (todo): write your description
+            np: (int): write your description
+            float32: (todo): write your description
+        """
 
         if symbolic_time_function_name_to_numeric_time_function_map is None:
             symbolic_time_function_name_to_numeric_time_function_map = dict()
@@ -670,14 +865,32 @@ class LambdifiedMatrixExpressions(LambdifiedArrayExpressions):
 
     @property
     def rows(self) -> tp.Tuple[int, ...]:
+        """
+        The number of rows.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._rows
 
     @property
     def cols(self) -> tp.Tuple[int, ...]:
+        """
+        A tuple of columns.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._cols
 
     @property
     def symbolic_matrix_expressions(self) -> tp.Tuple[sym.ImmutableMatrix, ...]:
+        """
+        The sparse matrix representation of the matrix.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.symbolic_array_expressions
 
 
@@ -694,6 +907,52 @@ class LambdifiedVectorExpressions(LambdifiedMatrixExpressions):
          lazy_initialization: bool = False,
          pre_attach: tp.Optional[tp.Tuple[bool, ...]] = None,
          dtype: np.generic = np.float32):
+        """
+        Initialize the matrix.
+
+        Args:
+            self: (todo): write your description
+            symbolic_vector_expressions: (todo): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            sym: (todo): write your description
+            MatrixBase: (str): write your description
+            argument_symbols: (str): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            sym: (todo): write your description
+            Symbol: (str): write your description
+            time_symbol: (int): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            sym: (todo): write your description
+            Symbol: (str): write your description
+            symbolic_time_function_name_to_numeric_time_function_map: (todo): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            tp: (int): write your description
+            Dict: (todo): write your description
+            str: (todo): write your description
+            tp: (int): write your description
+            Callable: (todo): write your description
+            squeeze_column_vectors: (todo): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            perform_cse: (todo): write your description
+            lazy_initialization: (todo): write your description
+            pre_attach: (todo): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            dtype: (todo): write your description
+            np: (int): write your description
+            generic: (todo): write your description
+            np: (int): write your description
+            float32: (todo): write your description
+        """
 
         super().__init__(
                     symbolic_matrix_expressions=symbolic_vector_expressions,
@@ -708,10 +967,22 @@ class LambdifiedVectorExpressions(LambdifiedMatrixExpressions):
 
     @property
     def dimension(self) -> int:
+        """
+        The number of the vector.
+
+        Args:
+            self: (todo): write your description
+        """
         return len(self.symbolic_vector_expressions)
 
     @property
     def symbolic_vector_expressions(self) -> tp.Tuple[sym.ImmutableMatrix, ]:
+        """
+        The list of the symbolic vectors.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.symbolic_matrix_expressions
 
 
@@ -731,6 +1002,46 @@ class LambdifiedArrayExpression:
          lazy_initialization: bool = False,
          pre_attach: bool = True,
          dtype: np.generic = np.float32):
+        """
+        Initialize a symbol.
+
+        Args:
+            self: (todo): write your description
+            symbolic_array_expression: (str): write your description
+            tp: (int): write your description
+            Union: (todo): write your description
+            sym: (todo): write your description
+            MatrixBase: (str): write your description
+            sym: (todo): write your description
+            Array: (array): write your description
+            argument_symbols: (str): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            sym: (todo): write your description
+            Symbol: (str): write your description
+            time_symbol: (int): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            sym: (todo): write your description
+            Symbol: (str): write your description
+            symbolic_time_function_name_to_numeric_time_function_map: (todo): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            tp: (int): write your description
+            Dict: (todo): write your description
+            str: (todo): write your description
+            tp: (int): write your description
+            Callable: (todo): write your description
+            squeeze_column_vector: (todo): write your description
+            perform_cse: (todo): write your description
+            lazy_initialization: (todo): write your description
+            pre_attach: (todo): write your description
+            dtype: (todo): write your description
+            np: (int): write your description
+            generic: (todo): write your description
+            np: (int): write your description
+            float32: (todo): write your description
+        """
 
         self._lambdified_array_expressions = \
                 LambdifiedArrayExpressions(
@@ -747,41 +1058,95 @@ class LambdifiedArrayExpression:
 
     @property
     def is_column_vector(self) -> bool:
+        """
+        Returns true if all columns are 1.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._lambdified_array_expressions.is_column_vector(0)
 
     @property
     def is_row_vector(self) -> bool:
+        """
+        True if_row vector is 1d.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._lambdified_array_expressions.is_row_vector(0)
 
     @property
     def argument_symbols(self) -> tp.Tuple[sym.Symbol, ...]:
+        """
+        A tuple containing the argument indices.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._lambdified_array_expressions.argument_symbols
 
     @property
     def number_of_state_variables(self) -> int:
+        """
+        The number of variables.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._lambdified_array_expressions.number_of_state_variables
 
     @property
     def time_symbol(self) -> sym.Symbol:
+        """
+        The symbol symbols of all symbols.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._lambdified_array_expressions.time_symbol
 
     @property
     def symbolic_array_expression(self) -> sym.ImmutableMatrix:
+        """
+        The symbolic expression of the symmetric expression.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._lambdified_array_expressions.symbolic_array_expressions[0]
 
     @property
     def symbolic_time_function_name_to_numeric_time_function_map(self) \
             -> tp.Dict[str, tp.Callable]:
+        """
+        Returns the number of the time function that is defined in - series.
+
+        Args:
+            self: (todo): write your description
+        """
         return (self
                 ._lambdified_array_expressions
                 .symbolic_time_function_name_to_numeric_time_function_map)
 
     @property
     def symbols(self) -> tp.Tuple[sym.Symbol, ...]:
+        """
+        A tuple of symbols contained symbols.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._lambdified_array_expressions.symbols
 
     @property
     def number_of_variables(self) -> int:
+        """
+        Number of variables.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._lambdified_array_expressions.number_of_variables
 
     def evaluate_with_list_of_state_vectors(
@@ -909,6 +1274,42 @@ class LambdifiedMatrixExpression(LambdifiedArrayExpression):
          lazy_initialization: bool = False,
          pre_attach: bool = True,
          dtype: np.generic = np.float32):
+        """
+        Initialize the matrix.
+
+        Args:
+            self: (todo): write your description
+            symbolic_matrix_expression: (todo): write your description
+            sym: (todo): write your description
+            MatrixBase: (str): write your description
+            argument_symbols: (str): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            sym: (todo): write your description
+            Symbol: (str): write your description
+            time_symbol: (int): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            sym: (todo): write your description
+            Symbol: (str): write your description
+            symbolic_time_function_name_to_numeric_time_function_map: (todo): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            tp: (int): write your description
+            Dict: (todo): write your description
+            str: (todo): write your description
+            tp: (int): write your description
+            Callable: (todo): write your description
+            squeeze_column_vector: (todo): write your description
+            perform_cse: (todo): write your description
+            lazy_initialization: (todo): write your description
+            pre_attach: (todo): write your description
+            dtype: (todo): write your description
+            np: (int): write your description
+            generic: (todo): write your description
+            np: (int): write your description
+            float32: (todo): write your description
+        """
 
         super().__init__(argument_symbols=argument_symbols,
                          time_symbol=time_symbol,
@@ -923,6 +1324,12 @@ class LambdifiedMatrixExpression(LambdifiedArrayExpression):
 
     @property
     def rows(self) -> int:
+        """
+        The number of the number. numpy.
+
+        Args:
+            self: (todo): write your description
+        """
         return (self
                 ._lambdified_array_expressions
                 .symbolic_array_expressions[0]
@@ -930,12 +1337,24 @@ class LambdifiedMatrixExpression(LambdifiedArrayExpression):
 
     @property
     def cols(self) -> int:
+        """
+        The number of columns of the array.
+
+        Args:
+            self: (todo): write your description
+        """
         return (self
                 ._lambdified_array_expressions
                 .symbolic_array_expressions[0].shape[1])
 
     @property
     def symbolic_matrix_expression(self) -> sym.ImmutableMatrix:
+        """
+        Returns a symbolic expression.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.symbolic_array_expression
 
 
@@ -951,6 +1370,41 @@ class LambdifiedVectorExpression(LambdifiedMatrixExpression):
          lazy_initialization: bool = False,
          pre_attach: bool = True,
          dtype: np.generic = np.float32):
+        """
+        Initialize a symbol.
+
+        Args:
+            self: (todo): write your description
+            symbolic_vector_expression: (todo): write your description
+            sym: (todo): write your description
+            MatrixBase: (str): write your description
+            argument_symbols: (str): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            sym: (todo): write your description
+            Symbol: (str): write your description
+            time_symbol: (int): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            sym: (todo): write your description
+            Symbol: (str): write your description
+            symbolic_time_function_name_to_numeric_time_function_map: (todo): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            tp: (int): write your description
+            Dict: (todo): write your description
+            str: (todo): write your description
+            tp: (int): write your description
+            Callable: (todo): write your description
+            perform_cse: (todo): write your description
+            lazy_initialization: (todo): write your description
+            pre_attach: (todo): write your description
+            dtype: (todo): write your description
+            np: (int): write your description
+            generic: (todo): write your description
+            np: (int): write your description
+            float32: (todo): write your description
+        """
 
         super().__init__(argument_symbols=argument_symbols,
                          time_symbol=time_symbol,
@@ -965,6 +1419,12 @@ class LambdifiedVectorExpression(LambdifiedMatrixExpression):
 
     @property
     def symbolic_vector_expression(self) -> sym.ImmutableMatrix:
+        """
+        Returns the symbolic expression of the symbolic expression.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.symbolic_matrix_expression
 
 
@@ -980,6 +1440,41 @@ class LambdifiedScalarExpression(LambdifiedVectorExpression):
          lazy_initialization: bool = False,
          pre_attach: bool = True,
          dtype: np.generic = np.float32):
+        """
+        Initialize the module.
+
+        Args:
+            self: (todo): write your description
+            symbolic_expression: (str): write your description
+            sym: (todo): write your description
+            Expr: (todo): write your description
+            argument_symbols: (str): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            sym: (todo): write your description
+            Symbol: (str): write your description
+            time_symbol: (int): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            sym: (todo): write your description
+            Symbol: (str): write your description
+            symbolic_time_function_name_to_numeric_time_function_map: (todo): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            tp: (int): write your description
+            Dict: (todo): write your description
+            str: (todo): write your description
+            tp: (int): write your description
+            Callable: (todo): write your description
+            perform_cse: (todo): write your description
+            lazy_initialization: (todo): write your description
+            pre_attach: (todo): write your description
+            dtype: (todo): write your description
+            np: (int): write your description
+            generic: (todo): write your description
+            np: (int): write your description
+            float32: (todo): write your description
+        """
 
         super().__init__(argument_symbols=argument_symbols,
                          time_symbol=time_symbol,
@@ -994,6 +1489,12 @@ class LambdifiedScalarExpression(LambdifiedVectorExpression):
 
     @property
     def symbolic_expression(self) -> sym.Expr:
+        """
+        Returns the sympy expression.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.symbolic_matrix_expression[0, 0]
 
     def evaluate_with_list_of_state_vectors(
@@ -1111,6 +1612,24 @@ def lambdify(args,
              printer: tp.Optional[tp.Tuple] = None,
              use_imps: bool = True,
              dummify: bool = True):
+    """
+    Return the expression.
+
+    Args:
+        expr: (todo): write your description
+        modules: (list): write your description
+        tp: (int): write your description
+        Optional: (todo): write your description
+        tp: (int): write your description
+        Tuple: (int): write your description
+        printer: (todo): write your description
+        tp: (int): write your description
+        Optional: (todo): write your description
+        tp: (int): write your description
+        Tuple: (int): write your description
+        use_imps: (bool): write your description
+        dummify: (int): write your description
+    """
     if modules is None:
         modules = []
 

@@ -16,6 +16,12 @@ from cocos.multi_processing.utilities import (
 
 
 def _init_gpu_in_process(device_id: int):
+    """
+    Initialize the gpu device.
+
+    Args:
+        device_id: (int): write your description
+    """
     # print(f'initializing device {device_id}')
     time.sleep(0.1)
     ComputeDeviceManager.set_compute_device(compute_device=device_id)
@@ -25,6 +31,18 @@ def _init_gpu_in_process(device_id: int):
 def _get_set_of_compute_devices_from_iterable(
         compute_devices: tp.Iterable[tp.Union[int, ComputeDevice]]) \
         -> tp.FrozenSet[ComputeDevice]:
+    """
+    Returns a list of set of set.
+
+    Args:
+        compute_devices: (bool): write your description
+        tp: (todo): write your description
+        Iterable: (todo): write your description
+        tp: (todo): write your description
+        Union: (str): write your description
+        int: (str): write your description
+        ComputeDevice: (bool): write your description
+    """
     result_compute_devices = []
 
     for i, compute_device in enumerate(compute_devices):
@@ -133,17 +151,41 @@ class ComputeDevicePool:
 
     @property
     def compute_devices(self) -> tp.FrozenSet[ComputeDevice]:
+        """
+        Compute all devices.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._compute_devices
 
     @property
     def number_of_devices(self) -> int:
+        """
+        Returns the number of devices.
+
+        Args:
+            self: (todo): write your description
+        """
         return len(self.compute_devices)
 
     @property
     def multiprocessing_pool_type(self) -> MultiprocessingPoolType:
+        """
+        Multiprocessingpooltype.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._multiprocessing_pool_type
 
     def sync(self):
+        """
+        Syncs the devices.
+
+        Args:
+            self: (todo): write your description
+        """
         for compute_device in self._compute_devices:
             compute_device.sync()
 
@@ -212,6 +254,12 @@ class ComputeDevicePool:
                 number_of_batches=number_of_batches)
 
         def synced_f(index, *args, **kwargs) -> ResultType:
+            """
+            Perform a function.
+
+            Args:
+                index: (int): write your description
+            """
             if host_to_device_transfer_function is not None:
                 args, kwargs = host_to_device_transfer_function(*args, **kwargs)
             sync()
@@ -306,6 +354,12 @@ class ComputeDevicePool:
                 number_of_batches=number_of_batches)
 
         def synced_f(index, *args, **kwargs) -> ResultType:
+            """
+            Perform a function.
+
+            Args:
+                index: (int): write your description
+            """
             if host_to_device_transfer_function is not None:
                 args, kwargs = host_to_device_transfer_function(*args, **kwargs)
             sync()

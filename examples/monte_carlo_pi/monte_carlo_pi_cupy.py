@@ -5,6 +5,13 @@ import numpy
 
 
 def estimate_pi_cupy(n: int, batches: int = 1) -> float:
+    """
+    Estimate the sum of the sum of the 2d slices.
+
+    Args:
+        n: (todo): write your description
+        batches: (todo): write your description
+    """
     n_per_batch = math.ceil(n/batches)
 
     pi = 0.0
@@ -21,6 +28,14 @@ def estimate_pi_cupy(n: int, batches: int = 1) -> float:
 
 
 def single_gpu_cupy_benchmark(n: int, batches: int, repetitions: int = 1) -> float:
+    """
+    Perform a single benchmark benchmark.
+
+    Args:
+        n: (todo): write your description
+        batches: (list): write your description
+        repetitions: (int): write your description
+    """
     with Timer() as timer:
         for _ in range(repetitions):
             estimate_pi_cupy(n, batches=batches)
@@ -30,6 +45,11 @@ def single_gpu_cupy_benchmark(n: int, batches: int, repetitions: int = 1) -> flo
 
 
 def main():
+    """
+    Main function.
+
+    Args:
+    """
     n = 1000000000
     repetitions = 1
     batches = 20

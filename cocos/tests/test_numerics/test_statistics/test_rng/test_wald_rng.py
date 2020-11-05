@@ -16,6 +16,14 @@ test_data = [
 
 @pytest.mark.parametrize("mean, scale, n_kolmogorov_smirnov", test_data)
 def test_wald_distribution(mean, scale, n_kolmogorov_smirnov):
+    """
+    Generate a random covariance of a random gaussian distribution.
+
+    Args:
+        mean: (todo): write your description
+        scale: (float): write your description
+        n_kolmogorov_smirnov: (todo): write your description
+    """
     u = cn.random.wald(mean, scale, n_kolmogorov_smirnov)
     reject = perform_ks_test(u,
                              alpha=0.01,

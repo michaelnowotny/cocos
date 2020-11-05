@@ -12,6 +12,13 @@ test_data = [(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 20]],
 
 @pytest.mark.parametrize("A_numpy, b_numpy", test_data)
 def test_solve(A_numpy, b_numpy):
+    """
+    Solve the linear equation.
+
+    Args:
+        A_numpy: (bool): write your description
+        b_numpy: (int): write your description
+    """
     cocos.device.init()
     if cocos.device.is_dbl_supported():
         # using numpy

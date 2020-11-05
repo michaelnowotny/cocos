@@ -10,6 +10,34 @@ def _pad_shape_tuple_default(shape: tp.Union[tp.Sequence, int, float],
                              d2: tp.Optional[int],
                              d3: tp.Optional[int]) \
         -> tp.Tuple[int,
+    """
+    Pad a tuple of a shape.
+
+    Args:
+        shape: (int): write your description
+        tp: (todo): write your description
+        Union: (str): write your description
+        tp: (todo): write your description
+        Sequence: (todo): write your description
+        int: (todo): write your description
+        float: (todo): write your description
+        d0: (todo): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        int: (todo): write your description
+        d1: (todo): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        int: (todo): write your description
+        d2: (todo): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        int: (todo): write your description
+        d3: (todo): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        int: (todo): write your description
+    """
                     tp.Optional[int],
                     tp.Optional[int],
                     tp.Optional[int]]:
@@ -33,6 +61,18 @@ def _pad_shape_tuple_default(shape: tp.Union[tp.Sequence, int, float],
 
 def _pad_shape_tuple_none(shape: tp.Union[tp.Sequence, int, float]) \
         -> tp.Tuple[int,
+    """
+    Return a tuple of the shape.
+
+    Args:
+        shape: (int): write your description
+        tp: (todo): write your description
+        Union: (str): write your description
+        tp: (todo): write your description
+        Sequence: (todo): write your description
+        int: (todo): write your description
+        float: (todo): write your description
+    """
                     tp.Optional[int],
                     tp.Optional[int],
                     tp.Optional[int]]:
@@ -45,6 +85,15 @@ def _pad_shape_tuple_none(shape: tp.Union[tp.Sequence, int, float]) \
 
 def _pad_shape_tuple_axis(axes: tp.Sequence[int]) \
         -> tp.Tuple[int, int, int, int]:
+    """
+    Pad a tuple.
+
+    Args:
+        axes: (todo): write your description
+        tp: (todo): write your description
+        Sequence: (todo): write your description
+        int: (todo): write your description
+    """
     output_shape = list(axes)
     for i in range(len(axes), 4):
         output_shape.append(i)
@@ -53,6 +102,15 @@ def _pad_shape_tuple_axis(axes: tp.Sequence[int]) \
 
 
 def _pad_shape_tuple_one(shape: tp.Tuple[int]) -> tp.Tuple[int, int, int, int]:
+    """
+    Pad a shape to a shape.
+
+    Args:
+        shape: (int): write your description
+        tp: (todo): write your description
+        Tuple: (todo): write your description
+        int: (todo): write your description
+    """
     d0 = 1
     d1 = 1
     d2 = 1
@@ -73,6 +131,13 @@ def _pad_shape_tuple_one(shape: tp.Tuple[int]) -> tp.Tuple[int, int, int, int]:
 
 
 def _as_str(self, dims: bool = True):
+    """
+    Convert string to string.
+
+    Args:
+        self: (todo): write your description
+        dims: (int): write your description
+    """
     arr_str = c_char_ptr_t(0)
     be = backend.get()
     safe_call(be.af_array_to_string(c_pointer(arr_str), "", self.arr, 4, dims))
@@ -100,6 +165,15 @@ def _compute_slice_length(index: slice, length: int) -> int:
 
 
 def _remove_trailing_ones(shape: tp.Tuple[int, ...]) -> tp.Tuple[int, ...]:
+    """
+    Removes all trajectories that shape.
+
+    Args:
+        shape: (int): write your description
+        tp: (todo): write your description
+        Tuple: (todo): write your description
+        int: (todo): write your description
+    """
     while len(shape) > 1 and shape[-1] == 1:
         shape = shape[:-1]
 

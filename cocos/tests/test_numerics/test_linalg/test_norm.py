@@ -9,6 +9,12 @@ test_data = [np.inf, 1, 2, None]
 
 @pytest.mark.parametrize("ord", test_data)
 def test_norm(ord):
+    """
+    Determine norm.
+
+    Args:
+        ord: (int): write your description
+    """
     cocos.device.init()
 
     # using numpy

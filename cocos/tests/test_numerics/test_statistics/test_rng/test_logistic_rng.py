@@ -16,6 +16,14 @@ test_data = [(5.0, np.sqrt(3.0) / np.pi, n_kolmogorov_smirnov),
 
 @pytest.mark.parametrize("loc, scale, n_kolmogorov_smirnov", test_data)
 def test_logistic_distribution(loc, scale, n_kolmogorov_smirnov):
+    """
+    Reject k - means.
+
+    Args:
+        loc: (array): write your description
+        scale: (float): write your description
+        n_kolmogorov_smirnov: (array): write your description
+    """
     u = cn.random.logistic(loc, scale, n_kolmogorov_smirnov)
     reject = perform_ks_test(u,
                              alpha=0.01,

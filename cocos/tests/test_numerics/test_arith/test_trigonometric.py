@@ -15,6 +15,12 @@ test_data = [np.array([[1, -1],
 
 @pytest.mark.parametrize("A_numpy", test_data)
 def test_trigonometric(A_numpy):
+    """
+    Determine a_numpy.
+
+    Args:
+        A_numpy: (int): write your description
+    """
     cocos.device.init()
     A_cocos = cn.array(A_numpy)
 

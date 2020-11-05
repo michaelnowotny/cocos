@@ -4,6 +4,11 @@ import numpy as np
 
 
 def test_diff():
+    """
+    Determine the difference between the diffs.
+
+    Args:
+    """
     cocos.device.init()
 
     if cocos.device.is_dbl_supported():

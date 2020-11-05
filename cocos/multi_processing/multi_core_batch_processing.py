@@ -56,6 +56,12 @@ def map_reduce_multicore(
             number_of_batches=number_of_batches)
 
     def wrapped_f(index, *args, **kwargs) -> ResultType:
+        """
+        Decorator for function f.
+
+        Args:
+            index: (int): write your description
+        """
         return index, f(*args, **kwargs)
 
     if multiprocessing_pool_type == MultiprocessingPoolType.LOKY:
@@ -135,6 +141,12 @@ def map_combine_multicore(
             number_of_batches=number_of_batches)
 
     def wrapped_f(index, *args, **kwargs) -> ResultType:
+        """
+        Decorator for function f.
+
+        Args:
+            index: (int): write your description
+        """
         return index, f(*args, **kwargs)
 
     results = []

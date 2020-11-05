@@ -22,6 +22,12 @@ from ._utilities import \
 
 
 def _verify_operand(other):
+    """
+    Verifies the operands of the operand operandation.
+
+    Args:
+        other: (todo): write your description
+    """
     if  isinstance(other, np.ndarray):
         if GPUOptions.mixed_computation_error_level == \
                 MixedComputationErrorLevel.ERROR:
@@ -33,6 +39,14 @@ def _verify_operand(other):
 
 
 def _binary_function(lhs, rhs, func) -> 'ndarray':
+    """
+    Helper function for _binary_function.
+
+    Args:
+        lhs: (todo): write your description
+        rhs: (todo): write your description
+        func: (callable): write your description
+    """
     _verify_operand(lhs)
     _verify_operand(rhs)
 
@@ -49,6 +63,14 @@ def _binary_function(lhs, rhs, func) -> 'ndarray':
 def _binary_method(rhs,
                    func,
                    broadcast: bool = False) -> 'ndarray':
+    """
+    Decorator for _binary.
+
+    Args:
+        rhs: (todo): write your description
+        func: (todo): write your description
+        broadcast: (todo): write your description
+    """
     _verify_operand(rhs)
     argument = None
     if isinstance(rhs, ndarray):
@@ -64,6 +86,18 @@ def _binary_method(rhs,
 
 
 def _unary_function(x, af_func: tp.Callable, np_func: tp.Callable) -> 'ndarray':
+    """
+    Unary function.
+
+    Args:
+        x: (todo): write your description
+        af_func: (todo): write your description
+        tp: (todo): write your description
+        Callable: (todo): write your description
+        np_func: (todo): write your description
+        tp: (todo): write your description
+        Callable: (todo): write your description
+    """
     _verify_operand(x)
     # print("unary function argument is a {}".format(type(x)))
     if isinstance(x, ndarray):
@@ -76,11 +110,30 @@ def _unary_function(x, af_func: tp.Callable, np_func: tp.Callable) -> 'ndarray':
 
 
 def is_boolean(a):
+    """
+    Return true if dtype is boolean false otherwise.
+
+    Args:
+        a: (int): write your description
+    """
     return a.dtype == np.bool or a.dtype == np.bool_
 
 
 def _translate_index_key(item, input_shape: tp.Union[int, tp.Tuple[int, ...]]) \
         -> tp.Tuple[tp.Any, tp.Tuple[int, ...]]:
+    """
+    Translate an index key into a tuple.
+
+    Args:
+        item: (todo): write your description
+        input_shape: (list): write your description
+        tp: (int): write your description
+        Union: (str): write your description
+        int: (int): write your description
+        tp: (int): write your description
+        Tuple: (todo): write your description
+        int: (int): write your description
+    """
     if isinstance(item, tuple):
         # item is a tuple of items
         af_item = []
@@ -153,17 +206,53 @@ class ndarray(object):
     def __init__(self,
                  af_array: af.Array,
                  shape: tp.Optional[tp.Tuple[int, ...]] = None):
+        """
+        Initialize af_array.
+
+        Args:
+            self: (todo): write your description
+            af_array: (array): write your description
+            af: (int): write your description
+            Array: (array): write your description
+            shape: (int): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            tp: (int): write your description
+            Tuple: (todo): write your description
+            int: (int): write your description
+        """
         self._af_array = af_array
         self._label = 'array'
         self._shape = shape
 
     def __del__(self):
+        """
+        Removes the filter.
+
+        Args:
+            self: (todo): write your description
+        """
         del self._af_array
 
     def __getstate__(self) -> tp.Tuple:
+        """
+        Returns the underlying state.
+
+        Args:
+            self: (todo): write your description
+        """
         return np.array(self._af_array), self._label, self._shape
 
     def __setstate__(self, state: tp.Tuple):
+        """
+        Set the underlying state.
+
+        Args:
+            self: (todo): write your description
+            state: (dict): write your description
+            tp: (todo): write your description
+            Tuple: (todo): write your description
+        """
         numpy_array, label, shape = state
         af_array = af.to_array(numpy_array)
         self._af_array = af_array
@@ -171,15 +260,34 @@ class ndarray(object):
         self._shape = shape
 
     def __array__(self) -> np.ndarray:
+        """
+        The underlying numpy. ndarray.
+
+        Args:
+            self: (todo): write your description
+        """
 
         return self._af_array.__array__()
 
     @property
     def label(self) -> str:
+        """
+        Return the label. label.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._label
 
     @label.setter
     def label(self, label):
+        """
+        Set the label.
+
+        Args:
+            self: (todo): write your description
+            label: (str): write your description
+        """
         self._label = label
 
     @property
@@ -300,6 +408,12 @@ class ndarray(object):
         return ndarray(af_array)
 
     def __str__(self) -> str:
+        """
+        The string representation of the array.
+
+        Args:
+            self: (todo): write your description
+        """
         if GPUOptions.str_via_numpy:
             np_array = np.array(self)
             return np_array.__str__()
@@ -308,174 +422,476 @@ class ndarray(object):
             return _as_str(self._af_array, dims=True)
 
     def __repr__(self) -> str:
+        """
+        Return an array representation of this array.
+
+        Args:
+            self: (todo): write your description
+        """
         np_array = np.array(self)
         return np_array.__repr__()
 
     def __len__(self) -> int:
+        """
+        The number of columns.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.shape[0]
 
     def __abs__(self):
+        """
+        Returns a new af_array.
+
+        Args:
+            self: (todo): write your description
+        """
         new_af_array = af.abs(self._af_array)
         return ndarray(new_af_array)
 
     @af.broadcast
     def __add__(self, other):
+        """
+        Return a new array with other.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__add__)
 
     @af.broadcast
     def __iadd__(self, other):
+        """
+        Return a new tensorfluent.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__iadd__)
 
     @af.broadcast
     def __radd__(self, other):
+        """
+        Return a new dstream with another dstream.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__radd__)
 
     @af.broadcast
     def __sub__(self, other):
+        """
+        Compute a function f.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__sub__)
 
     @af.broadcast
     def __isub__(self, other):
+        """
+        Determine if other is an equivalent series.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__isub__)
 
     @af.broadcast
     def __rsub__(self, other):
+        """
+        Compute a new array - like other.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__rsub__)
 
     @af.broadcast
     def __mul__(self, other):
+        """
+        Compute the rdd of other function.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__mul__)
 
     @af.broadcast
     def __imul__(self, other):
+        """
+        Compute the imulululable.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__imul__)
 
     @af.broadcast
     def __rmul__(self, other):
+        """
+        Returns true ifulululules.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__rmul__)
 
     @af.broadcast
     def __truediv__(self, other):
+        """
+        Compute the derivative of two series.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__truediv__)
 
     @af.broadcast
     def __itruediv__(self, other):
+        """
+        Wrapivivivivivivivivivate.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__itruediv__)
 
     @af.broadcast
     def __rtruediv__(self, other):
+        """
+        Compute rdd of the rdd of another array.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__rtruediv__)
 
     @af.broadcast
     def __idiv__(self, other):
+        """
+        Constructs a new series with another.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__idiv__)
 
     @af.broadcast
     def __rdiv__(self, other):
+        """
+        Compute the rdd of this dstream.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__rdiv__)
 
     @af.broadcast
     def __mod__(self, other):
+        """
+        Compute the result of the same as other ).
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__mod__)
 
     @af.broadcast
     def __imod__(self, other):
+        """
+        Compute the imodel of other.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__imod__)
 
     @af.broadcast
     def __rmod__(self, other):
+        """
+        Compute the rmod ( rmod.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__rmod__)
 
     @af.broadcast
     def __pow__(self, other):
+        """
+        Compute the delta function ).
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__pow__)
 
     @af.broadcast
     def __ipow__(self, other):
+        """
+        Compute the other function over - 1 ) of other.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__ipow__)
 
     @af.broadcast
     def __rpow__(self, other):
+        """
+        Compute the rpow of two arrays.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__rpow__)
 
     @af.broadcast
     def __lt__(self, other):
+        """
+        Returns a < = b.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__lt__)
 
     @af.broadcast
     def __gt__(self, other):
+        """
+        Compute a new dstream by a.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__gt__)
 
     @af.broadcast
     def __le__(self, other):
+        """
+        Compute a function - style.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__le__)
 
     @af.broadcast
     def __ge__(self, other):
+        """
+        Compute the r.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__ge__)
 
     @af.broadcast
     def __eq__(self, other):
+        """
+        Compute a function f ( scalarrays.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__eq__)
 
     @af.broadcast
     def __ne__(self, other):
+        """
+        Compute the difference between two arrays.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__ne__)
 
     @af.broadcast
     def __and__(self, other):
+        """
+        Compute a function - wise version of other.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__and__)
 
     @af.broadcast
     def __iand__(self, other):
+        """
+        Compute a function fd.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__iand__)
 
     @af.broadcast
     def __or__(self, other):
+        """
+        Determine if other is greater than other.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__or__)
 
     @af.broadcast
     def __ior__(self, other):
+        """
+        Compute a new binary operator.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__ior__)
 
     @af.broadcast
     def __xor__(self, other):
+        """
+        Compute the xor function.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__xor__)
 
     @af.broadcast
     def __ixor__(self, other):
+        """
+        Returns true if other is a - 1darray.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__ixor__)
 
     @af.broadcast
     def __lshift__(self, other):
+        """
+        Returns a function with another.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__lshift__)
 
     @af.broadcast
     def __ilshift__(self, other):
+        """
+        Ilshift other function with other.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__ilshift__)
 
     @af.broadcast
     def __rshift__(self, other):
+        """
+        Shift this timeseries of another series.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__rshift__)
 
     @af.broadcast
     def __irshift__(self, other):
+        """
+        Return a function with another frame.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         return _binary_method(other, func=self._af_array.__irshift__)
 
     def __neg__(self):
+        """
+        A ndarray of the underlying ndarray.
+
+        Args:
+            self: (todo): write your description
+        """
         return ndarray(self._af_array.__neg__())
 
     def __pos__(self):
+        """
+        Return the underlying ndarray.
+
+        Args:
+            self: (todo): write your description
+        """
         return ndarray(self._af_array.__pos__())
 
     def __invert__(self):
+        """
+        Invert the ndarray tovertarray.
+
+        Args:
+            self: (todo): write your description
+        """
         return ndarray(self._af_array.__invert__())
 
     def __matmul__(self, other):
+        """
+        Compute the dot product.
+
+        Args:
+            self: (todo): write your description
+            other: (todo): write your description
+        """
         _verify_operand(other)
         return dot(self, other)
 
     def __getitem__(self, item) -> 'ndarray':
+        """
+        Return an item from the array.
+
+        Args:
+            self: (todo): write your description
+            item: (str): write your description
+        """
         af_item, required_shape = _translate_index_key(item, self.shape)
         # from IPython.core.debugger import set_trace
         # set_trace()
@@ -490,6 +906,14 @@ class ndarray(object):
         return new_cocos_array
 
     def __setitem__(self, key, value) -> 'ndarray':
+        """
+        Set a key value.
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+            value: (str): write your description
+        """
         from cocos.options import GPUOptions, MixedComputationErrorLevel
         af_key, required_shape = _translate_index_key(key, self.shape)
         if isinstance(value, np.ndarray):
@@ -506,6 +930,12 @@ class ndarray(object):
         return ndarray(new_af_array)
 
     def __sizeof__(self):
+        """
+        Returns the size of the queue.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.size
 
     def dot(self,
@@ -518,6 +948,12 @@ class ndarray(object):
 
     def _get_index_from_args(self, *args) \
             -> tp.Union[int, tp.Tuple[int, ...]]:
+        """
+        Get the index from index.
+
+        Args:
+            self: (todo): write your description
+        """
         if len(args) == 1 and isinstance(args[0], tuple):
             args = args[0]
 
@@ -766,6 +1202,12 @@ class ndarray(object):
             # return tile(self, tuple(reps))
 
     def round(self) -> 'ndarray':
+        """
+        Returns the number of the round.
+
+        Args:
+            self: (todo): write your description
+        """
         return round(self)
 
     def std(self, axis: tp.Optional[int] = None) \
@@ -805,6 +1247,12 @@ class ndarray(object):
 
 def asscalar(a: ndarray) \
         -> numbers.Number:
+    """
+    Calculate the numpy arrays.
+
+    Args:
+        a: (array): write your description
+    """
     if a.size > 1:
         raise ValueError(f"a must be an array size 1 but has {a.size} elements")
 
@@ -912,58 +1360,142 @@ def imag(a: ndarray):
 
 
 def isempty(num: ndarray) -> bool:
+    """
+    Returns true if the given number is empty.
+
+    Args:
+        num: (int): write your description
+    """
     return num._af_array.is_empty()
 
 
 def isscalar(num: ndarray) -> bool:
+    """
+    Calculate of the numpy array.
+
+    Args:
+        num: (int): write your description
+    """
     return num._af_array.is_scalar()
 
 
 def isrow(num: ndarray) -> bool:
+    """
+    Returns true if numpy row is a row.
+
+    Args:
+        num: (int): write your description
+    """
     return num._af_array.is_row()
 
 
 def iscolumn(num: ndarray) -> bool:
+    """
+    Returns the number of rows in a numpy array.
+
+    Args:
+        num: (int): write your description
+    """
     return num._af_array.is_column()
 
 
 def isvector(num: ndarray) -> bool:
+    """
+    Returns true if the given n is a numpy array.
+
+    Args:
+        num: (int): write your description
+    """
     return num._af_array.is_vector()
 
 
 def isrealobj(x: ndarray) -> bool:
+    """
+    Returns true if x is an array.
+
+    Args:
+        x: (todo): write your description
+    """
     return x._af_array.is_real()
 
 
 def iscomplexobj(x: ndarray) -> bool:
+    """
+    Returns true if x is complex false otherwise false.
+
+    Args:
+        x: (array): write your description
+    """
     return x._af_array.is_complex()
 
 
 def isdouble(num: ndarray) -> bool:
+    """
+    Returns true if num is equal false otherwise.
+
+    Args:
+        num: (int): write your description
+    """
     return num._af_array.is_double()
 
 
 def issingle(num: ndarray) -> bool:
+    """
+    Return the number of elements in the numpy array.
+
+    Args:
+        num: (int): write your description
+    """
     return num._af_array.is_single()
 
 
 def isrealfloating(num: ndarray) -> bool:
+    """
+    Returns true if num isrealfating numpy.
+
+    Args:
+        num: (int): write your description
+    """
     return num._af_array.is_real_floating()
 
 
 def isfloating(num: ndarray) -> bool:
+    """
+    Returns true if the given number is a floating point number.
+
+    Args:
+        num: (int): write your description
+    """
     return num._af_array.is_floating()
 
 
 def isinteger(num: ndarray) -> bool:
+    """
+    Returns true if num is an integer.
+
+    Args:
+        num: (int): write your description
+    """
     return num._af_array.is_integer()
 
 
 def isbool(num: ndarray) -> bool:
+    """
+    Returns true if the numarray is a boolean false otherwise.
+
+    Args:
+        num: (int): write your description
+    """
     return num._af_array.is_integer()
 
 
 def isfortran(a: ndarray) -> bool:
+    """
+    Check if a nd is a numpy array.
+
+    Args:
+        a: (array): write your description
+    """
     if isinstance(a, ndarray):
         return True
     elif isinstance(a, np.ndarray):
@@ -973,6 +1505,12 @@ def isfortran(a: ndarray) -> bool:
 
 
 def display(array: ndarray):
+    """
+    Display an array or numpy array.
+
+    Args:
+        array: (array): write your description
+    """
     if isinstance(array, ndarray):
         af.display(array._af_array)
     else:
@@ -981,6 +1519,16 @@ def display(array: ndarray):
 
 def _complete_shape(a: ndarray, shape: tp.Sequence[int]) \
         -> tp.Tuple[int, ...]:
+    """
+    Return the shape of a shape.
+
+    Args:
+        a: (todo): write your description
+        shape: (int): write your description
+        tp: (todo): write your description
+        Sequence: (todo): write your description
+        int: (todo): write your description
+    """
     shape_np = np.array(shape)
     placeholder_indices = np.where(shape_np == -1)[0]
     number_of_placeholders = len(placeholder_indices)
@@ -1006,6 +1554,16 @@ def _complete_shape(a: ndarray, shape: tp.Sequence[int]) \
 
 
 def reorder(a: ndarray, new_order: tp.Tuple[int, ...]):
+    """
+    Reorder an array.
+
+    Args:
+        a: (todo): write your description
+        new_order: (todo): write your description
+        tp: (todo): write your description
+        Tuple: (todo): write your description
+        int: (todo): write your description
+    """
     if len(new_order) > 4:
         raise ValueError(f'Cocos does not support arrays with more than 4 axes.')
 
@@ -1030,6 +1588,13 @@ def reshape_without_reorder(a: ndarray,
 
 
 def reshape(a, newshape):
+    """
+    Reshape an array.
+
+    Args:
+        a: (todo): write your description
+        newshape: (int): write your description
+    """
     newshape = _complete_shape(a, newshape)
     if a.ndim < 1 or a.ndim > 4:
         raise ValueError('a must have between 1 and 4 axes')
@@ -1078,6 +1643,13 @@ def squeeze(a: ndarray,
 
 
 def _dot_internal(a: ndarray, b: ndarray) -> ndarray:
+    """
+    Dot product function.
+
+    Args:
+        a: (todo): write your description
+        b: (todo): write your description
+    """
     if (isrow(a) and isrow(b)) or (iscolumn(a) and iscolumn(b)):
         return _binary_function(a, b, af.dot)
     elif isrow(a) and iscolumn(b):
@@ -1304,6 +1876,13 @@ def corrcoef(x,
 def _division_with_remainder(dividend: ndarray,
                              divisor_int: int) \
         -> tp.Tuple[ndarray, ndarray]:
+    """
+    Return a positive integer representing an integer.
+
+    Args:
+        dividend: (todo): write your description
+        divisor_int: (todo): write your description
+    """
 
     # divisor_array = array(divisor_int)
     whole_part = dividend / divisor_int
@@ -1312,6 +1891,12 @@ def _division_with_remainder(dividend: ndarray,
 
 
 def nonzero(a: ndarray) -> tp.Tuple:
+    """
+    Return the non - like non - zero.
+
+    Args:
+        a: (array): write your description
+    """
     index_af_array = af.where(a._af_array)
 
     tmp_array = ndarray(index_af_array)
@@ -1335,6 +1920,13 @@ def nonzero(a: ndarray) -> tp.Tuple:
 def trace(a: ndarray,
           offset: int=0) \
         -> tp.Union[int, float]:
+    """
+    Return the trace of the array.
+
+    Args:
+        a: (todo): write your description
+        offset: (int): write your description
+    """
 
     return af.sum(af.diag(a._af_array, num=offset))
 
@@ -1356,6 +1948,12 @@ def negative(x: ndarray) -> ndarray:
 
 
 def _wrap_af_array(af_array) -> ndarray:
+    """
+    Wrap an array to an array.
+
+    Args:
+        af_array: (array): write your description
+    """
     if isinstance(af_array, af.Array):
         return ndarray(af_array)
     else:
@@ -1366,6 +1964,14 @@ def _sort_internal(a: ndarray,
                    axis: int = -1,
                    ascending: bool = True) \
         -> af.Array:
+    """
+    Sort the array along a given axis.
+
+    Args:
+        a: (todo): write your description
+        axis: (int): write your description
+        ascending: (todo): write your description
+    """
     if axis is None:
         a = a.flatten()
         axis = 0
@@ -1397,12 +2003,39 @@ def any(a: ndarray,
         out: tp.Optional[ndarray] = None,
         keepdims: bool = False) \
         -> tp.Union[bool, ndarray]:
+    """
+    Returns true if the array is true false otherwise.
+
+    Args:
+        a: (todo): write your description
+        axis: (int): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        int: (todo): write your description
+        out: (array): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        keepdims: (bool): write your description
+    """
     return _wrap_af_array(af.any_true(a._af_array, dim=axis))
 
 
 def argmax(a: ndarray,
            axis: tp.Optional[int] = None,
            out: tp.Optional[ndarray] = None) -> ndarray:
+    """
+    Returns the maximum of the values along an axis.
+
+    Args:
+        a: (array): write your description
+        axis: (int): write your description
+        tp: (array): write your description
+        Optional: (todo): write your description
+        int: (todo): write your description
+        out: (array): write your description
+        tp: (array): write your description
+        Optional: (todo): write your description
+    """
     if out:
         raise ValueError('out != None is not supported')
 
@@ -1413,6 +2046,19 @@ def argmax(a: ndarray,
 def argmin(a: ndarray,
            axis: tp.Optional[int] = None,
            out: tp.Optional[ndarray] = None) -> ndarray:
+    """
+    Return the minimum value of an array.
+
+    Args:
+        a: (array): write your description
+        axis: (int): write your description
+        tp: (array): write your description
+        Optional: (todo): write your description
+        int: (array): write your description
+        out: (array): write your description
+        tp: (array): write your description
+        Optional: (todo): write your description
+    """
     if out:
         raise ValueError('out != None is not supported')
 
@@ -1423,6 +2069,14 @@ def argmin(a: ndarray,
 def argsort(a: ndarray,
             axis: int = -1,
             ascending: bool = True) -> ndarray:
+    """
+    Return indices ( nd ) axis.
+
+    Args:
+        a: (array): write your description
+        axis: (int): write your description
+        ascending: (bool): write your description
+    """
     out, indices = sort_argsort(a, axis, ascending)
     return indices
 
@@ -1462,11 +2116,27 @@ def prod(a: ndarray, axis: tp.Optional[int] = None) -> tp.Union[float, ndarray]:
 
 
 def sort(a: ndarray, axis: int = -1, ascending: bool = True) -> ndarray:
+    """
+    Sort an array along a given axis.
+
+    Args:
+        a: (array): write your description
+        axis: (int): write your description
+        ascending: (bool): write your description
+    """
     return ndarray(_sort_internal(a, axis, ascending))
 
 
 def sort_argsort(a: ndarray, axis: int = -1, ascending: bool = True) \
         -> tp.Tuple[ndarray, ndarray]:
+    """
+    Sort an array along an array axis.
+
+    Args:
+        a: (array): write your description
+        axis: (int): write your description
+        ascending: (bool): write your description
+    """
     if axis is None:
         a = a.flatten()
         axis = 0
@@ -1494,6 +2164,21 @@ def sum(a: ndarray, axis: tp.Optional[int] = None) \
 def _full_internal(shape: tp.Tuple[int, ...],
                    value,
                    dtype: np.generic = np.float32) -> af.Array:
+    """
+    Return full full array to the full d3.
+
+    Args:
+        shape: (int): write your description
+        tp: (todo): write your description
+        Tuple: (todo): write your description
+        int: (todo): write your description
+        value: (todo): write your description
+        dtype: (todo): write your description
+        np: (todo): write your description
+        generic: (todo): write your description
+        np: (todo): write your description
+        float32: (todo): write your description
+    """
     af_type = convert_numpy_to_af_type(dtype)
 
     d0, d1, d2, d3 = _pad_shape_tuple_none(shape)
@@ -1520,6 +2205,19 @@ def full_like(a, fill_value, dtype: tp.Optional[np.generic] = None) -> ndarray:
 
 
 def tile(A: ndarray, reps: tp.Union[int, tp.Tuple[int, ...]]) -> ndarray:
+    """
+    Convert a 2d array.
+
+    Args:
+        A: (array): write your description
+        reps: (int): write your description
+        tp: (int): write your description
+        Union: (str): write your description
+        int: (int): write your description
+        tp: (int): write your description
+        Tuple: (int): write your description
+        int: (int): write your description
+    """
     af_array = None
     if isinstance(reps, tuple):
         d0, d1, d2, d3 = _pad_shape_tuple_one(reps)
@@ -1535,6 +2233,16 @@ def tile(A: ndarray, reps: tp.Union[int, tp.Tuple[int, ...]]) -> ndarray:
 
 
 def repeat(A: ndarray, repeats: int, axis: tp.Optional[int] = None):
+    """
+    Return the last axis.
+
+    Args:
+        A: (todo): write your description
+        repeats: (int): write your description
+        axis: (int): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+    """
     if axis is None:
         raise ValueError('axis=None is not supported')
 
@@ -1554,30 +2262,79 @@ def round(a: ndarray):
 
 
 def array_equal(a1: ndarray, a2: ndarray) -> bool:
+    """
+    Return true if all elements are equal.
+
+    Args:
+        a1: (array): write your description
+        a2: (array): write your description
+    """
     return all(a1 == a2)
 
 
 def greater(x1: ndarray, x2: ndarray) -> ndarray:
+    """
+    Return the smallest value of two arrays.
+
+    Args:
+        x1: (todo): write your description
+        x2: (todo): write your description
+    """
     return x1 > x2
 
 
 def greater_equal(x1: ndarray, x2: ndarray) -> ndarray:
+    """
+    Returns the equal equal to x1 and x2.
+
+    Args:
+        x1: (todo): write your description
+        x2: (todo): write your description
+    """
     return x1 >= x2
 
 
 def less(x1: ndarray, x2: ndarray) -> ndarray:
+    """
+    Return the smallest value of x1 and x2.
+
+    Args:
+        x1: (list): write your description
+        x2: (list): write your description
+    """
     return x1 < x2
 
 
 def less_equal(x1: ndarray, x2: ndarray) -> ndarray:
+    """
+    Determine if x1 and x2 are equal.
+
+    Args:
+        x1: (array): write your description
+        x2: (array): write your description
+    """
     return x1 <= x2
 
 
 def equal(x1: ndarray, x2: ndarray) -> ndarray:
+    """
+    Returnsures of two arrays.
+
+    Args:
+        x1: (array): write your description
+        x2: (array): write your description
+    """
     return x1 == x2
 
 
 def not_equal(x1: ndarray, x2: ndarray) -> ndarray:
+    """
+    Returnsures of two arrays.
+
+    Args:
+        x1: (array): write your description
+        x2: (array): write your description
+    """
     return x1 != x2
 
 

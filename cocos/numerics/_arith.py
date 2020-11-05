@@ -79,20 +79,45 @@ def log(x: tp.Union[float, ndarray]) -> ndarray:
 
 
 def iszero(x: ndarray) -> ndarray:
+    """
+    Returns true if x is zero.
+
+    Args:
+        x: (array): write your description
+    """
     return _unary_function(x, af.iszero, np_func=lambda y: not np.nonzero(y))
 
 
 def isinf(x: ndarray) -> ndarray:
+    """
+    Returns true if x is an array.
+
+    Args:
+        x: (array): write your description
+    """
     return _unary_function(x, af.isinf, np_func=np.isinf)
 
 
 def isnan(x: ndarray) -> ndarray:
+    """
+    Returns true if x is nan.
+
+    Args:
+        x: (array): write your description
+    """
     return _unary_function(x, af.isnan, np_func=np.isnan)
 
 
 @af.broadcast
 def logical_and(x1: ndarray,
                 x2: ndarray):
+    """
+    Logical x1.
+
+    Args:
+        x1: (array): write your description
+        x2: (array): write your description
+    """
     new_af_array \
         = _binary_func(x1._af_array,
                        x2._af_array,
@@ -104,6 +129,13 @@ def logical_and(x1: ndarray,
 @af.broadcast
 def logical_or(x1: ndarray,
                x2: ndarray):
+    """
+    Logical to x1.
+
+    Args:
+        x1: (array): write your description
+        x2: (array): write your description
+    """
     new_af_array = _binary_func(x1._af_array,
                                 x2._af_array,
                                 backend.get().af_or)
@@ -112,6 +144,12 @@ def logical_or(x1: ndarray,
 
 
 def logical_not(x: ndarray):
+    """
+    Log - 1 if x is an array.
+
+    Args:
+        x: (array): write your description
+    """
     new_af_array = _arith_unary_func(x._af_array,
                                      backend.get().af_not)
 
@@ -121,6 +159,13 @@ def logical_not(x: ndarray):
 @af.broadcast
 def logical_xor(x1: ndarray,
                 x2: ndarray):
+    """
+    Logical xor.
+
+    Args:
+        x1: (array): write your description
+        x2: (array): write your description
+    """
     return bitwise_xor(x1.astype(np.bool8), x2.astype(np.bool8))
     # return logical_and(logical_or(a,b),(logical_not(logical_and(a, b))))
 
@@ -128,6 +173,13 @@ def logical_xor(x1: ndarray,
 @af.broadcast
 def bitwise_and(x1: ndarray,
                 x2: ndarray):
+    """
+    Return x1 and x2.
+
+    Args:
+        x1: (todo): write your description
+        x2: (todo): write your description
+    """
     new_af_array \
         = _binary_func(x1._af_array, x2._af_array, backend.get().af_bitand)
     return ndarray(new_af_array)
@@ -136,6 +188,13 @@ def bitwise_and(x1: ndarray,
 @af.broadcast
 def bitwise_or(x1: ndarray,
                x2: ndarray):
+    """
+    Bitwise x1...
+
+    Args:
+        x1: (todo): write your description
+        x2: (todo): write your description
+    """
     new_af_array \
         = _binary_func(x1._af_array, x2._af_array, backend.get().af_bitor)
     return ndarray(new_af_array)
@@ -143,6 +202,12 @@ def bitwise_or(x1: ndarray,
 
 @af.broadcast
 def invert(x: ndarray):
+    """
+    Invert numpy array to numpy. ndarray.
+
+    Args:
+        x: (todo): write your description
+    """
     if not isinteger(x):
         raise TypeError("invert only supportd integers arguments")
     af_array = x._af_array
@@ -152,6 +217,13 @@ def invert(x: ndarray):
 @af.broadcast
 def bitwise_xor(x1: ndarray,
                 x2: ndarray):
+    """
+    Bitwise xor.
+
+    Args:
+        x1: (todo): write your description
+        x2: (todo): write your description
+    """
     new_af_array \
         = _binary_func(x1._af_array, x2._af_array, backend.get().af_bitxor)
     return ndarray(new_af_array)
@@ -161,12 +233,26 @@ def bitwise_xor(x1: ndarray,
 @af.broadcast
 def left_shift(x1: ndarray,
                x2: ndarray):
+    """
+    Left two arrays.
+
+    Args:
+        x1: (array): write your description
+        x2: (array): write your description
+    """
     return x1 << x2
 
 
 @af.broadcast
 def right_shift(x1: ndarray,
                 x2: ndarray):
+    """
+    Shift the right.
+
+    Args:
+        x1: (array): write your description
+        x2: (array): write your description
+    """
     return x1 >> x2
 
 
@@ -305,6 +391,15 @@ def arctan2(a: ndarray,
 
 @af.broadcast
 def cplx(a: ndarray, b: tp.Optional[ndarray] = None):
+    """
+    Cplx function
+
+    Args:
+        a: (int): write your description
+        b: (int): write your description
+        tp: (int): write your description
+        Optional: (todo): write your description
+    """
     return _binary_function(a, b, af.cplx)
 
 
@@ -359,6 +454,13 @@ def arctanh(a: ndarray):
 @af.broadcast
 def root(a: ndarray,
          b: ndarray):
+    """
+    Return the root of binary array b.
+
+    Args:
+        a: (todo): write your description
+        b: (todo): write your description
+    """
     return _binary_function(a, b, af.root)
 
 
@@ -373,10 +475,22 @@ def power(x1: ndarray,
 
 
 def power2(a: ndarray):
+    """
+    Convert a function.
+
+    Args:
+        a: (todo): write your description
+    """
     return _unary_function(a, af_func=af.pow2, np_func=lambda x: x*x)
 
 
 def expit(a: ndarray):
+    """
+    Expit a function.
+
+    Args:
+        a: (int): write your description
+    """
     return _unary_function(a, af_func=af.sigmoid, np_func=sp.special.expit)
 
 
@@ -389,10 +503,22 @@ def expm1(x: ndarray):
 
 
 def erf(a: ndarray):
+    """
+    Erase the numpy.
+
+    Args:
+        a: (todo): write your description
+    """
     return _unary_function(a, af_func=af.erf, np_func=sp.special.erf)
 
 
 def erfc(a: ndarray):
+    """
+    Erase a numpy array is_func.
+
+    Args:
+        a: (todo): write your description
+    """
     return _unary_function(a, af_func=af.erfc, np_func=sp.special.erfc)
 
 
@@ -431,18 +557,42 @@ def cbrt(x: ndarray):
 import scipy as sp
 
 def factorial(a: ndarray):
+    """
+    Factorial function.
+
+    Args:
+        a: (array): write your description
+    """
     return _unary_function(a, af_func=af.factorial, np_func=sp.special.factorial)
 
 
 def gamma(a: ndarray):
+    """
+    Unary function.
+
+    Args:
+        a: (int): write your description
+    """
     return _unary_function(a, af_func=af.tgamma, np_func=sp.special.gamma)
 
 
 def gammaln(a: ndarray):
+    """
+    R compute the gammal function.
+
+    Args:
+        a: (array): write your description
+    """
     return _unary_function(a, af_func=af.lgamma, np_func=sp.special.gammaln)
 
 
 def isfinite(a: ndarray):
+    """
+    Returns true if an array is a nd.
+
+    Args:
+        a: (todo): write your description
+    """
     inf = isinf(a)
     nan = isnan(a)
     return logical_not(logical_or(inf, nan))
@@ -450,11 +600,23 @@ def isfinite(a: ndarray):
 
 # @af.broadcast
 def isneginf(a: ndarray):
+    """
+    Determine if a numpy array
+
+    Args:
+        a: (todo): write your description
+    """
     neginf = full((1,), np.NINF, a.dtype)
     return a == neginf
 
 
 # @af.broadcast
 def isposinf(a: ndarray):
+    """
+    Returns true if the array elements are infs.
+
+    Args:
+        a: (todo): write your description
+    """
     posinf = full((1,), np.inf, a.dtype)
     return a == posinf

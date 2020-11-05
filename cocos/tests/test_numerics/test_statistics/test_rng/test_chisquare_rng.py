@@ -16,6 +16,13 @@ test_data = [(1, n_kolmogorov_smirnov),
 
 @pytest.mark.parametrize("df, n_kolmogorov_smirnov", test_data)
 def test_chisquare_distribution(df, n_kolmogorov_smirnov):
+    """
+    Reject k - means k kolologquarequarequarequare.
+
+    Args:
+        df: (todo): write your description
+        n_kolmogorov_smirnov: (todo): write your description
+    """
     u = cn.random.chisquare(df, n_kolmogorov_smirnov)
     reject = perform_ks_test(u,
                              alpha=0.01,

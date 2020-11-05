@@ -6,6 +6,13 @@ import numpy
 
 
 def estimate_pi(n: int, gpu: bool = True) -> float:
+    """
+    Estimate a random pi.
+
+    Args:
+        n: (int): write your description
+        gpu: (int): write your description
+    """
     np = select_num_pack(gpu)
 
     x = np.random.rand(n)

@@ -134,6 +134,16 @@ def diagflat(v: ndarray,
 
 def concatenate(arrays: tp.Tuple[ndarray, ...],
                 axis: int = 0) -> ndarray:
+    """
+    Concatenate arrays.
+
+    Args:
+        arrays: (array): write your description
+        tp: (int): write your description
+        Tuple: (todo): write your description
+        ndarray: (array): write your description
+        axis: (int): write your description
+    """
     if len(arrays) < 2 or len(arrays) > 4:
         raise ValueError("the number of arrays to be concatenated is supposed "
                          "to be between two and four")
@@ -154,20 +164,57 @@ def concatenate(arrays: tp.Tuple[ndarray, ...],
 
 
 def vstack(tup: tp.Tuple[ndarray, ...]) -> ndarray:
+    """
+    Concatenate a ndarray.
+
+    Args:
+        tup: (todo): write your description
+        tp: (todo): write your description
+        Tuple: (todo): write your description
+        ndarray: (array): write your description
+    """
     return concatenate(tup, 0)
 
 
 def hstack(tup: tp.Tuple[ndarray, ...]) -> ndarray:
+    """
+    Concatenate numpy array.
+
+    Args:
+        tup: (array): write your description
+        tp: (todo): write your description
+        Tuple: (todo): write your description
+        ndarray: (array): write your description
+    """
     return concatenate(tup, 1)
 
 
 def dstack(tup: tp.Tuple[ndarray, ...]) -> ndarray:
+    """
+    Concatenate an array.
+
+    Args:
+        tup: (array): write your description
+        tp: (todo): write your description
+        Tuple: (todo): write your description
+        ndarray: (array): write your description
+    """
     return concatenate(tup, 2)
 
 
 def roll(a: ndarray,
          shift: int,
          axis: tp.Optional[int] = None) -> ndarray:
+    """
+    Roll an array over the given axis.
+
+    Args:
+        a: (array): write your description
+        shift: (int): write your description
+        axis: (int): write your description
+        tp: (array): write your description
+        Optional: (todo): write your description
+    """
     if axis is None:
         (d0, d1, d2, d3) = _pad_shape_tuple_one(a.shape)
         flat_af_array = af.data.flat(a._af_array)
@@ -185,14 +232,33 @@ def roll(a: ndarray,
 
 def flip(m: ndarray,
          axis: int) -> ndarray:
+    """
+    Flip a ndarray elements.
+
+    Args:
+        m: (array): write your description
+        axis: (int): write your description
+    """
     return ndarray(af.data.flip(m._af_array, axis))
 
 
 def fliplr(m: ndarray) -> ndarray:
+    """
+    Fliplens an array.
+
+    Args:
+        m: (array): write your description
+    """
     return ndarray(af.data.flip(m._af_array, 1))
 
 
 def flipud(m: ndarray) -> ndarray:
+    """
+    Flip a numpy array. ndarray.
+
+    Args:
+        m: (array): write your description
+    """
     return ndarray(af.data.flip(m._af_array, 0))
 
 

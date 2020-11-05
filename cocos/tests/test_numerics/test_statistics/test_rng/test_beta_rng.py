@@ -14,6 +14,14 @@ test_data = [(0.5, 0.5, n_kolmogorov_smirnov),
 
 @pytest.mark.parametrize("a, b, n_kolmogorov_smirnov", test_data)
 def test_beta_distribution(a, b, n_kolmogorov_smirnov):
+    """
+    Test the beta of the beta.
+
+    Args:
+        a: (array): write your description
+        b: (array): write your description
+        n_kolmogorov_smirnov: (todo): write your description
+    """
     u = cn.random.beta(a, b, n_kolmogorov_smirnov)
     print(u.shape)
     reject = perform_ks_test(u,

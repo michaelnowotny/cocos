@@ -28,6 +28,14 @@ test_offset = (-2, -1, 0, 1, 2)
 @pytest.mark.parametrize("axis", test_axes)
 @pytest.mark.parametrize("shift", test_offset)
 def test_roll(A_numpy, axis, shift):
+    """
+    Test if the cocos device.
+
+    Args:
+        A_numpy: (int): write your description
+        axis: (int): write your description
+        shift: (todo): write your description
+    """
     print(f'axis={axis}, shift={shift}')
     cocos.device.init()
     A_cocos = cn.array(A_numpy)

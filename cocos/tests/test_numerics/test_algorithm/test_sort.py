@@ -13,6 +13,12 @@ test_data = [np.array([[1, -2, 5, 6, 20, 50, 3, 6],
 
 @pytest.mark.parametrize("A_numpy", test_data)
 def test_sort(A_numpy):
+    """
+    Sort the sort_numpy array.
+
+    Args:
+        A_numpy: (int): write your description
+    """
     cn.init()
 
     A_cocos = cn.array(A_numpy)

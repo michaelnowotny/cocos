@@ -6,10 +6,22 @@ import scipy.linalg as scipy_linalg
 
 
 def compare_cocos_numpy(cocos_array, numpy_array):
+    """
+    Compute cocos_array.
+
+    Args:
+        cocos_array: (todo): write your description
+        numpy_array: (int): write your description
+    """
     return np.allclose(np.array(cocos_array), numpy_array)
 
 
 def test_lu():
+    """
+    Determine the cocos and coc.
+
+    Args:
+    """
     cocos.device.init()
 
     A_numpy = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 20]], dtype=np.float32)

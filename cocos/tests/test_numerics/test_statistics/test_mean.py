@@ -14,6 +14,12 @@ test_data = [np.array([[1, 2, 3], [4, 5, 6], [7, 8, 20]],
 
 @pytest.mark.parametrize("A", test_data)
 def test_mean(A):
+    """
+    R calculate mean of the mean.
+
+    Args:
+        A: (array): write your description
+    """
     cocos.device.init()
     A_arch = cn.array(A)
 

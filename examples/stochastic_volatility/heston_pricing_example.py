@@ -123,6 +123,23 @@ def run_benchmark(x0: float,
                   nT: int,
                   R: int,
                   use_gpu: bool = True) -> tp.Tuple[float, float, float, float]:
+    """
+    Run an approximate benchmark.
+
+    Args:
+        x0: (array): write your description
+        v0: (str): write your description
+        r: (str): write your description
+        rho: (str): write your description
+        sigma_v: (float): write your description
+        kappa: (str): write your description
+        v_bar: (str): write your description
+        T: (str): write your description
+        K: (str): write your description
+        nT: (str): write your description
+        R: (str): write your description
+        use_gpu: (bool): write your description
+    """
     if use_gpu:
         import cocos.numerics as np
     else:
@@ -178,6 +195,11 @@ def run_benchmark(x0: float,
 
 
 def main():
+    """
+    Main function.
+
+    Args:
+    """
     cd.info()
 
     # model parameters
