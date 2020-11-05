@@ -8,6 +8,16 @@ class DeviceMemoryInfo:
                  allocated_bytes: int,
                  locked_buffers: int,
                  locked_bytes: int) -> None:
+        """
+        !
+
+        Args:
+            self: (todo): write your description
+            allocated_buffers: (bool): write your description
+            allocated_bytes: (bool): write your description
+            locked_buffers: (list): write your description
+            locked_bytes: (str): write your description
+        """
         self._allocated_buffers = allocated_buffers
         self._allocated_bytes = allocated_bytes
         self._locked_buffers = locked_buffers
@@ -15,21 +25,51 @@ class DeviceMemoryInfo:
 
     @property
     def allocated_buffers(self) -> int:
+        """
+        Return all buffered bytes.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._allocated_buffers
 
     @property
     def allocated_bytes(self) -> int:
+        """
+        Returns the number of all bytes.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._allocated_bytes
 
     @property
     def locked_buffers(self) -> int:
+        """
+        : return : a list of buffering.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._locked_buffers
 
     @property
     def locked_bytes(self) -> int:
+        """
+        Returns the number of the lock.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._locked_bytes
 
     def __str__(self):
+        """
+        Èi̇·åıĸæįĩå®ļ¨
+
+        Args:
+            self: (todo): write your description
+        """
         return f"allocated buffers = {self.allocated_buffers}\n" \
                f"allocated bytes = {self.allocated_bytes}\n" \
                f"locked buffers = {self.locked_buffers}\n" \
@@ -43,6 +83,17 @@ class ComputeDevice:
                  backend: str,
                  toolkit_version: str,
                  compute_version: str) -> None:
+        """
+        Initialize the toolkit instance.
+
+        Args:
+            self: (todo): write your description
+            id: (str): write your description
+            name: (str): write your description
+            backend: (todo): write your description
+            toolkit_version: (todo): write your description
+            compute_version: (str): write your description
+        """
         self._id = id
         self._name = name
         self._backend = backend
@@ -51,28 +102,70 @@ class ComputeDevice:
 
     @property
     def id(self) -> int:
+        """
+        Returns the id of the entity.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._id
 
     @property
     def name(self) -> str:
+        """
+        Returns the name of this node.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._name
 
     @property
     def backend(self) -> str:
+        """
+        Get the backend.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._backend
 
     @property
     def toolkit_version(self) -> str:
+        """
+        Return the toolkit version.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._toolkit_version
 
     @property
     def compute_version(self) -> str:
+        """
+        Compute the version of the device.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._compute_version
 
     def sync(self):
+        """
+        Syncs this object with the given id.
+
+        Args:
+            self: (todo): write your description
+        """
         sync(self.id)
 
     def __str__(self):
+        """
+        Èi̇·åıĸæįĩå®ļ¨
+
+        Args:
+            self: (todo): write your description
+        """
         return f"{self.id}: {self.name} | " \
                f"{self.backend} - {self.toolkit_version} | " \
                f"compute version {self.compute_version}"
@@ -80,6 +173,11 @@ class ComputeDevice:
 
 def get_current_device_memory_info() \
         -> DeviceMemoryInfo:
+    """
+    Returns device memory information.
+
+    Args:
+    """
     device_mem_info = af.device_mem_info()
     allocated_buffers = device_mem_info['alloc']['buffers']
     allocated_bytes = device_mem_info['alloc']['bytes']
@@ -97,6 +195,12 @@ class ComputeDeviceManager:
 
     @staticmethod
     def _get_compute_device_internal(id: int) -> ComputeDevice:
+        """
+        Returns the device id.
+
+        Args:
+            id: (int): write your description
+        """
         af.set_device(id)
         device_info = af.device_info()
         name = device_info['device']
@@ -112,10 +216,21 @@ class ComputeDeviceManager:
 
     @staticmethod
     def get_number_of_compute_devices() -> int:
+        """
+        Returns the number of devices connected to use.
+
+        Args:
+        """
         return len(ComputeDeviceManager.get_compute_devices())
 
     @classmethod
     def get_compute_devices(cls) -> tp.Sequence[ComputeDevice]:
+        """
+        Returns list of all devices.
+
+        Args:
+            cls: (todo): write your description
+        """
         if ComputeDeviceManager._compute_devices is None:
             saved_device_id = cls.get_current_compute_device_id()
             n = af.get_device_count()
@@ -133,25 +248,59 @@ class ComputeDeviceManager:
     @staticmethod
     def get_compute_devices_by_name(name_contains: str) \
             -> tp.Sequence[ComputeDevice]:
+        """
+        Get a list of devices.
+
+        Args:
+            name_contains: (str): write your description
+        """
         compute_devices = ComputeDeviceManager.get_compute_devices()
         return [compute_device for compute_device in compute_devices
                 if name_contains in compute_device.name]
 
     @staticmethod
     def get_compute_device(id: int) -> ComputeDevice:
+        """
+        Get the device with the given id.
+
+        Args:
+            id: (int): write your description
+        """
         return ComputeDeviceManager.get_compute_devices()[id]
 
     @classmethod
     def get_current_compute_device_id(cls) -> int:
+        """
+        Return the current device id.
+
+        Args:
+            cls: (todo): write your description
+        """
         return af.get_device()
 
     @classmethod
     def get_current_compute_device(cls) -> ComputeDevice:
+        """
+        Get the current device state.
+
+        Args:
+            cls: (todo): write your description
+        """
         return cls.get_compute_device(cls.get_current_compute_device_id())
 
     @staticmethod
     def set_compute_device(compute_device: tp.Union[int, ComputeDevice]) \
             -> None:
+        """
+        Set the device state.
+
+        Args:
+            compute_device: (bool): write your description
+            tp: (todo): write your description
+            Union: (str): write your description
+            int: (todo): write your description
+            ComputeDevice: (bool): write your description
+        """
         if isinstance(compute_device, int):
             compute_device \
                 = ComputeDeviceManager.get_compute_device(compute_device)
@@ -164,6 +313,15 @@ class ComputeDeviceManager:
 
 
 def init(backend: tp.Optional[str] = None):
+    """
+    Initialize a backend.
+
+    Args:
+        backend: (todo): write your description
+        tp: (int): write your description
+        Optional: (todo): write your description
+        str: (todo): write your description
+    """
     try:
         if backend:
             af.set_backend(backend)
@@ -173,6 +331,11 @@ def init(backend: tp.Optional[str] = None):
 
 
 def info():
+    """
+    Print information about the device.
+
+    Args:
+    """
     print("Cocos running on " + build_and_backend())
     selected_device_id = ComputeDeviceManager.get_current_compute_device_id()
     for compute_device in ComputeDeviceManager.get_compute_devices():
@@ -189,10 +352,27 @@ def info():
 
 
 def build_and_backend() -> str:
+    """
+    Builds a string representation of the backend.
+
+    Args:
+    """
     return af.info_str().split('\n')[0]
 
 
 def sync(compute_device: tp.Optional[tp.Union[int, ComputeDevice]] = None):
+    """
+    Syncs the device.
+
+    Args:
+        compute_device: (bool): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        tp: (todo): write your description
+        Union: (str): write your description
+        int: (todo): write your description
+        ComputeDevice: (bool): write your description
+    """
     if isinstance(compute_device, ComputeDevice):
         device = compute_device.id
     elif not compute_device or isinstance(compute_device, int):
@@ -206,6 +386,14 @@ def sync(compute_device: tp.Optional[tp.Union[int, ComputeDevice]] = None):
 
 
 def gpu_sync_wrapper(f: tp.Callable, *args, **kwargs):
+    """
+    Decorator for synchronisation a function.
+
+    Args:
+        f: (todo): write your description
+        tp: (todo): write your description
+        Callable: (str): write your description
+    """
     result = f(*args, **kwargs)
     sync()
     return result
@@ -214,6 +402,18 @@ def gpu_sync_wrapper(f: tp.Callable, *args, **kwargs):
 def is_dbl_supported(
         compute_device: tp.Optional[tp.Union[int, ComputeDevice]] = None) \
         -> bool:
+    """
+    Determine if the device is supported by dbl.
+
+    Args:
+        compute_device: (bool): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        tp: (todo): write your description
+        Union: (str): write your description
+        int: (todo): write your description
+        ComputeDevice: (bool): write your description
+    """
     if isinstance(compute_device, ComputeDevice):
         device = compute_device.id
     elif not compute_device or isinstance(compute_device, int):
@@ -227,5 +427,10 @@ def is_dbl_supported(
 
 
 def selected_backend() -> str:
+    """
+    Return the device name.
+
+    Args:
+    """
     device_info = af.device_info()
     return device_info['backend'].lower()

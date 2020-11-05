@@ -18,10 +18,20 @@ except:
 
 
 def is_loky_installed() -> bool:
+    """
+    Check if loky is installed.
+
+    Args:
+    """
     return _IS_LOKY_INSTALLED
 
 
 def is_pathos_installed() -> bool:
+    """
+    Return true if the path is installed.
+
+    Args:
+    """
     return _IS_PATHOS_INSTALLED
 
 
@@ -31,6 +41,11 @@ class MultiprocessingPoolType(Enum):
 
     @staticmethod
     def default() -> 'MultiprocessingPoolType':
+        """
+        Return the default pool.
+
+        Args:
+        """
         if is_loky_installed():
             return MultiprocessingPoolType.LOKY
         elif is_pathos_installed():
@@ -89,6 +104,32 @@ def _extract_arguments_and_number_of_batches(
         args_list: tp.Optional[tp.Sequence[tp.Sequence]] = None,
         kwargs_list: tp.Optional[tp.Sequence[tp.Dict[str, tp.Any]]] = None,
         number_of_batches: tp.Optional[int] = None):
+    """
+    Extract arguments from a list.
+
+    Args:
+        args_list: (list): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        tp: (todo): write your description
+        Sequence: (todo): write your description
+        tp: (todo): write your description
+        Sequence: (todo): write your description
+        kwargs_list: (dict): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        tp: (todo): write your description
+        Sequence: (todo): write your description
+        tp: (todo): write your description
+        Dict: (todo): write your description
+        str: (todo): write your description
+        tp: (todo): write your description
+        Any: (todo): write your description
+        number_of_batches: (int): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        int: (int): write your description
+    """
     if number_of_batches is None:
         if args_list is not None:
             number_of_batches = len(args_list)

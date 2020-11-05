@@ -28,6 +28,12 @@ SIZE_TYPE = tp.Optional[tp.Union[int, tp.Sequence]]
 
 
 def map_rng_to_random_engine(rng: RandomNumberGenerator):
+    """
+    Returns a random rng - rng.
+
+    Args:
+        rng: (todo): write your description
+    """
     if rng == RandomNumberGenerator.PHILOX_4X32_10:
         return af.random.RANDOM_ENGINE.PHILOX_4X32_10
     elif rng == RandomNumberGenerator.THREEFRY_2X32_16:
@@ -157,6 +163,25 @@ def _random_with_dtype_internal(shape: tp.Sequence[int],
                                 rng_function: tp.Callable,
                                 dtype: np.generic = np.float32,
                                 num_pack: ModuleType = np):
+    """
+    Return a random array with random integer dtype.
+
+    Args:
+        shape: (int): write your description
+        tp: (todo): write your description
+        Sequence: (todo): write your description
+        int: (int): write your description
+        rng_function: (todo): write your description
+        tp: (todo): write your description
+        Callable: (str): write your description
+        dtype: (todo): write your description
+        np: (todo): write your description
+        generic: (todo): write your description
+        np: (todo): write your description
+        float32: (todo): write your description
+        num_pack: (int): write your description
+        np: (todo): write your description
+    """
     draw_shape = list(shape)
 
     if num_pack == np:
@@ -172,6 +197,22 @@ def _random_with_dtype_internal(shape: tp.Sequence[int],
 def rand_with_dtype(shape: tp.Sequence[int],
                      dtype: np.generic = np.float32,
                      num_pack: ModuleType = np):
+    """
+    Return a random integer dtype dtype.
+
+    Args:
+        shape: (int): write your description
+        tp: (todo): write your description
+        Sequence: (todo): write your description
+        int: (todo): write your description
+        dtype: (todo): write your description
+        np: (todo): write your description
+        generic: (todo): write your description
+        np: (todo): write your description
+        float32: (todo): write your description
+        num_pack: (int): write your description
+        np: (todo): write your description
+    """
     return _random_with_dtype_internal(shape=shape,
                                        rng_function=num_pack.random.rand,
                                        dtype=dtype,
@@ -181,6 +222,22 @@ def rand_with_dtype(shape: tp.Sequence[int],
 def randn_with_dtype(shape: tp.Sequence[int],
                      dtype: np.generic = np.float32,
                      num_pack: ModuleType = np):
+    """
+    Return a random array with random values.
+
+    Args:
+        shape: (int): write your description
+        tp: (todo): write your description
+        Sequence: (todo): write your description
+        int: (todo): write your description
+        dtype: (todo): write your description
+        np: (todo): write your description
+        generic: (todo): write your description
+        np: (todo): write your description
+        float32: (todo): write your description
+        num_pack: (int): write your description
+        np: (todo): write your description
+    """
     return _random_with_dtype_internal(shape=shape,
                                        rng_function=num_pack.random.randn,
                                        dtype=dtype,
@@ -191,6 +248,26 @@ def randn_antithetic(shape: tp.Sequence[int],
                      antithetic_dimension: tp.Optional[int] = None,
                      dtype: np.generic = np.float32,
                      num_pack: ModuleType = np):
+    """
+    Generate a random dimension.
+
+    Args:
+        shape: (int): write your description
+        tp: (array): write your description
+        Sequence: (todo): write your description
+        int: (todo): write your description
+        antithetic_dimension: (todo): write your description
+        tp: (array): write your description
+        Optional: (todo): write your description
+        int: (todo): write your description
+        dtype: (todo): write your description
+        np: (array): write your description
+        generic: (todo): write your description
+        np: (array): write your description
+        float32: (todo): write your description
+        num_pack: (int): write your description
+        np: (array): write your description
+    """
     verify_shape_and_antithetic_dimension(shape, antithetic_dimension)
     draw_shape = list(shape)
 
@@ -220,6 +297,26 @@ def rand_antithetic(shape: tp.Sequence[int],
                     antithetic_dimension: tp.Optional[int] = None,
                     dtype: np.generic = np.float32,
                     num_pack: ModuleType = np):
+    """
+    Return a random dimension.
+
+    Args:
+        shape: (int): write your description
+        tp: (array): write your description
+        Sequence: (todo): write your description
+        int: (todo): write your description
+        antithetic_dimension: (todo): write your description
+        tp: (array): write your description
+        Optional: (todo): write your description
+        int: (todo): write your description
+        dtype: (todo): write your description
+        np: (array): write your description
+        generic: (todo): write your description
+        np: (array): write your description
+        float32: (todo): write your description
+        num_pack: (int): write your description
+        np: (array): write your description
+    """
     verify_shape_and_antithetic_dimension(shape, antithetic_dimension)
     draw_shape = list(shape)
 
@@ -291,6 +388,25 @@ def choice(a: ndarray,
            size: tp.Optional[tp.Union[tp.Tuple[int, ...], int]] = None,
            replace: bool = True,
            p: tp.Optional[ndarray] = None) -> ndarray:
+    """
+    Return a random element.
+
+    Args:
+        a: (int): write your description
+        size: (int): write your description
+        tp: (int): write your description
+        Optional: (todo): write your description
+        tp: (int): write your description
+        Union: (str): write your description
+        tp: (int): write your description
+        Tuple: (todo): write your description
+        int: (todo): write your description
+        int: (todo): write your description
+        replace: (bool): write your description
+        p: (int): write your description
+        tp: (int): write your description
+        Optional: (todo): write your description
+    """
     if p:
         raise ValueError('p != None is not supported')
 
@@ -308,6 +424,17 @@ def choice(a: ndarray,
 def _draw_and_reshape(size: SIZE_TYPE,
                       rng_func: tp.Callable[[int], ndarray]) \
         -> ndarray:
+    """
+    Draws a random array.
+
+    Args:
+        size: (int): write your description
+        rng_func: (todo): write your description
+        tp: (todo): write your description
+        Callable: (todo): write your description
+        int: (todo): write your description
+        ndarray: (array): write your description
+    """
     if not size:
         n = 1
     elif isinstance(size, int):
@@ -344,6 +471,14 @@ def uniform(low: float = 0.0,
 def _exponential_internal(scale: float,
                           n: int,
                           antithetic: bool = False) -> ndarray:
+    """
+    Exponential implementation of numpy implementation.
+
+    Args:
+        scale: (float): write your description
+        n: (array): write your description
+        antithetic: (todo): write your description
+    """
     u = rand(n)
     u = minimum(u, 1.0 - np.finfo(np.float32).eps)
     x: ndarray = log(1.0 - u) * (-scale)
@@ -353,6 +488,17 @@ def _exponential_internal(scale: float,
 def exponential(scale: float=1.0,
                 size: tp.Optional[SIZE_TYPE] = None,
                 antithethic: bool = False) -> ndarray:
+    """
+    Exponential exponential.
+
+    Args:
+        scale: (float): write your description
+        size: (int): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        SIZE_TYPE: (int): write your description
+        antithethic: (todo): write your description
+    """
     return _draw_and_reshape(size,
                              lambda n: _exponential_internal(
                                             scale=scale,
@@ -361,6 +507,15 @@ def exponential(scale: float=1.0,
 
 
 def standard_exponential(size: tp.Optional[SIZE_TYPE] = None) -> ndarray:
+    """
+    Returns a standard standard deviation.
+
+    Args:
+        size: (int): write your description
+        tp: (array): write your description
+        Optional: (todo): write your description
+        SIZE_TYPE: (int): write your description
+    """
     return exponential(size=size)
 
 
@@ -373,6 +528,14 @@ def gamma_rand_marsaglia_and_tsang_arrayfire(alpha: float,
                                              lambda_: float,
                                              n: int) \
         -> af.array:
+    """
+    Generate a random multivariate random variates.
+
+    Args:
+        alpha: (float): write your description
+        lambda_: (array): write your description
+        n: (todo): write your description
+    """
     random_numbers = af.constant(0, n, dtype=Dtype.f32)
     # Gamma(alpha, lambda) generator using Marsaglia and Tsang method
     # Algorithm 4.33
@@ -423,7 +586,24 @@ def gamma(shape: float,
           scale: float = 1.0,
           size: tp.Optional[SIZE_TYPE] = None) \
         -> ndarray:
+    """
+    Return a gamma function.
+
+    Args:
+        shape: (int): write your description
+        scale: (float): write your description
+        size: (int): write your description
+        tp: (int): write your description
+        Optional: (todo): write your description
+        SIZE_TYPE: (int): write your description
+    """
     def fun(n: int):
+        """
+        Return a numpy. ndarray.
+
+        Args:
+            n: (array): write your description
+        """
         return ndarray(gamma_rand_marsaglia_and_tsang_arrayfire(
                             alpha=shape,
                             lambda_=1.0/scale, n=n))
@@ -433,16 +613,44 @@ def gamma(shape: float,
 
 def standard_gamma(shape: float,
                    size: tp.Optional[SIZE_TYPE] = None) -> ndarray:
+    """
+    Return the standard standard standard standard deviation.
+
+    Args:
+        shape: (int): write your description
+        size: (int): write your description
+        tp: (array): write your description
+        Optional: (todo): write your description
+        SIZE_TYPE: (int): write your description
+    """
     return gamma(shape, size=size)
 
 
 def chisquare(df, size: tp.Optional[SIZE_TYPE] = None) -> ndarray:
+    """
+    Computes the quisquarequarequare.
+
+    Args:
+        df: (float): write your description
+        size: (int): write your description
+        tp: (float): write your description
+        Optional: (todo): write your description
+        SIZE_TYPE: (int): write your description
+    """
     return gamma(df / 2.0, 2.0, size)
 
 
 def _beta_internal(a: float,
                    b: float,
                    n: int) -> ndarray:
+    """
+    Calculate beta function.
+
+    Args:
+        a: (array): write your description
+        b: (array): write your description
+        n: (array): write your description
+    """
     X = gamma(a, 1.0, n)
     Y = gamma(b, 1.0, n)
     return X / (X + Y)
@@ -451,12 +659,31 @@ def _beta_internal(a: float,
 def beta(a: float,
          b: float,
          size: tp.Optional[SIZE_TYPE] = None) -> ndarray:
+    """
+    Draw beta beta.
+
+    Args:
+        a: (todo): write your description
+        b: (todo): write your description
+        size: (int): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        SIZE_TYPE: (int): write your description
+    """
     return _draw_and_reshape(size, lambda n: _beta_internal(a, b, n))
 
 
 def _wald_internal(mu: float,
                    LAMBDA: float,
                    n: int) -> ndarray:
+    """
+    Rejects mu mu mu mu mu
+
+    Args:
+        mu: (todo): write your description
+        LAMBDA: (float): write your description
+        n: (todo): write your description
+    """
     v = randn(n)
     u = rand(n)
 
@@ -471,28 +698,78 @@ def _wald_internal(mu: float,
 def wald(mean: float,
          scale: float,
          size: tp.Optional[SIZE_TYPE] = None) -> ndarray:
+    """
+    Return the mean of the mean.
+
+    Args:
+        mean: (todo): write your description
+        scale: (float): write your description
+        size: (int): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        SIZE_TYPE: (int): write your description
+    """
     return _draw_and_reshape(size, lambda n: _wald_internal(mean, scale, n))
 
 
 def normal(loc: float = 0.0,
            scale: float = 1.0,
            size: tp.Optional[SIZE_TYPE] = None) -> ndarray:
+    """
+    Draw random samples.
+
+    Args:
+        loc: (str): write your description
+        scale: (str): write your description
+        size: (tuple): write your description
+        tp: (str): write your description
+        Optional: (todo): write your description
+        SIZE_TYPE: (int): write your description
+    """
     return _draw_and_reshape(size, lambda n: loc + scale * randn(n))
 
 
 def standard_normal(size: tp.Optional[SIZE_TYPE] = None) -> ndarray:
+    """
+    Draws a standard deviation.
+
+    Args:
+        size: (int): write your description
+        tp: (array): write your description
+        Optional: (todo): write your description
+        SIZE_TYPE: (int): write your description
+    """
     return _draw_and_reshape(size, randn)
 
 
 def lognormal(mean: float = 0.0,
               sigma: float = 1.0,
               size: tp.Optional[SIZE_TYPE] = None) -> ndarray:
+    """
+    Computes the log - likelihood.
+
+    Args:
+        mean: (todo): write your description
+        sigma: (float): write your description
+        size: (int): write your description
+        tp: (array): write your description
+        Optional: (todo): write your description
+        SIZE_TYPE: (int): write your description
+    """
     return exp(normal(mean, sigma, size))
 
 
 def _logistic_internal(loc: float,
                        scale: float,
                        n: int) -> ndarray:
+    """
+    Logistic function.
+
+    Args:
+        loc: (array): write your description
+        scale: (float): write your description
+        n: (array): write your description
+    """
     u = rand(n)
     u = minimum(u, 1.0 - np.finfo(np.float32).eps)
     x: ndarray = loc - scale * log(1.0 / u - 1.0)
@@ -502,11 +779,33 @@ def _logistic_internal(loc: float,
 def logistic(loc: float = 0.0,
              scale: float = 1.0,
              size: tp.Optional[SIZE_TYPE] = None):
+    """
+    Logistic logistic distribution.
+
+    Args:
+        loc: (array): write your description
+        scale: (float): write your description
+        size: (int): write your description
+        tp: (array): write your description
+        Optional: (todo): write your description
+        SIZE_TYPE: (int): write your description
+    """
     return _draw_and_reshape(size, lambda n: _logistic_internal(loc, scale, n))
 
 
 def multivariate_normal(mean, cov, size: tp.Sequence[int]) \
         -> ndarray:
+    """
+    Normalize a multivariate normal distribution.
+
+    Args:
+        mean: (array): write your description
+        cov: (array): write your description
+        size: (int): write your description
+        tp: (array): write your description
+        Sequence: (todo): write your description
+        int: (array): write your description
+    """
     d = len(mean)
     if not isinstance(size, collections.abc.Iterable):
         size = [size]

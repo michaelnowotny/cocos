@@ -28,6 +28,12 @@ test_data = [np.array([[1, 2, 3],
 
 @pytest.mark.parametrize("A_numpy", test_data)
 def test_squeeze_reshape(A_numpy):
+    """
+    Squeeze a 3d array.
+
+    Args:
+        A_numpy: (array): write your description
+    """
     cocos.device.init()
     newshapes = [(3, 1, 3), (1, 3, 3)]
     axess = [(None, 1), (None, 0)]
@@ -49,6 +55,11 @@ def test_squeeze_reshape(A_numpy):
 
 
 def main():
+    """
+    Main function.
+
+    Args:
+    """
     test_squeeze_reshape(test_data[0])
 
 

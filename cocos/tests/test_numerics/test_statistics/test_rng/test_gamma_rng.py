@@ -16,6 +16,14 @@ test_data = [(1, 2, n_kolmogorov_smirnov),
 
 @pytest.mark.parametrize("a, b, n_kolmogorov_smirnov", test_data)
 def test_gamma_distribution(a, b, n_kolmogorov_smirnov):
+    """
+    Reject a random variate distribution.
+
+    Args:
+        a: (array): write your description
+        b: (array): write your description
+        n_kolmogorov_smirnov: (todo): write your description
+    """
     u = cn.random.gamma(a, b, n_kolmogorov_smirnov)
     reject = perform_ks_test(u,
                              alpha=0.01,

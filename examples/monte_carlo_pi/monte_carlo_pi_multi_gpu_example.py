@@ -16,6 +16,14 @@ SINGLE_CORE_NUMPY = 'NumPy Single Core'
 
 
 def estimate_pi(n: int, batches: int = 1, gpu: bool = True) -> float:
+    """
+    Estimate the 2d numpy array n.
+
+    Args:
+        n: (int): write your description
+        batches: (int): write your description
+        gpu: (int): write your description
+    """
     np = select_num_pack(gpu)
 
     n_per_batch = math.ceil(n/batches)
@@ -34,6 +42,12 @@ def estimate_pi(n: int, batches: int = 1, gpu: bool = True) -> float:
 
 
 def estimate_pi_numexpr(n: int) -> float:
+    """
+    Estimate the nexpr in the numpy array.
+
+    Args:
+        n: (todo): write your description
+    """
     np = numpy
 
     x = rand_with_dtype([n], dtype=numpy.float32, num_pack=np)
@@ -47,6 +61,13 @@ def estimate_pi_numexpr(n: int) -> float:
 
 
 def estimate_pi_cupy(n: int, batches: int = 1) -> float:
+    """
+    Estimate the sum of the sum of slices.
+
+    Args:
+        n: (todo): write your description
+        batches: (todo): write your description
+    """
     import cupy as np
 
     n_per_batch = math.ceil(n/batches)
@@ -67,6 +88,14 @@ def estimate_pi_cupy(n: int, batches: int = 1) -> float:
 def single_core_benchmark(n: int,
                           repetitions: int = 1,
                           verbose: bool = False) -> float:
+    """
+    Benchmark n timeseries of n times
+
+    Args:
+        n: (todo): write your description
+        repetitions: (int): write your description
+        verbose: (bool): write your description
+    """
     if verbose:
         print('single core benchmark - begin')
 
@@ -85,6 +114,14 @@ def single_core_benchmark(n: int,
 def single_core_benchmark_numexpr(n: int,
                                   repetitions: int = 1,
                                   verbose: bool = False) -> float:
+    """
+    Benchmark nexpr nexpr
+
+    Args:
+        n: (todo): write your description
+        repetitions: (int): write your description
+        verbose: (bool): write your description
+    """
     if verbose:
         print('single core benchmark numexpr - begin')
 
@@ -104,6 +141,17 @@ def multi_core_benchmark(n: int,
                          core_config: tp.Iterable[int],
                          repetitions: int = 1,
                          verbose: bool = False) -> tp.Dict[int, float]:
+    """
+    Benchmark number of n number of the number n.
+
+    Args:
+        n: (todo): write your description
+        core_config: (todo): write your description
+        tp: (todo): write your description
+        Iterable: (todo): write your description
+        repetitions: (int): write your description
+        verbose: (bool): write your description
+    """
     if verbose:
         print('multi core benchmark - begin')
 
@@ -132,6 +180,15 @@ def single_gpu_cupy_benchmark(n: int,
                               batches: int,
                               repetitions: int = 1,
                               verbose: bool = False) -> float:
+    """
+    Benchmark a single benchmark.
+
+    Args:
+        n: (todo): write your description
+        batches: (list): write your description
+        repetitions: (int): write your description
+        verbose: (bool): write your description
+    """
     if verbose:
         print('single gpu cupy benchmark - begin')
 
@@ -153,6 +210,15 @@ def single_gpu_benchmark(n: int,
                          batches: int,
                          repetitions: int = 1,
                          verbose: bool = False) -> float:
+    """
+    Benchmark a single benchmark.
+
+    Args:
+        n: (todo): write your description
+        batches: (list): write your description
+        repetitions: (int): write your description
+        verbose: (bool): write your description
+    """
     if verbose:
         print('single gpu benchmark - begin')
 
@@ -174,6 +240,16 @@ def multi_gpu_benchmark(n: int,
                         compute_device_pool: ComputeDevicePool,
                         repetitions: int = 1,
                         verbose: bool = False) -> tp.Dict[int, float]:
+    """
+    Benchmark multiple gpu benchmark.
+
+    Args:
+        n: (int): write your description
+        batches: (list): write your description
+        compute_device_pool: (bool): write your description
+        repetitions: (int): write your description
+        verbose: (bool): write your description
+    """
     if verbose:
         print('multi gpu benchmark - begin')
 
@@ -201,6 +277,16 @@ def multi_gpu_benchmark(n: int,
 
 
 def create_result_table(means_of_computation_to_runtime_map: tp.Dict[str, float]) -> str:
+    """
+    Creates the table
+
+    Args:
+        means_of_computation_to_runtime_map: (dict): write your description
+        tp: (todo): write your description
+        Dict: (todo): write your description
+        str: (todo): write your description
+        float: (todo): write your description
+    """
     single_core_runtime = means_of_computation_to_runtime_map[SINGLE_CORE_NUMPY]
 
     res = "<table>\n"
@@ -224,6 +310,16 @@ def create_result_table(means_of_computation_to_runtime_map: tp.Dict[str, float]
 
 
 def create_bar_plot(means_of_computation_to_runtime_map: tp.Dict[str, float]):
+    """
+    Creates bar chart
+
+    Args:
+        means_of_computation_to_runtime_map: (dict): write your description
+        tp: (str): write your description
+        Dict: (todo): write your description
+        str: (str): write your description
+        float: (todo): write your description
+    """
     single_core_runtime = means_of_computation_to_runtime_map[SINGLE_CORE_NUMPY]
 
     objects = list(means_of_computation_to_runtime_map.keys())
@@ -247,6 +343,11 @@ def create_bar_plot(means_of_computation_to_runtime_map: tp.Dict[str, float]):
 
 
 def main():
+    """
+    The main function.
+
+    Args:
+    """
     n = 1000000000
     repetitions = 1
     batches = 20

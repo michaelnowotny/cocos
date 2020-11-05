@@ -20,6 +20,12 @@ test_data = [np.array([[1, 2, 3],
 
 @pytest.mark.parametrize("A_numpy", test_data)
 def test_count_nonzero(A_numpy):
+    """
+    Count the number of the number of nonzero.
+
+    Args:
+        A_numpy: (int): write your description
+    """
     cocos.device.init()
     A_cocos = cn.array(A_numpy)
 

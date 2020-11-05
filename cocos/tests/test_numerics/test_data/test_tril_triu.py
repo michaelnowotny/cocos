@@ -19,6 +19,12 @@ test_data = [np.array([[1, 2, 3],
 
 @pytest.mark.parametrize("A_numpy", test_data)
 def test_tril_triu(A_numpy):
+    """
+    Determine the triangulation of a triangulation.
+
+    Args:
+        A_numpy: (int): write your description
+    """
     cocos.device.init()
     A_cocos = cn.array(A_numpy)
 

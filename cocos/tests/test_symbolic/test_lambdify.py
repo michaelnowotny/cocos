@@ -7,6 +7,11 @@ import cocos.symbolic._lambdification
 
 
 def test_lambdify():
+    """
+    Compute the ols of a vector x is_lam.
+
+    Args:
+    """
     x = sym.Symbol('x')
 
     expr = sym.sin(x) + sym.cos(x)

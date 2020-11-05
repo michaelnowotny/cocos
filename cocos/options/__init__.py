@@ -18,6 +18,12 @@ class RandomNumberGenerator(Enum):
 
 class GPUOptions:
     def __init__(self):
+        """
+        Initialize the state
+
+        Args:
+            self: (todo): write your description
+        """
         print("running GPUOptions.__init__")
     default_rng = RandomNumberGenerator.DEFAULT
     mixed_computation_error_level = MixedComputationErrorLevel.ERROR

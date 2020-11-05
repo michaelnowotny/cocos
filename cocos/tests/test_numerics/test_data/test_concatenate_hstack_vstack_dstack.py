@@ -13,6 +13,11 @@ backend = None
 
 
 def test_concatenate_hstack_v_stack_dstack():
+    """
+    Concatenate the concatenated concatenated.
+
+    Args:
+    """
     cocos.device.init(backend)
     cocos.device.info()
 

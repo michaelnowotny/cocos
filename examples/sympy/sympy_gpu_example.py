@@ -33,10 +33,25 @@ print()
 
 
 def numeric_time_function(t: float):
+    """
+    Numeric time function
+
+    Args:
+        t: (todo): write your description
+    """
     return np.log(t)
 
 
 def jacobian_direct(t, x1, x2, x3):
+    """
+    R compute jacobian function.
+
+    Args:
+        t: (array): write your description
+        x1: (array): write your description
+        x2: (array): write your description
+        x3: (array): write your description
+    """
     g = numeric_time_function
     state_vectors = (x1, x2, x3)
     R = find_length_of_state_vectors(state_vectors)

@@ -85,6 +85,13 @@ __all__ = ['gaussian_kde']
 def _split_points_into_batches(points: NumericArray,
                                number_of_points_per_batch: int) \
         -> tp.List[tp.List[NumericArray]]:
+    """
+    Split the number of points into num_points.
+
+    Args:
+        points: (array): write your description
+        number_of_points_per_batch: (int): write your description
+    """
     number_of_points = points.shape[1]
 
     n_begin = 0
@@ -101,6 +108,18 @@ def _split_points_into_batches(points: NumericArray,
 def _check_array_at_right_location_and_convert(array,
                                                gpu: bool,
                                                dtype: np.generic = np.float32):
+    """
+    Checks if array is a numpy array.
+
+    Args:
+        array: (array): write your description
+        gpu: (todo): write your description
+        dtype: (todo): write your description
+        np: (todo): write your description
+        generic: (todo): write your description
+        np: (todo): write your description
+        float32: (todo): write your description
+    """
     if isinstance(array, np.ndarray) and gpu:
         array = cn.array(array)
 
@@ -116,6 +135,23 @@ def _check_array_at_right_location_and_convert(array,
 def ensure_consistent_numeric_arrays(arrays: tp.Iterable[tp.Optional[NumericArray]],
                                      gpu: bool,
                                      dtype: np.generic = np.float32):
+    """
+    Ensures that numpy arrays have the same type.
+
+    Args:
+        arrays: (array): write your description
+        tp: (todo): write your description
+        Iterable: (todo): write your description
+        tp: (todo): write your description
+        Optional: (todo): write your description
+        NumericArray: (int): write your description
+        gpu: (todo): write your description
+        dtype: (todo): write your description
+        np: (todo): write your description
+        generic: (todo): write your description
+        np: (todo): write your description
+        float32: (todo): write your description
+    """
     return tuple(_check_array_at_right_location_and_convert(array=array, gpu=gpu, dtype=dtype)
                  if array is not None
                  else None
@@ -127,6 +163,14 @@ def _verify_and_get_shape_of_datapoints_datavalues_and_evaluation_points(points:
                                                                          values: NumericArray,
                                                                          xi: NumericArray) \
         -> tp.Tuple[int, int, int]:
+    """
+    Verifies that the shape of the shape and dtype.
+
+    Args:
+        points: (array): write your description
+        values: (todo): write your description
+        xi: (int): write your description
+    """
     n = points.shape[0]
 
     if points.ndim > 1:
@@ -156,6 +200,20 @@ def gaussian_kernel_estimate_vectorized_whitened(whitening: NumericArray,
                                                  norm: float,
                                                  dtype: np.generic,
                                                  gpu: bool) -> NumericArray:
+    """
+    Estimate a gaussian kernel.
+
+    Args:
+        whitening: (todo): write your description
+        whitened_points: (array): write your description
+        values: (array): write your description
+        xi: (array): write your description
+        norm: (todo): write your description
+        dtype: (todo): write your description
+        np: (todo): write your description
+        generic: (todo): write your description
+        gpu: (todo): write your description
+    """
     n, m, d = \
         _verify_and_get_shape_of_datapoints_datavalues_and_evaluation_points(points=whitened_points,
                                                                              values=values,
@@ -376,10 +434,22 @@ SILVERMAN_FACTOR_STRING = 'silverman'
 
 
 def compute_scotts_factor(kde_info: GaussianKDEInformation) -> float:
+    """
+    Compute factor factor factor.
+
+    Args:
+        kde_info: (todo): write your description
+    """
     return power(kde_info.neff, -1.0 / (kde_info.dimension + 4))
 
 
 def compute_silverman_factor(kde_info: GaussianKDEInformation) -> float:
+    """
+    Compute the factor factor.
+
+    Args:
+        kde_info: (todo): write your description
+    """
     d = kde_info.dimension
     neff = kde_info.neff
     return power(neff * (d + 2.0) / 4.0, -1.0 / (d + 4))
@@ -568,6 +638,28 @@ class gaussian_kde:
                                                  numbers.Number]] = None,
                  weights: tp.Optional[NumericArray] = None,
                  gpu: bool = False):
+        """
+        Initialize the weights.
+
+        Args:
+            self: (todo): write your description
+            dataset: (todo): write your description
+            bw_method: (str): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            tp: (int): write your description
+            Union: (todo): write your description
+            CovarianceFactorFunctionType: (str): write your description
+            str: (todo): write your description
+            tp: (int): write your description
+            Callable: (todo): write your description
+            numbers: (int): write your description
+            Number: (int): write your description
+            weights: (array): write your description
+            tp: (int): write your description
+            Optional: (todo): write your description
+            gpu: (todo): write your description
+        """
 
         self._num_pack = select_num_pack(gpu)
         self._gpu = gpu
@@ -601,6 +693,15 @@ class gaussian_kde:
 
     def _check_and_adjust_dimensions_of_points(self, points: np.ndarray) \
             -> np.ndarray:
+        """
+        Check if the points have the same.
+
+        Args:
+            self: (todo): write your description
+            points: (array): write your description
+            np: (todo): write your description
+            ndarray: (array): write your description
+        """
         points = atleast_2d(asarray(points))
 
         d, m = points.shape
@@ -738,10 +839,25 @@ class gaussian_kde:
               maximum_number_of_elements_per_batch: int,
               n: int,
               d: int):
+            """
+            Perform a simple normalization.
+
+            Args:
+                points_internal: (int): write your description
+                maximum_number_of_elements_per_batch: (int): write your description
+                n: (int): write your description
+                d: (int): write your description
+            """
             points_per_batch = math.floor(maximum_number_of_elements_per_batch / (n * d))
             args_list_internal = _split_points_into_batches(points_internal, points_per_batch)
 
             def f_internal(points_internal_internal):
+                """
+                Compute the f - gaussian normalization.
+
+                Args:
+                    points_internal_internal: (int): write your description
+                """
                 return gaussian_kernel_estimate_vectorized_whitened(
                         whitening=self.whitening,
                         whitened_points=self.whitened_points,
@@ -1133,18 +1249,42 @@ class gaussian_kde:
 
     @property
     def gpu(self) -> bool:
+        """
+        Return a boolean indicating whether or notificator.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._gpu
 
     @property
     def weights(self) -> np.ndarray:
+        """
+        Weights weights.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._weights
 
     @cached_property
     def neff(self) -> float:
+        """
+        The weight of the weight.
+
+        Args:
+            self: (todo): write your description
+        """
         return 1.0/np.sum(self.weights*self.weights)
 
     @cached_property
     def whitening(self) -> NumericArray:
+        """
+        Return the whitening. numpy array.
+
+        Args:
+            self: (todo): write your description
+        """
         gpu = self.gpu
         num_pack = select_num_pack(gpu)
         precision = \
@@ -1154,6 +1294,12 @@ class gaussian_kde:
 
     @cached_property
     def whitened_points(self) -> NumericArray:
+        """
+        Returns the number of whitened.
+
+        Args:
+            self: (todo): write your description
+        """
         gpu = self.gpu
         num_pack = select_num_pack(gpu)
         points = \
@@ -1163,6 +1309,12 @@ class gaussian_kde:
 
     @cached_property
     def normalization_constant(self) -> float:
+        """
+        The constant constant.
+
+        Args:
+            self: (todo): write your description
+        """
         gpu = self.gpu
         num_pack = select_num_pack(gpu)
 

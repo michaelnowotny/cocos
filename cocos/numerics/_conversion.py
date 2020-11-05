@@ -3,6 +3,12 @@ from arrayfire import Dtype
 
 
 def convert_numpy_to_af_type(numpy_type):
+    """
+    Convert numpy. numpy. numpy. numpy. numpy. numpy. numpy. numpy. numpy. n
+
+    Args:
+        numpy_type: (int): write your description
+    """
     if numpy_type == np.float32:
         return Dtype.f32
     elif numpy_type == np.complex64:
@@ -40,6 +46,12 @@ def convert_numpy_to_af_type(numpy_type):
 
 
 def convert_af_to_numpy_type(af_type):
+    """
+    Convert a numpy.
+
+    Args:
+        af_type: (str): write your description
+    """
     if af_type == Dtype.f32:
         return np.float32
     elif af_type == Dtype.c32:

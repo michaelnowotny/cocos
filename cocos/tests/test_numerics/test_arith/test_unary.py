@@ -29,6 +29,12 @@ test_data = [np.array([[np.inf, -np.inf, np.NaN]],
 
 @pytest.mark.parametrize("A_numpy", test_data)
 def test_unary(A_numpy):
+    """
+    Test if a_numpy.
+
+    Args:
+        A_numpy: (int): write your description
+    """
     cocos.device.init()
     A_cocos = cn.array(A_numpy)
 

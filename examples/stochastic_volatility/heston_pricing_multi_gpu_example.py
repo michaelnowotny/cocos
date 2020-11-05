@@ -31,6 +31,16 @@ from stochastic_volatility.heston_utilities import (
 
 def create_result_table(number_of_devices_to_runtime_map: tp.Dict[int, float]) \
         -> str:
+    """
+    Builds a table of devices.
+
+    Args:
+        number_of_devices_to_runtime_map: (dict): write your description
+        tp: (todo): write your description
+        Dict: (todo): write your description
+        int: (todo): write your description
+        float: (todo): write your description
+    """
     res = "<table>\n"
     res += "<tbody>\n"
     res += "<tr>\n"
@@ -53,6 +63,16 @@ def create_result_table(number_of_devices_to_runtime_map: tp.Dict[int, float]) \
 
 
 def create_bar_plot(number_of_devices_to_runtime_map: tp.Dict[int, float]):
+    """
+    Creates bar chart.
+
+    Args:
+        number_of_devices_to_runtime_map: (dict): write your description
+        tp: (str): write your description
+        Dict: (todo): write your description
+        int: (str): write your description
+        float: (todo): write your description
+    """
     objects = []
     performance = []
 

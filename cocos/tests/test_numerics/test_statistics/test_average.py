@@ -24,6 +24,13 @@ test_data = [(np.array([[1, 2, 3],
 
 @pytest.mark.parametrize("A_numpy, weights", test_data)
 def test_average(A_numpy, weights):
+    """
+    Test the mean of a set of a set of weights.
+
+    Args:
+        A_numpy: (int): write your description
+        weights: (todo): write your description
+    """
     print(A_numpy)
     cocos.device.init()
     print('init')
@@ -82,6 +89,11 @@ def test_average(A_numpy, weights):
 
 
 def test_average_3_axes():
+    """
+    Test if the mean of a 3d.
+
+    Args:
+    """
     A_numpy = np.array([[[0.2, 1.0, 0.5],
                         [0.4, 0.5, 0.6],
                         [0.7, 0.2, 0.25]],

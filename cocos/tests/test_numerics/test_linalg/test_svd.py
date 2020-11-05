@@ -10,10 +10,22 @@ backend = None
 
 
 def compare_cocos_numpy(cocos_array, numpy_array):
+    """
+    Compute cocos_array.
+
+    Args:
+        cocos_array: (todo): write your description
+        numpy_array: (int): write your description
+    """
     return np.allclose(np.array(cocos_array), numpy_array)
 
 
 def test_svd():
+    """
+    Perform svd algorithm ising algorithm.
+
+    Args:
+    """
     cocos.device.init(backend)
     cocos.device.info()
 

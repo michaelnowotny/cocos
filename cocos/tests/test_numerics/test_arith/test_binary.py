@@ -26,6 +26,13 @@ test_data_float = [(np.array([[1, 2, -3],
 
 @pytest.mark.parametrize("A_numpy, B_numpy", test_data_float)
 def test_binary_float(A_numpy, B_numpy):
+    """
+    Test if a_binary_numpy.
+
+    Args:
+        A_numpy: (int): write your description
+        B_numpy: (int): write your description
+    """
     cocos.device.init()
     A_cocos = cn.array(A_numpy)
     B_cocos = cn.array(B_numpy)
@@ -49,6 +56,13 @@ def test_binary_float(A_numpy, B_numpy):
 
 @pytest.mark.parametrize("A_numpy, B_numpy", test_data_int)
 def test_binary_int(A_numpy, B_numpy):
+    """
+    Test if a_numpy.
+
+    Args:
+        A_numpy: (int): write your description
+        B_numpy: (int): write your description
+    """
     cocos.device.init()
     A_cocos = cn.array(A_numpy)
     B_coocs = cn.array(B_numpy)

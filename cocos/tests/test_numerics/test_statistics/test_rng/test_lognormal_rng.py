@@ -14,6 +14,14 @@ test_data = [( 0.0, 0.2, n_kolmogorov_smirnov),
 
 @pytest.mark.parametrize("mu, sigma, n_kolmogorov_smirnov", test_data)
 def test_lognormal_distribution(mu, sigma, n_kolmogorov_smirnov):
+    """
+    Rejectsigma random variate a random samples.
+
+    Args:
+        mu: (array): write your description
+        sigma: (float): write your description
+        n_kolmogorov_smirnov: (array): write your description
+    """
     u = cn.random.lognormal(mu, sigma, n_kolmogorov_smirnov)
     reject = perform_ks_test(u,
                              alpha=0.01,

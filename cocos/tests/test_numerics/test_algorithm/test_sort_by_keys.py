@@ -12,6 +12,13 @@ test_data = [(np.array([1, 5, 3, 2],
 
 @pytest.mark.parametrize("keys_numpy, values_numpy", test_data)
 def test_sort_by_keys(keys_numpy, values_numpy):
+    """
+    Sort the keys_numpy.
+
+    Args:
+        keys_numpy: (int): write your description
+        values_numpy: (int): write your description
+    """
     cocos.device.init()
 
     keys_cocos = cn.array(keys_numpy)

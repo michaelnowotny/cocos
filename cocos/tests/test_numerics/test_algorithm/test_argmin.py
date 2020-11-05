@@ -16,6 +16,12 @@ test_data = [np.array([[1, 2, 3],
 
 @pytest.mark.parametrize("A_numpy", test_data)
 def test_argmin(A_numpy):
+    """
+    Test if the minimum value of a_numpy array a_numpy.
+
+    Args:
+        A_numpy: (int): write your description
+    """
     cocos.device.init()
     A_cocos = cn.array(A_numpy)
 

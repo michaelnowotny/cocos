@@ -188,66 +188,186 @@ if GPUOptions.use_gpu:
     init(None)
 else:
     def is_dbl_supported() -> bool:
+        """
+        Return true if a dbl_supported is_dbl_supported.
+
+        Args:
+        """
         return True
 
     class ndarray(np.ndarray):
         @property
         def label(self) -> str:
+            """
+            Return the label. label.
+
+            Args:
+                self: (todo): write your description
+            """
             return self._label
 
         @label.setter
         def label(self, label):
+            """
+            Set the label.
+
+            Args:
+                self: (todo): write your description
+                label: (str): write your description
+            """
             self._label = label
 
     def init(backend: str=None):
+        """
+        Initialize the backend.
+
+        Args:
+            backend: (todo): write your description
+        """
         pass
 
     def sync(device=None):
+        """
+        Syncs the device.
+
+        Args:
+            device: (todo): write your description
+        """
         pass
 
     def info():
+        """
+        Prints the info
+
+        Args:
+        """
         print("dummy gpu numerics emulated on cpu")
 
     def selected_backend() -> str:
+        """
+        Return the backend backend.
+
+        Args:
+        """
         return "dummy numpy cpu"
 
     def isempty(num) -> bool:
+        """
+        Check if number is not empty.
+
+        Args:
+            num: (int): write your description
+        """
         raise NotImplementedError()
 
     def isrow(num) -> bool:
+        """
+        Returns the first n.
+
+        Args:
+            num: (int): write your description
+        """
         raise NotImplementedError()
 
     def iscolumn(num) -> bool:
+        """
+        Returns the numberumnumn.
+
+        Args:
+            num: (int): write your description
+        """
         raise NotImplementedError()
 
     def isdouble(num) -> bool:
+        """
+        Returns a copy of num.
+
+        Args:
+            num: (int): write your description
+        """
         raise NotImplementedError()
 
     def issingle(num) -> bool:
+        """
+        Returns the next num.
+
+        Args:
+            num: (int): write your description
+        """
         raise NotImplementedError()
 
     def isrealfloating(num) -> bool:
+        """
+        Returns a copy of num.
+
+        Args:
+            num: (int): write your description
+        """
         raise NotImplementedError()
 
     def isfloating(num) -> bool:
+        """
+        Checks if num is a number.
+
+        Args:
+            num: (int): write your description
+        """
         raise NotImplementedError()
 
     def isinteger(num) -> bool:
+        """
+        Returns a positive integer.
+
+        Args:
+            num: (int): write your description
+        """
         raise NotImplementedError()
 
     def isbool(num) -> bool:
+        """
+        Returns a boolean indicating whether num is a boolean.
+
+        Args:
+            num: (int): write your description
+        """
         raise NotImplementedError()
 
     def iszero(num) -> bool:
+        """
+        Returns a zero zero.
+
+        Args:
+            num: (int): write your description
+        """
         raise NotImplementedError()
 
     def cplx(a, b=None):
+        """
+        Cplx ( a b )
+
+        Args:
+            a: (int): write your description
+            b: (int): write your description
+        """
         raise NotImplementedError()
 
     def root(a, b):
+        """
+        Return the root of a and b.
+
+        Args:
+            a: (todo): write your description
+            b: (todo): write your description
+        """
         raise NotImplementedError()
 
     def power2(a):
+        """
+        Power2.
+
+        Args:
+            a: (todo): write your description
+        """
         raise NotImplementedError()
 
     # from arrayfire/algorithm.py

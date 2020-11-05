@@ -14,6 +14,13 @@ test_data = [
 
 @pytest.mark.parametrize("scale, n_kolmogorov_smirnov", test_data)
 def test_exponential_distribution(scale, n_kolmogorov_smirnov):
+    """
+    Generate a random symmetric distribution.
+
+    Args:
+        scale: (float): write your description
+        n_kolmogorov_smirnov: (todo): write your description
+    """
     u = cn.random.exponential(scale, n_kolmogorov_smirnov)
     reject = perform_ks_test(u,
                              alpha=0.01,

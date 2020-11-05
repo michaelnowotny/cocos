@@ -27,6 +27,11 @@ from examples.stochastic_volatility.heston_utilities import (
 
 
 def loky_installed() -> bool:
+    """
+    Determine if loky is installed.
+
+    Args:
+    """
     try:
         import loky
         return True
@@ -37,22 +42,53 @@ def loky_installed() -> bool:
 class NumpyMulticoreBundle(NumpyBundle):
     @classmethod
     def is_installed(cls) -> bool:
+        """
+        Determine if the installed.
+
+        Args:
+            cls: (todo): write your description
+        """
         return super().is_installed() & loky_installed()
 
     @classmethod
     def label(cls) -> str:
+        """
+        Return label.
+
+        Args:
+            cls: (callable): write your description
+        """
         return 'NumPy Multicore'
 
 
 class CocosMultiGPUBundle(CocosBundle):
     def __init__(self, number_of_gpus: int):
+        """
+        Initialize the specified number.
+
+        Args:
+            self: (todo): write your description
+            number_of_gpus: (int): write your description
+        """
         self.number_of_gpus = number_of_gpus
 
     @classmethod
     def is_installed(cls) -> bool:
+        """
+        Determine if the installed.
+
+        Args:
+            cls: (todo): write your description
+        """
         return super().is_installed() & loky_installed()
 
     def label(self) -> str:
+        """
+        The label of the label.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.number_of_gpus == 1:
             return 'Cocos on 1 GPU'
         else:
@@ -64,23 +100,59 @@ class HestonBenchmarkResults:
                  numerical_package_bundle: tp.Type[NumericalPackageBundle],
                  total_time: float,
                  option_price: float):
+        """
+        Initialize the bundle bundle.
+
+        Args:
+            self: (todo): write your description
+            numerical_package_bundle: (int): write your description
+            tp: (int): write your description
+            Type: (str): write your description
+            NumericalPackageBundle: (int): write your description
+            total_time: (int): write your description
+            option_price: (todo): write your description
+        """
         self._numerical_package_bundle = numerical_package_bundle
         self._total_time = total_time
         self._option_price = option_price
 
     @property
     def numerical_package_bundle(self) -> tp.Type[NumericalPackageBundle]:
+        """
+        The bundle bundle bundle bundle bundle.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._numerical_package_bundle
 
     @property
     def total_time(self) -> float:
+        """
+        The total amount of the total time.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._total_time
 
     @property
     def option_price(self) -> float:
+        """
+        Returns the default price of the given option.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._option_price
 
     def print_results(self):
+        """
+        Print the bundle results.
+
+        Args:
+            self: (todo): write your description
+        """
         label = self.numerical_package_bundle.label()
         print(f'results on {label}')
         print(
@@ -101,6 +173,26 @@ def run_benchmark(x0: float,
                   R: int,
                   numerical_package_bundle: tp.Type[NumericalPackageBundle]) \
         -> HestonBenchmarkResults:
+    """
+    Benchmarkmarkmarkmarkmarkmarkmark
+
+    Args:
+        x0: (array): write your description
+        v0: (str): write your description
+        r: (str): write your description
+        rho: (str): write your description
+        sigma_v: (float): write your description
+        kappa: (str): write your description
+        v_bar: (str): write your description
+        T: (str): write your description
+        K: (str): write your description
+        nT: (str): write your description
+        R: (str): write your description
+        numerical_package_bundle: (bool): write your description
+        tp: (str): write your description
+        Type: (str): write your description
+        NumericalPackageBundle: (int): write your description
+    """
 
     # number of paths for warm-up (compile GPU kernels)
     R_warm_up = 1000
@@ -155,6 +247,19 @@ def run_benchmarks(
         numerical_package_bundles:
         tp.Optional[tp.Tuple[tp.Type[NumericalPackageBundle], ...]] = None) \
         -> tp.Dict[type(NumericalPackageBundle), HestonBenchmarkResults]:
+    """
+    Execute benchmarks.
+
+    Args:
+        numerical_package_bundles: (bool): write your description
+        tp: (str): write your description
+        Optional: (todo): write your description
+        tp: (str): write your description
+        Tuple: (str): write your description
+        tp: (str): write your description
+        Type: (str): write your description
+        NumericalPackageBundle: (int): write your description
+    """
     if numerical_package_bundles is None:
         numerical_package_bundles = \
             get_available_numerical_packages(list_installed_bundles=True)
@@ -275,6 +380,17 @@ def create_result_dataframe(
         numerical_package_bundle_to_result_map:
         tp.Dict[type(NumericalPackageBundle), HestonBenchmarkResults]) \
         -> pd.DataFrame:
+    """
+    Creates a dataframe from the results table
+
+    Args:
+        numerical_package_bundle_to_result_map: (dict): write your description
+        tp: (str): write your description
+        Dict: (todo): write your description
+        type: (str): write your description
+        NumericalPackageBundle: (int): write your description
+        HestonBenchmarkResults: (todo): write your description
+    """
     numpy_results = numerical_package_bundle_to_result_map[NumpyBundle]
 
     table_dict = {}
@@ -292,6 +408,17 @@ def create_result_dataframe(
 def create_result_table(
         numerical_package_bundle_to_result_map:
         tp.Dict[type(NumericalPackageBundle), HestonBenchmarkResults]) -> str:
+    """
+    Builds a table with the results of a bundle.
+
+    Args:
+        numerical_package_bundle_to_result_map: (dict): write your description
+        tp: (todo): write your description
+        Dict: (todo): write your description
+        type: (str): write your description
+        NumericalPackageBundle: (int): write your description
+        HestonBenchmarkResults: (todo): write your description
+    """
     numpy_results = numerical_package_bundle_to_result_map[NumpyBundle]
 
     res = "<table>\n"
@@ -318,6 +445,17 @@ def create_result_table(
 def create_bar_plot(
         numerical_package_bundle_to_result_map:
         tp.Dict[type(NumericalPackageBundle), HestonBenchmarkResults]):
+    """
+    Generate the bar plot
+
+    Args:
+        numerical_package_bundle_to_result_map: (todo): write your description
+        tp: (str): write your description
+        Dict: (todo): write your description
+        type: (str): write your description
+        NumericalPackageBundle: (int): write your description
+        HestonBenchmarkResults: (todo): write your description
+    """
     numpy_results = numerical_package_bundle_to_result_map[NumpyBundle]
 
     objects = [numerical_package_bundle.label()
@@ -343,6 +481,11 @@ def create_bar_plot(
 
 
 def main():
+    """
+    Execute the bundle.
+
+    Args:
+    """
     numerical_package_bundle_to_result_map = run_benchmarks()
 
     # create result dataframe

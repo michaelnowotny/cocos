@@ -34,6 +34,15 @@ def split_arrays(a: NumericArray,
                  b: NumericArray,
                  c: NumericArray,
                  number_of_batches: int) -> tp.Tuple[tp.Dict[str, NumericArray], ...]:
+    """
+    Split an array of arrays.
+
+    Args:
+        a: (array): write your description
+        b: (array): write your description
+        c: (array): write your description
+        number_of_batches: (int): write your description
+    """
     assert a.shape == b.shape
     assert a.shape == b.shape
     assert a.ndim == 1
@@ -53,6 +62,13 @@ def split_arrays(a: NumericArray,
 
 
 def generate_data(n: int, gpu: bool) -> tp.Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]:
+    """
+    Generate numpy array.
+
+    Args:
+        n: (str): write your description
+        gpu: (str): write your description
+    """
     num_pack = select_num_pack(gpu)
     a = rand_with_dtype([n], dtype=numpy.float32, num_pack=num_pack)
     b = rand_with_dtype([n], dtype=numpy.float32, num_pack=num_pack)
@@ -64,12 +80,28 @@ def process_data(a: NumericArray,
                  b: NumericArray,
                  c: NumericArray,
                  gpu: bool):
+    """
+    Process data array. ndarray.
+
+    Args:
+        a: (todo): write your description
+        b: (todo): write your description
+        c: (todo): write your description
+        gpu: (todo): write your description
+    """
     np = select_num_pack(gpu)
 
     return (np.sin(a) + np.cos(b)) * np.arctan(c)
 
 
 def single_core_benchmark(n: int, repetitions: int = 1) -> float:
+    """
+    Benchmark a benchmark.
+
+    Args:
+        n: (todo): write your description
+        repetitions: (int): write your description
+    """
     a, b, c = generate_data(n, gpu=False)
 
     with Timer() as timer:
@@ -81,6 +113,16 @@ def single_core_benchmark(n: int, repetitions: int = 1) -> float:
 
 def multi_core_benchmark(n: int, core_config: tp.Iterable[int], repetitions: int = 1) \
         -> tp.Dict[int, float]:
+    """
+    Multi - multi - multi - multi - way multi - benchmark.
+
+    Args:
+        n: (todo): write your description
+        core_config: (todo): write your description
+        tp: (todo): write your description
+        Iterable: (todo): write your description
+        repetitions: (int): write your description
+    """
     # This does not increase performance on Anaconda and Windows as elementwise trigonometric
     # operations seem to be multi-threaded to begin with.
 
@@ -122,10 +164,24 @@ def multi_core_benchmark(n: int, core_config: tp.Iterable[int], repetitions: int
 
 
 def host_to_device_transfer_function(a, b, c):
+    """
+    Converts a device : param a : : param a : : param b : param c : param b :
+
+    Args:
+        a: (todo): write your description
+        b: (todo): write your description
+        c: (todo): write your description
+    """
     return [], {'a': cn.array(a), 'b': cn.array(b), 'c': cn.array(c)}
 
 
 def device_to_host_transfer_function(x):
+    """
+    Convert x : class : ~host_transferhost function.
+
+    Args:
+        x: (todo): write your description
+    """
     if x is None:
         return None
     else:
@@ -136,6 +192,15 @@ def single_gpu_benchmark(n: int,
                          batches: int,
                          repetitions: int = 1,
                          host_to_device_transfer: bool = False) -> float:
+    """
+    Benchmark a single benchmark.
+
+    Args:
+        n: (todo): write your description
+        batches: (list): write your description
+        repetitions: (int): write your description
+        host_to_device_transfer: (todo): write your description
+    """
     gpu = not host_to_device_transfer
     a_complete, b_complete, c_complete = generate_data(n, gpu=gpu)
 
@@ -162,6 +227,15 @@ def batched_single_gpu_benchmark(n: int,
                                  batches: int,
                                  repetitions: int = 1,
                                  use_map_combine: bool = False) -> float:
+    """
+    Benchched version of the benchmark.
+
+    Args:
+        n: (todo): write your description
+        batches: (todo): write your description
+        repetitions: (int): write your description
+        use_map_combine: (bool): write your description
+    """
     a_complete, b_complete, c_complete = generate_data(n, gpu=False)
 
     with Timer() as timer:
@@ -196,6 +270,14 @@ def batched_single_gpu_benchmark(n: int,
 
 def multi_gpu_benchmark(n: int, repetitions: int = 1, use_map_combine: bool = False) \
         -> tp.Dict[int, float]:
+    """
+    Benchmark a list of the benchmark.
+
+    Args:
+        n: (int): write your description
+        repetitions: (int): write your description
+        use_map_combine: (bool): write your description
+    """
     compute_device_pool = ComputeDevicePool()
 
     number_of_gpus_to_runtime_map = {}
@@ -266,6 +348,11 @@ def multi_gpu_benchmark(n: int, repetitions: int = 1, use_map_combine: bool = Fa
 
 
 def main():
+    """
+    The main function.
+
+    Args:
+    """
     n = 200000000
     repetitions = 1
     batches = 20

@@ -9,6 +9,13 @@ test_data = [(2, 2), (3, 3)]
 
 @pytest.mark.parametrize("n, m", test_data)
 def test_identity(n: int, m: int):
+    """
+    Test if the device identity.
+
+    Args:
+        n: (todo): write your description
+        m: (todo): write your description
+    """
     cocos.device.init()
 
     # eye

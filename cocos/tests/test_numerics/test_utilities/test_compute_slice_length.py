@@ -15,6 +15,15 @@ test_data = [(slice(0, 3, 2), np.array([1, 2, 3, 4, 5, 6, 7, 8])),
 
 @pytest.mark.parametrize("index, x", test_data)
 def test_compute_slice_length(index: slice, x: np.ndarray):
+    """
+    Compute the length of a slice.
+
+    Args:
+        index: (int): write your description
+        x: (todo): write your description
+        np: (todo): write your description
+        ndarray: (array): write your description
+    """
     y = x[index]
     computed_length = _compute_slice_length(index, len(x))
     if not len(y) == computed_length:

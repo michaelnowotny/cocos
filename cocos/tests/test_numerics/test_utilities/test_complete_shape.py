@@ -22,6 +22,20 @@ test_data = [(two_by_two, (1, -1), (1, 4)),
 def test_complete_shape(a,
                         input_shape: tp.Tuple[int, ...],
                         intended_output_shape: tp.Tuple[int, ...]):
+    """
+    Test if a is an input shape.
+
+    Args:
+        a: (todo): write your description
+        input_shape: (list): write your description
+        tp: (todo): write your description
+        Tuple: (todo): write your description
+        int: (todo): write your description
+        intended_output_shape: (todo): write your description
+        tp: (todo): write your description
+        Tuple: (todo): write your description
+        int: (todo): write your description
+    """
 
     output_shape = _complete_shape(a, input_shape)
     assert output_shape == intended_output_shape

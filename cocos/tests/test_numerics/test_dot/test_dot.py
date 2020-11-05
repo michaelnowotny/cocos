@@ -6,6 +6,11 @@ from cocos.options import GPUOptions
 
 
 def test_dot():
+    """
+    Compute dot product.
+
+    Args:
+    """
     cocos.device.init()
 
     A_numpy = np.array([[1.0, 2], [3, 4.0]], dtype=np.float32)
