@@ -13,6 +13,9 @@ RUN apt-get update && apt-get install -y software-properties-common && \
         cmake \
         git \
         gnupg2 \
+        libboost-all-dev \
+        opencl-headers \
+        ocl-icd-opencl-dev \
         python3-pip \
         wget \
         xorg-dev && \
@@ -37,12 +40,13 @@ RUN echo "deb [arch=amd64] https://repo.arrayfire.com/ubuntu focal main" | tee /
 RUN apt-get update && apt-get install -y --no-install-recommends arrayfire arrayfire-dev
 RUN ldconfig
 
-WORKDIR /
+WORKDIR /root
 
+# Install Cocos
 RUN git clone https://github.com/michaelnowotny/cocos.git && \
-    cd /cocos && \
+    cd cocos && \
     pip3 install .
 
-WORKDIR /cocos
+WORKDIR /root/cocos
 
 ENTRYPOINT bash

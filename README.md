@@ -38,7 +38,7 @@ In addition to its numeric functionality, it allows parallel computation of SymP
 ### 0. Prerequisites
 NVidia CUDA must be installed on the system.
 
-### 1.  Download and install 
+### 1.  Download and Install Arrayfire 
 #### Windows
 - Windows [ArrayFire 3.6.4](http://arrayfire.s3.amazonaws.com/index.html#!/3.6.4%2F)
 
@@ -59,9 +59,6 @@ Docker must be installed on your system. See here for instructions: `https://doc
 - Build the Docker image from the Dockerfile via `sudo docker build --tag cocos .` (this only needs to be done the first time)
 - Run a Docker container based on the image created in the previous step via `sudo docker run -it --gpus all cocos`
 - To test the installation:
-    - Clone Cocos repo from GitHub via `git clone https://github.com/michaelnowotny/cocos.git`
-    - Navigate to Cocos directory via `cd cocos`
-    - Install Cocos and its dependencies via `pip3 install .`
     - Navigate to the Monte-Carlo example via `cd examples/monte_carlo_pi`
     - Run Monte-Carlo example via `python3 -m monte_carlo_pi`
 
