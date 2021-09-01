@@ -40,15 +40,18 @@ NVidia CUDA must be installed on the system.
 
 ### 1.  Download and Install Arrayfire 
 #### Windows
-- Windows [ArrayFire 3.6.4](http://arrayfire.s3.amazonaws.com/index.html#!/3.6.4%2F)
+[ArrayFire 3.8.0](http://arrayfire.s3.amazonaws.com/3.8.0/ArrayFire-v3.8.0.exe)
 
-#### Ubuntu Linux 20.04 and Derivatives
+#### Linux via Installer 
+[ArrayFire 3.8.0](http://arrayfire.s3.amazonaws.com/3.8.0/ArrayFire-v3.8.0_Linux_x86_64.sh)
+
+#### Ubuntu Linux 20.04 and Derivatives via APT
 - Follow the instructions here: `https://github.com/arrayfire/arrayfire/wiki/Install-ArrayFire-From-Linux-Package-Managers`, concretely
     - `sudo apt-key adv --fetch-key https://repo.arrayfire.com/GPG-PUB-KEY-ARRAYFIRE-2020.PUB`
     - Register the ArrayFire repo as a software source for apt-get via `echo "deb [arch=amd64] https://repo.arrayfire.com/ubuntu focal main" | sudo tee /etc/apt/sources.list.d/arrayfire.list`   
       (if your distribution is based on a different version of Ubuntu, you must replace focal with the code name obtained via `lsb_release -c`)
     - Update software sources and install ArrayFire via `sudo apt-get update && sudo apt-get install arrayfire`
-#### Docker on Ubuntu Linux 20.04 and Derivatives
+#### Ubuntu Linux 20.04 and Derivatives via Docker
 Docker must be installed on your system. See here for instructions: `https://docs.docker.com/engine/install/ubuntu/`.
 - Set up the nvidia-docker plugin as follows:
     - Add nvidia's cryptographic key to apt-get via `curl -s -L https://nvidia.github.io/nvidia-container-runtime/gpgkey | sudo apt-key add -`
