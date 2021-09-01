@@ -57,7 +57,7 @@ Docker must be installed on your system. See here for instructions: `https://doc
     - Stop the Docker daemon via `sudo systemctl stop docker`
     - Restart the Docker daemon via `sudo systemctl start docker`
 - Build the Docker image from the Dockerfile via `sudo docker build --tag cocos .` (this only needs to be done the first time)
-- Run a Docker container based on the image created in the previous step via `sudo docker run -it cocos`
+- Run a Docker container based on the image created in the previous step via `sudo docker run -it --gpus all cocos`
 - To test the installation:
     - Clone Cocos repo from GitHub via `git clone https://github.com/michaelnowotny/cocos.git`
     - Navigate to Cocos directory via `cd cocos`
