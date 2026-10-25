@@ -1,8 +1,10 @@
 import array as pyarray
 import arrayfire as af
+import math
 import numbers
 import numpy as np
 import typing as tp
+import warnings
 
 from cocos.options import \
     GPUOptions, \
@@ -76,7 +78,7 @@ def _unary_function(x, af_func: tp.Callable, np_func: tp.Callable) -> 'ndarray':
 
 
 def is_boolean(a):
-    return a.dtype == np.bool or a.dtype == np.bool_
+    return a.dtype == np.bool_
 
 
 def _translate_index_key(item, input_shape: tp.Union[int, tp.Tuple[int, ...]]) \
@@ -170,9 +172,16 @@ class ndarray(object):
         self._label = label
         self._shape = shape
 
-    def __array__(self) -> np.ndarray:
+    def __array__(self, dtype=None, copy=None) -> np.ndarray:
+        if copy is False:
+            raise ValueError("Converting a cocos array to a NumPy array "
+                             "requires a copy from device memory.")
 
-        return self._af_array.__array__()
+        np_array = self._af_array.__array__()
+        if dtype is not None:
+            np_array = np_array.astype(dtype, copy=False)
+
+        return np_array
 
     @property
     def label(self) -> str:
@@ -768,13 +777,13 @@ class ndarray(object):
     def round(self) -> 'ndarray':
         return round(self)
 
-    def std(self, axis: tp.Optional[int] = None) \
+    def std(self, axis: tp.Optional[int] = None, ddof: int = 0) \
             -> tp.Union['ndarray', numbers.Number]:
         """
         Returns the standard deviation of the array elements along given axis.
         """
 
-        return std(self, axis)
+        return std(self, axis=axis, ddof=ddof)
 
     def sum(self,
             axis: tp.Optional[int] = None) \
@@ -1007,7 +1016,7 @@ def _complete_shape(a: ndarray, shape: tp.Sequence[int]) \
 
 def reorder(a: ndarray, new_order: tp.Tuple[int, ...]):
     if len(new_order) > 4:
-        raise ValueError(f'Cocos does not support arrays with more than 4 axes.')
+        raise ValueError('Cocos does not support arrays with more than 4 axes.')
 
     d0, d1, d2, d3 = _pad_shape_tuple_axis(new_order)
     # print(f'd0={d0}, d1={d1}, d2={d2}, d3={d3}')
@@ -1204,17 +1213,47 @@ def median(a: ndarray,
         return new_af_array
 
 
+def _variance_bias(ddof: tp.Optional[int]) -> af.VARIANCE:
+    """
+    Translate NumPy's delta degrees of freedom to ArrayFire's variance bias.
+    """
+
+    if ddof is None or ddof == 0:
+        return af.VARIANCE.POPULATION
+    elif ddof == 1:
+        return af.VARIANCE.SAMPLE
+    else:
+        raise ValueError(f"ddof must be 0 or 1, ddof={ddof} is not supported")
+
+
+def _variance(af_array: af.Array,
+              ddof: tp.Optional[int],
+              axis: tp.Optional[int]) -> tp.Union[af.Array, numbers.Number]:
+    bias = _variance_bias(ddof)
+    if af_array.is_complex():
+        # As in NumPy, the variance of complex numbers is the mean of the
+        # squared absolute deviations, which ArrayFire does not compute.
+        return af.var(af.real(af_array), bias=bias, dim=axis) \
+            + af.var(af.imag(af_array), bias=bias, dim=axis)
+    else:
+        return af.var(af_array, bias=bias, weights=None, dim=axis)
+
+
 def std(a: ndarray, axis: tp.Optional[int] = None, ddof: int = 0) \
         -> tp.Union[ndarray, numbers.Number]:
     """
     Compute the standard deviation along the specified axis.
     """
 
-    new_af_array: tp.Optional[tp.Union[ndarray, numbers.Number]] = None
-    if ddof or ddof == 0:
-        new_af_array = af.stdev(a._af_array, dim=axis)
-    elif ddof == 1:
-        new_af_array = af.sqrt(af.var(a._af_array, isbiased=False, dim=axis))
+    if a._af_array.is_complex():
+        variance = _variance(a._af_array, ddof=ddof, axis=axis)
+        new_af_array = af.sqrt(variance) \
+            if isinstance(variance, af.Array) else math.sqrt(variance)
+    else:
+        new_af_array = af.stdev(a._af_array,
+                                bias=_variance_bias(ddof),
+                                dim=axis)
+
     if isinstance(new_af_array, af.Array):
         return ndarray(new_af_array)
     else:
@@ -1231,23 +1270,38 @@ def var(a: ndarray,
     Compute the variance along the specified axis.
     """
 
-    isbiased = True
-    if ddof is not None:
-        if ddof == 1:
-            isbiased = False
-        elif ddof == 0:
-            pass
-        else:
-            raise ValueError(f"ddof must be 0 or 1, ddof={ddof} is not "
-                             f"supported")
-
-    new_af_array \
-        = af.var(a._af_array, isbiased=isbiased, weights=None, dim=axis)
+    new_af_array = _variance(a._af_array, ddof=ddof, axis=axis)
 
     if isinstance(new_af_array, af.Array):
         return ndarray(new_af_array)
     else:
         return new_af_array
+
+
+def _observations_by_variables(x: ndarray,
+                               rowvar: bool,
+                               dtype: np.dtype) -> af.Array:
+    """
+    Return the data in x as an ArrayFire array of the given type with one
+    observation per row and one variable per column.
+    """
+
+    if x.ndim > 2:
+        raise ValueError("x has more than 2 dimensions")
+
+    af_array = x._af_array
+    if x.ndim == 2 and rowvar:
+        af_array = af.transpose(af_array)
+
+    return af_array.as_type(convert_numpy_to_af_type(dtype))
+
+
+def _scalar(af_array: af.Array) -> numbers.Number:
+    """
+    Return the element of an array with one element as a Python number.
+    """
+
+    return af_array.to_ndarray().item()
 
 
 def cov(m: ndarray,
@@ -1256,49 +1310,87 @@ def cov(m: ndarray,
         bias: bool = False,
         ddof: tp.Optional[int] = None,
         fweights: tp.Optional = None,
-        aweights: tp.Optional = None):
+        aweights: tp.Optional = None) -> tp.Union[ndarray, numbers.Number]:
     """
     Estimate a covariance matrix, given data and weights.
+
+    Weighted covariances (fweights and aweights) are not supported.
     """
 
-    isbiased = bias
-    if ddof is not None and ddof == 0:
-        isbiased = True
+    if fweights is not None or aweights is not None:
+        raise NotImplementedError("fweights and aweights are not supported")
 
-    new_af_array = af.cov(m._af_array, isbiased=isbiased, dim=0)
-    if isinstance(new_af_array, af.Array):
-        return ndarray(new_af_array)
+    if ddof is None:
+        ddof = 0 if bias else 1
+
+    # Both inputs are converted to their common floating point type. Unlike
+    # NumPy, cocos keeps single precision for single precision inputs.
+    dtype = np.dtype(m.dtype) if y is None else np.result_type(m.dtype, y.dtype)
+    if not np.issubdtype(dtype, np.inexact):
+        dtype = np.dtype(np.float64 if af.is_dbl_supported() else np.float32)
+
+    x = _observations_by_variables(m, rowvar, dtype)
+    if y is not None:
+        x = af.join(1, x, _observations_by_variables(y, rowvar, dtype))
+
+    number_of_observations = x.dims()[0]
+    degrees_of_freedom = number_of_observations - ddof
+    if degrees_of_freedom <= 0:
+        warnings.warn("Degrees of freedom <= 0 for slice",
+                      RuntimeWarning,
+                      stacklevel=2)
+        degrees_of_freedom = 0
+
+    centered = x - af.tile(af.mean(x, dim=0), number_of_observations)
+    conjugate = af.conjg(centered) if centered.is_complex() else centered
+    covariance = af.matmulTN(centered, conjugate) / degrees_of_freedom
+
+    if covariance.elements() == 1:
+        return _scalar(covariance)
     else:
-        return new_af_array
+        return ndarray(covariance)
 
 
-def corrcoef(x,
-             y: tp.Optional = None,
-             rowvar: int = 1,
+def corrcoef(x: ndarray,
+             y: tp.Optional[ndarray] = None,
+             rowvar: bool = True,
              bias: bool = False,
-             ddof: tp.Optional[int] = None):
+             ddof: tp.Optional[int] = None) \
+        -> tp.Union[ndarray, numbers.Number]:
     """
     Return Pearson product-moment correlation coefficients.
+
+    As in NumPy, the arguments bias and ddof have no effect.
     """
 
-    isbiased = bias
-    if ddof and ddof == 0:
-        isbiased = True
+    covariance = cov(x, y, rowvar=rowvar)
+    if not isinstance(covariance, ndarray):
+        # NumPy division returns nan for a zero variance (with a warning).
+        return (np.asarray(covariance) / np.asarray(covariance)).item()
 
-    cov_array = af.cov(x._af_array, isbiased=isbiased, dim=0)
-    std_array = af.stdev(x._af_array, dim=0)
+    covariance = covariance._af_array
+    standard_deviation = af.sqrt(af.real(af.diag(covariance))
+                                 if covariance.is_complex()
+                                 else af.diag(covariance))
+    correlation = covariance / af.matmulNT(standard_deviation,
+                                           standard_deviation)
 
-    if isinstance(std_array, af.Array) and isinstance(cov_array, af.Array):
-        new_array = cov_array / af.matmulNT(std_array, std_array)
-        return ndarray(new_array)
-    elif (isinstance(std_array, af.Array) and
-          not isinstance(cov_array, af.Array)) or \
-            (not isinstance(std_array, af.Array) and
-             isinstance(cov_array, af.Array)):
-        raise ValueError("error: either both std_array and cov_array must be "
-                         "arrayfire arrays or none of them")
+    if correlation.is_complex():
+        return ndarray(af.cplx(_clip_to_unit_interval(af.real(correlation)),
+                               af.imag(correlation)))
     else:
-        return cov_array / std_array * std_array
+        return ndarray(_clip_to_unit_interval(correlation))
+
+
+def _clip_to_unit_interval(af_array: af.Array) -> af.Array:
+    """
+    Clip the values to [-1, 1] but keep NaNs, which af.clamp replaces by -1
+    on the CUDA and OpenCL backends.
+    """
+
+    return af.select(af.isnan(af_array),
+                     af_array,
+                     af.clamp(af_array, -1.0, 1.0))
 
 
 def _division_with_remainder(dividend: ndarray,

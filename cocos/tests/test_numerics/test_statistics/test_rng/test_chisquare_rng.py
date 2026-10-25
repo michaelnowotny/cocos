@@ -20,7 +20,7 @@ def test_chisquare_distribution(df, n_kolmogorov_smirnov):
     reject = perform_ks_test(u,
                              alpha=0.01,
                              distribution='chi2',
-                             args=(df, 0.0, 0.0),
+                             args=(df,),
                              verbose=True)
 
     assert not reject

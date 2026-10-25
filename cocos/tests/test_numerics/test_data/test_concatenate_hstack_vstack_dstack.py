@@ -1,19 +1,12 @@
-import array as pyarray
 import numpy as np
-import pytest
 
 import cocos.device
 import cocos.numerics as cn
 
 
-# backend = 'cpu'
-# backend = 'cuda'
-# backend = 'opencl'
-backend = None
-
 
 def test_concatenate_hstack_v_stack_dstack():
-    cocos.device.init(backend)
+    cocos.device.init()
     cocos.device.info()
 
     # define data type

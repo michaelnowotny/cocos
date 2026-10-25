@@ -47,12 +47,10 @@
 
 # Standard library imports.
 import math
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from cached_property import cached_property
+from functools import cached_property
 import numbers
 import typing as tp
-import warnings
 
 from cocos.multi_processing.device_pool import ComputeDevicePool
 from cocos.multi_processing.single_device_batch_processing import map_combine_single_device
@@ -65,12 +63,23 @@ from cocos.numerics.numerical_package_selector import select_num_pack
 # SciPy imports.
 from scipy import linalg, special
 from scipy.special import logsumexp
-from scipy._lib._util import check_random_state
 
 from numpy import (asarray, atleast_2d, reshape, zeros, newaxis, dot, exp, pi,
                    sqrt, ravel, power, atleast_1d, squeeze, sum, transpose,
                    ones, cov)
 import numpy as np
+
+
+def _check_random_state(seed):
+    """Turn `seed` into a NumPy random number generator (as SciPy does)."""
+    if seed is None:
+        return np.random.mtrand._rand
+    if isinstance(seed, (numbers.Integral, np.integer)):
+        return np.random.RandomState(seed)
+    if isinstance(seed, (np.random.RandomState, np.random.Generator)):
+        return seed
+    raise ValueError(f"{seed!r} cannot be used to seed a random number "
+                     f"generator")
 
 # Local imports.
 # # from . import mvn
@@ -143,7 +152,8 @@ def _verify_and_get_shape_of_datapoints_datavalues_and_evaluation_points(points:
     if p != 1:
         raise ValueError('p != 1 is not supported')
 
-    if xi.shape[1] != d:
+    xi_d = xi.shape[1] if xi.ndim > 1 else 1
+    if xi_d != d:
         raise ValueError(f"points and xi must have same trailing dim but the shape of xi is {xi.shape}")
 
     return n, m, d
@@ -162,11 +172,14 @@ def gaussian_kernel_estimate_vectorized_whitened(whitening: NumericArray,
                                                                              xi=xi)
     whitened_points, values, xi, whitening = \
         ensure_consistent_numeric_arrays((whitened_points, values, xi, whitening), gpu)
+    # one-dimensional evaluation points are points in one dimension
+    xi = xi.reshape((m, d))
 
     num_pack = select_num_pack(gpu)
 
     whitened_points = whitened_points.astype(dtype, copy=False)
-    whitened_xi = num_pack.dot(xi, whitening).astype(dtype, copy=False)
+    whitened_xi = num_pack.dot(xi.astype(dtype, copy=False),
+                               whitening.astype(dtype, copy=False))
     values = values.astype(dtype, copy=False)
 
     # Create the result array and evaluate the weighted sum
@@ -254,15 +267,13 @@ def gaussian_kernel_estimate_vectorized(points: NumericArray,
 
     points, values, xi, precision = \
         ensure_consistent_numeric_arrays((points, values, xi, precision), gpu)
-
-    print(f'type(points) = {type(points)}')
-    print(f'type(values) = {type(values)}')
-    print(f'type(xi) = {type(xi)}')
-    print(f'type(precision) = {type(precision)}')
+    # one-dimensional data and evaluation points are points in one dimension
+    points = points.reshape((n, d))
+    xi = xi.reshape((m, d))
 
     # Rescale the data
     whitening = num_pack.linalg.cholesky(precision).astype(dtype, copy=False)
-    points = num_pack.dot(points, whitening).astype(dtype, copy=False)
+    points = num_pack.dot(points.astype(dtype, copy=False), whitening)
     # xi = num_pack.dot(xi, whitening).astype(dtype, copy=False)
     values = values.astype(dtype, copy=False)
 
@@ -1014,7 +1025,7 @@ class gaussian_kde:
         if size is None:
             size = int(self.neff)
 
-        random_state = check_random_state(seed)
+        random_state = _check_random_state(seed)
         norm = transpose(random_state.multivariate_normal(
             zeros((self.d,), float), self.covariance, size=size
         ))

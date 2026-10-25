@@ -29,7 +29,7 @@ if __name__ == '__main__':
     # print(f'xy_grid.shape = {xy_grid.shape}')
 
     # construct and evaluate scipy gaussian kde object
-    gaussian_kde_scipy = ss.kde.gaussian_kde(points_xy)
+    gaussian_kde_scipy = ss.gaussian_kde(points_xy)
     density_estimate_scipy = gaussian_kde_scipy.evaluate(xy_grid)
     # print(f'density_estimate_scipy.shape = {density_estimate_scipy.shape}')
 
@@ -64,7 +64,7 @@ if __name__ == '__main__':
               'than the default tolerance')
 
     fig = plt.figure()
-    ax = fig.gca(projection='3d')
+    ax = fig.add_subplot(projection='3d')
     ax.plot_wireframe(X=xy_grid_x,
                       Y=xy_grid_y,
                       Z=density_estimate_scipy.reshape((grid_size, grid_size)),

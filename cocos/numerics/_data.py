@@ -4,7 +4,7 @@ import typing as tp
 
 from ._array import full, ndarray
 from ._conversion import convert_numpy_to_af_type
-from ._utilities import _pad_shape_tuple_none, _pad_shape_tuple_one
+from ._utilities import _pad_shape_tuple_one
 
 
 def empty(shape: tp.Tuple[int, ...],

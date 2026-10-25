@@ -62,9 +62,9 @@ class NumpyBundle(NumericalPackageBundle):
     @classmethod
     def is_installed(cls) -> bool:
         try:
-            import numpy
+            import numpy  # noqa: F401
             return True
-        except:
+        except ImportError:
             return False
 
     @classmethod
@@ -86,9 +86,9 @@ class CocosBundle(NumericalPackageBundle):
     @classmethod
     def is_installed(cls) -> bool:
         try:
-            import cocos
+            import cocos  # noqa: F401
             return True
-        except:
+        except ImportError:
             return False
 
     @classmethod
@@ -115,9 +115,9 @@ class CuPyBundle(NumericalPackageBundle):
     @classmethod
     def is_installed(cls) -> bool:
         try:
-            import cupy
+            import cupy  # noqa: F401
             return True
-        except:
+        except Exception:  # also covers CUDA libraries that fail to load
             return False
 
     @classmethod
@@ -155,7 +155,7 @@ def get_available_numerical_packages(
            if numerical_bundle.is_installed()]
 
     if list_installed_bundles:
-        print(f'Required packages found for the following benchmarks:')
+        print('Required packages found for the following benchmarks:')
         for numerical_bundle in available_numerical_bundles:
             print(numerical_bundle.label())
 

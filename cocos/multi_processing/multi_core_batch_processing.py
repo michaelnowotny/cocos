@@ -59,7 +59,6 @@ def map_reduce_multicore(
         return index, f(*args, **kwargs)
 
     if multiprocessing_pool_type == MultiprocessingPoolType.LOKY:
-        from concurrent.futures import as_completed
         from loky import get_reusable_executor
 
         executor = \

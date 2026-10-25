@@ -1,4 +1,3 @@
-import collections
 import numpy as np
 from types import ModuleType
 import typing as tp

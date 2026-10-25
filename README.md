@@ -4,7 +4,7 @@
 ## Overview
 
 Cocos is a package for numeric and scientific computing on GPUs for Python with a NumPy-like API. 
-It supports both CUDA and OpenCL on Windows, Mac OS, and Linux. 
+It runs on NVIDIA GPUs via CUDA, on other GPUs via OpenCL, and on the CPU. 
 Internally, it relies on the ArrayFire C/C++ library.
 Cocos offers a multi-GPU map-reduce framework. 
 In addition to its numeric functionality, it allows parallel computation of SymPy expressions on the GPU.
@@ -35,69 +35,86 @@ In addition to its numeric functionality, it allows parallel computation of SymP
 10.  [License](#license)  
 
 ## Installation
-### 0. Prerequisites
-NVidia CUDA must be installed on the system.
 
-### 1.  Download and Install Arrayfire 
-#### Windows
-[ArrayFire 3.8.0](http://arrayfire.s3.amazonaws.com/3.8.0/ArrayFire-v3.8.0.exe)
+Cocos consists of this Python package and the ArrayFire C/C++ library, version 3.10 or newer, 
+which must be installed separately. You can either 
+[run cocos in a Docker container](#option-1-docker), which leaves your system untouched, 
+or [install ArrayFire and cocos on your system](#option-2-install-on-your-system).
 
-#### Linux via Installer 
-[ArrayFire 3.8.0](http://arrayfire.s3.amazonaws.com/3.8.0/ArrayFire-v3.8.0_Linux_x86_64.sh)
+Upgrading from cocos 0.2? See the [changelog](https://github.com/michaelnowotny/cocos/blob/master/CHANGELOG.md) for what changed.
 
-#### Ubuntu Linux 20.04 and Derivatives via APT
-- Follow the instructions here: `https://github.com/arrayfire/arrayfire/wiki/Install-ArrayFire-From-Linux-Package-Managers`, concretely
-    - `sudo apt-key adv --fetch-key https://repo.arrayfire.com/GPG-PUB-KEY-ARRAYFIRE-2020.PUB`
-    - Register the ArrayFire repo as a software source for apt-get via `echo "deb [arch=amd64] https://repo.arrayfire.com/ubuntu focal main" | sudo tee /etc/apt/sources.list.d/arrayfire.list`   
-      (if your distribution is based on a different version of Ubuntu, you must replace focal with the code name obtained via `lsb_release -c`)
-    - Update software sources and install ArrayFire via `sudo apt-get update && sudo apt-get install arrayfire`
-#### Ubuntu Linux 20.04 and Derivatives via Docker
-Docker must be installed on your system. See here for instructions: `https://docs.docker.com/engine/install/ubuntu/`.
-- Set up the nvidia-docker plugin as follows:
-    - Add nvidia's cryptographic key to apt-get via `curl -s -L https://nvidia.github.io/nvidia-container-runtime/gpgkey | sudo apt-key add -`
-    - Add nvidia's repo to the software sources apt-get is able to access `curl -s -L https://nvidia.github.io/nvidia-container-runtime/ubuntu20.04/nvidia-container-runtime.list | sudo tee /etc/apt/sources.list.d/nvidia-container-runtime.list`
-    - Update the software sources and install the nvidia container runtime via `sudo apt-get update && sudo apt-get install nvidia-container-runtime`
-    - Stop the Docker daemon via `sudo systemctl stop docker`
-    - Restart the Docker daemon via `sudo systemctl start docker`
-- Build the Docker image from the Dockerfile via `sudo docker build --tag cocos .` (this only needs to be done the first time)
-- Run a Docker container based on the image created in the previous step via `sudo docker run -it --gpus all cocos`
-- To test the installation:
-    - Navigate to the Monte-Carlo example via `cd examples/monte_carlo_pi`
-    - Run Monte-Carlo example via `python3 -m monte_carlo_pi`
+### Requirements
 
-#### MacOS up until High Sierra (version 10.13.6)
-[ArrayFire 3.5.1](http://arrayfire.s3.amazonaws.com/index.html#!/3.5.1%2F)
+*   Linux on x86-64 with Python 3.12, 3.13, 3.14 or 3.15. 
+    ArrayFire also provides a Windows installer, and cocos should work on Windows, but this is not tested. 
+    macOS is no longer supported because there is no ArrayFire 3.10 release for it.
+*   For the CUDA backend: an NVIDIA GPU of the Maxwell generation or newer and an NVIDIA driver 
+    version 525.60 or newer (528.33 on Windows). No CUDA toolkit is needed; 
+    ArrayFire includes the CUDA libraries it uses.
+*   The OpenCL backend works with GPUs that have an OpenCL driver. The CPU backend needs no GPU.
 
-### 2. Make sure that your System is able to locate ArrayFire's libraries
-ArrayFire's functionality is contained in dynamic libries, 
-dynamic link libraries (.dll) on Windows and shared objects (.so) on Unix.  
+### Option 1: Docker
 
-This step is to ensure that these library files can be located on your system. 
-On Windows, this can be done by adding `%AF_PATH%\lib` to the path environment variable. 
-On Linux and Mac, one can either install (or copy) the ArrayFire libraries and their dependencies 
-to `/usr/local/lib` or modify the environment variable `LD_LIBRARY_PATH` (Linux) or 
-`DYLD_LIBRARY_PATH` (MacOS) to include the ArrayFire library directory.  
-    
-### 3.  Install Cocos via PIP: 
+The Docker image contains Ubuntu 24.04, ArrayFire 3.10, cocos, the dependencies of the examples 
+and JupyterLab.
+
+1.  Install [Docker](https://docs.docker.com/engine/install/) and the 
+    [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html), 
+    which gives containers access to the GPU.
+2.  Start a shell in the container:
+    <pre>
+    docker run --rm -it --gpus all ghcr.io/michaelnowotny/cocos
+    </pre>
+    Inside it, `python -c "import cocos.device; cocos.device.info()"` lists the available devices, 
+    `pytest --backend cuda` runs the test suite on the GPU, and 
+    `python examples/monte_carlo_pi/monte_carlo_pi.py` runs an example.
+3.  To use JupyterLab, for example with the notebook `notebooks/Getting Started.ipynb`, run
+    <pre>
+    docker run --rm -it --gpus all -p 8888:8888 ghcr.io/michaelnowotny/cocos \
+        jupyter lab --ip=0.0.0.0 --no-browser
+    </pre>
+    and open the URL it prints. Add `-v "$PWD":/home/cocos/work` to make the current directory 
+    available in the container as `~/work`.
+
+To build the image yourself instead, run `docker build -t cocos .` in a clone of this repository.
+
+### Option 2: Install on your system
+
+1.  Install ArrayFire 3.10 from [arrayfire.com/download](https://arrayfire.com/download). 
+    On Linux, download the installer (3.9 GB) and run it:
+    <pre>
+    curl -fL -o ArrayFire-v3.10.0_Linux_x86_64.sh https://arrayfire.gateway.scarf.sh/linux/3.10.0/ArrayFire.sh
+    sudo mkdir -p /opt/arrayfire
+    sudo sh ArrayFire-v3.10.0_Linux_x86_64.sh --skip-license --exclude-subdir --prefix=/opt/arrayfire
+    </pre>
+    The installation takes 13.8 GB. If you do not need the oneAPI backend for Intel GPUs or the 
+    debug symbols, you can delete `/opt/arrayfire/lib64/libafoneapi*` and `/opt/arrayfire/lib64/*.debug` 
+    to free 8.7 GB.
+2.  Cocos finds ArrayFire in `/opt/arrayfire`. If you installed it elsewhere, set the environment 
+    variable `AF_PATH` to the installation directory.
+3.  Install cocos:
+    <pre>
+    pip install cocos
+    </pre>
+    or, in a project managed with [uv](https://docs.astral.sh/uv/), `uv add cocos`. 
+    The optional extras `cocos[cupy]` and `cocos[pathos]` install CuPy (for the benchmarks 
+    comparing with CuPy) and pathos (an alternative to loky for multi-core processing; 
+    pathos does not work on Python 3.15 yet).
+4.  Check the installation with `python -c "import cocos.device; cocos.device.info()"`. 
+    To run the test suite on your GPU, install pytest and run 
+    `pytest -p cocos.tests.pytest_plugin --pyargs cocos.tests --backend cuda`.
+
+### Working on cocos
+
+Cocos uses [uv](https://docs.astral.sh/uv/) for development. With ArrayFire installed as above:
 <pre>
-pip install cocos 
+git clone https://github.com/michaelnowotny/cocos.git
+cd cocos
+uv sync                      # creates .venv with cocos, pytest and ruff
+uv run pytest --backend cuda # or --backend opencl, --backend cpu
+uv run ruff check
+uv sync --group examples     # adds the dependencies of the examples
 </pre>
-or 
-<pre>
-pip3 install cocos 
-</pre>
-if not using Anaconda.
-
-To get the latest version, clone the repository from github, 
-open a terminal/command prompt, navigate to the root folder and install via
-<pre>
-pip install .
-</pre>
-or 
-<pre>
-pip3 install . 
-</pre>
-if not using Anaconda.
 
 ## Getting Started
 ### Platform Information:
@@ -185,7 +202,7 @@ list of results in a single step.
 
 Please refer to the documentation of `cocos.multi_processing.device_pool.ComputeDevicePool.map_reduce` as well as 
 `cocos.multi_processing.device_pool.ComputeDevicePool.map_combine` for further details. 
-See 'examples/heston_pricing_multi_gpu_example.py' for a fully worked example. 
+See 'examples/stochastic_volatility/heston_pricing_multi_gpu_example.py' for a fully worked example. 
 
 ## Memory Limitations on the GPU Device
 It is common for modern standard desktop computers to support up to support up to 128GB of RAM. 
@@ -1588,9 +1605,9 @@ Most differences between NumPy and Cocos stem from two sources:
 
 <td>std(a, axis=None, ddof=0)</td>
 
-<td>Compute the arithmetic mean along the specified axis.</td>
+<td>Compute the standard deviation along the specified axis.</td>
 
-<td>parameters "dtype", "out", and "keepdims" are not supported</td>
+<td>parameters "dtype", "out", and "keepdims" are not supported; ddof must be 0 or 1</td>
 
 </tr>
 
@@ -1600,7 +1617,7 @@ Most differences between NumPy and Cocos stem from two sources:
 
 <td>Compute the variance along the specified axis.</td>
 
-<td>parameters "dtype", "out", and "keepdims" are not supported</td>
+<td>parameters "dtype", "out", and "keepdims" are not supported; ddof must be 0 or 1</td>
 
 </tr>
 
@@ -1666,11 +1683,11 @@ Most differences between NumPy and Cocos stem from two sources:
 
 <tr>
 
-<td>corrcoeff(x, bias=False, ddof=None</td>
+<td>corrcoef(x, y=None, rowvar=True)</td>
 
 <td>Return Pearson product-moment correlation coefficients.</td>
 
-<td>parameters "y" and "rowvar" are not supported</td>
+<td>x and y may have at most 2 axes</td>
 
 </tr>
 
@@ -1686,11 +1703,11 @@ Most differences between NumPy and Cocos stem from two sources:
 
 <tr>
 
-<td>cov(m, bias=False, ddof=None)</td>
+<td>cov(m, y=None, rowvar=True, bias=False, ddof=None)</td>
 
 <td>Estimate a covariance matrix, given data and weights.</td>
 
-<td>parameters "y", "rowvar", "fweights", and "aweights" are not supported</td>
+<td>parameters "fweights" and "aweights" are not supported; m and y may have at most 2 axes</td>
 
 </tr>
 
@@ -5630,10 +5647,13 @@ Most differences between NumPy and Cocos stem from two sources:
 
 ## Limitations and Differences with NumPy
 
-*   Requires Python 3.7 or higher.
 *   Arrays may have no more than 4 axes.
 *   Cocos provides only a subset of NumPy's functions and methods. In many cases, Cocos does not support all of the parameters of its corresponding NumPy function or method.
 *   Trailing singleton dimensions are cut off, e.g. there is no difference between an array with shape (2, 2, 1) and an array with shape (2, 2) in Cocos.
+*   Reductions along an axis, such as `sum`, `mean`, `average` and `var`, keep the reduced axis with length 1 unless it is the last axis. For example, averaging an array of shape (3, 4, 5) over axis 1 gives shape (3, 1, 5) rather than (3, 5).
+*   `var` and `std` support `ddof` equal to 0 or 1 only.
+*   Most functions that take an `axis` argument do not accept negative axes.
+*   `cov` and `corrcoef` compute in single precision when their inputs are single precision; NumPy always uses at least double precision.
 *   Matrix multiplication is not supported for integer types.
 
 ## A Note on Hardware Configurations for Multi-GPU Computing

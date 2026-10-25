@@ -5,7 +5,7 @@ import pytest
 import scipy.special as sp
 
 
-test_data = [np.array([[np.inf, -np.inf, np.NaN]],
+test_data = [np.array([[np.inf, -np.inf, np.nan]],
                       dtype=np.float32),
              np.array([[0, 0]],
                       dtype=np.int32),

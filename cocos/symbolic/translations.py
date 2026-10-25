@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.core.multiarray import array
+from numpy import array
 
 from cocos.numerics._arith import \
     absolute, \

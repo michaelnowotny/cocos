@@ -4,11 +4,6 @@ import pytest
 import cocos.device
 import cocos.numerics as cn
 
-# backend = 'cpu'
-# backend = 'cuda'
-# backend = 'opencl'
-backend = None
-
 
 test_data = [np.array([[1.0, -2.0],
                        [-3.0, 4.0]],
@@ -30,7 +25,7 @@ def compare_numpy_and_cocos(cocos_array: cn.ndarray, numpy_array: np.ndarray):
 
 @pytest.mark.parametrize("x", test_data)
 def test_reciprocal(x):
-    cocos.device.init(backend)
+    cocos.device.init()
     cocos.device.info()
 
     # using numpy

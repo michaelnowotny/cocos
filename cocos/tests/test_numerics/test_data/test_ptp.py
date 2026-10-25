@@ -29,10 +29,10 @@ def test_ptp(A_numpy):
     for axis in axes:
         if np.iscomplexobj(A_numpy):
             ptp_cocos = A_cocos.ptp(axis=axis)
-            ptp_numpy = A_numpy.ptp(axis=axis)
+            ptp_numpy = np.ptp(A_numpy, axis=axis)
             print(np.array(ptp_cocos))
             print(np.array(ptp_numpy))
             assert np.allclose(ptp_cocos.real, ptp_numpy.real)
             assert np.allclose(ptp_numpy.imag, ptp_cocos.imag)
         else:
-            assert np.allclose(A_cocos.ptp(axis=axis), A_numpy.ptp(axis=axis))
+            assert np.allclose(A_cocos.ptp(axis=axis), np.ptp(A_numpy, axis=axis))

@@ -4,9 +4,9 @@ from arrayfire.array import _binary_func
 from arrayfire.library import backend
 import numbers
 import numpy as np
+import scipy as sp
 import typing as tp
 
-from ._array import ndarray
 from ._array import _binary_function, _unary_function
 from ._array import ndarray, isinteger
 from ._data import full, zeros
@@ -121,7 +121,7 @@ def logical_not(x: ndarray):
 @af.broadcast
 def logical_xor(x1: ndarray,
                 x2: ndarray):
-    return bitwise_xor(x1.astype(np.bool8), x2.astype(np.bool8))
+    return bitwise_xor(x1.astype(np.bool_), x2.astype(np.bool_))
     # return logical_and(logical_or(a,b),(logical_not(logical_and(a, b))))
 
 
@@ -428,7 +428,6 @@ def cbrt(x: ndarray):
 
     return _unary_function(x, af_func=af.cbrt, np_func=np.cbrt)
 
-import scipy as sp
 
 def factorial(a: ndarray):
     return _unary_function(a, af_func=af.factorial, np_func=sp.special.factorial)
@@ -450,7 +449,7 @@ def isfinite(a: ndarray):
 
 # @af.broadcast
 def isneginf(a: ndarray):
-    neginf = full((1,), np.NINF, a.dtype)
+    neginf = full((1,), -np.inf, a.dtype)
     return a == neginf
 
 

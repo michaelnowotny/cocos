@@ -1,15 +1,9 @@
-import array as pyarray
 import numpy as np
 import pytest
 
 import cocos.device
 import cocos.numerics as cn
 
-
-# backend = 'cpu'
-# backend = 'cuda'
-# backend = 'opencl'
-backend = None
 
 
 test_data = [(np.array([[1.0, -2.0], [-3.0, 4.0]], dtype=np.float32),
@@ -24,7 +18,7 @@ def compare_numpy_and_cocos(cocos_array: cn.ndarray, numpy_array: np.ndarray):
 
 @pytest.mark.parametrize("x, y", test_data)
 def test_any_all(x, y):
-    cocos.device.init(backend)
+    cocos.device.init()
     cocos.device.info()
 
     # using numpy

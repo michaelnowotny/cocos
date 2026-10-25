@@ -35,7 +35,7 @@ xi_2d = generate_xi_2d()
 def test_gaussian_kde_scipy_vs_cocos(points: np.ndarray,
                                      xi: np.ndarray):
     gkde_cocos = gaussian_kde(points)
-    gkde_scipy = ss.kde.gaussian_kde(points)
+    gkde_scipy = ss.gaussian_kde(points)
 
     density_estimate_cocos = gkde_cocos.evaluate(xi)
     density_estimate_scipy = gkde_scipy.evaluate(xi)
@@ -50,7 +50,7 @@ def test_gaussian_kde_scipy_vs_cocos_gpu(points: np.ndarray,
                                          xi: np.ndarray):
     gkde_cocos = gaussian_kde(cn.array(points.squeeze()),
                               gpu=True)
-    gkde_scipy = ss.kde.gaussian_kde(points)
+    gkde_scipy = ss.gaussian_kde(points)
 
     density_estimate_cocos = gkde_cocos.evaluate(xi)
     density_estimate_scipy = gkde_scipy.evaluate(xi)

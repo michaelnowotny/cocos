@@ -1,4 +1,3 @@
-import cocos.device
 import cocos.numerics as cn
 import numpy as np
 import pytest

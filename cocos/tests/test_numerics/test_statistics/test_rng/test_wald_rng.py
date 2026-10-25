@@ -20,7 +20,7 @@ def test_wald_distribution(mean, scale, n_kolmogorov_smirnov):
     reject = perform_ks_test(u,
                              alpha=0.01,
                              distribution='invgauss',
-                             args=(mean, scale, 0),
+                             args=(mean / scale, 0.0, scale),
                              verbose=True)
 
     assert not reject

@@ -2,7 +2,6 @@ import typing as tp
 
 from cocos.device import sync
 from cocos.multi_processing.utilities import (
-    MultiprocessingPoolType,
     ResultType,
     ParameterTransferFunction,
     _extract_arguments_and_number_of_batches

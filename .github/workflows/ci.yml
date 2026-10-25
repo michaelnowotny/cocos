@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:  # the release workflows run the tests first
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
+      - name: Check that uv.lock is up to date
+        run: uv lock --check
+      - name: Lint
+        run: uv run --locked --only-group dev ruff check
+
+  # GitHub's runners have no GPU, so CI tests cocos on ArrayFire's CPU backend.
+  # This job caches the CPU backend for the test jobs.
+  arrayfire:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - id: cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/arrayfire-cpu
+          key: arrayfire-cpu-${{ hashFiles('.github/scripts/install-arrayfire-cpu.sh') }}
+      - name: Install the CPU backend of ArrayFire
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: .github/scripts/install-arrayfire-cpu.sh ~/arrayfire-cpu
+
+  test:
+    name: test (Python ${{ matrix.python }}${{ matrix.resolution == 'lowest-direct' && ', lowest versions' || '' }})
+    needs: arrayfire
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13", "3.14", "3.15"]
+        resolution: [locked]
+        include:
+          - python: "3.12"
+            resolution: lowest-direct
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/arrayfire-cpu
+          key: arrayfire-cpu-${{ hashFiles('.github/scripts/install-arrayfire-cpu.sh') }}
+          fail-on-cache-miss: true
+      - run: echo "AF_PATH=$HOME/arrayfire-cpu" >> "$GITHUB_ENV"
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Test
+        if: matrix.resolution == 'locked'
+        run: uv run --locked pytest --backend cpu
+      - name: Test with the lowest supported versions of the dependencies
+        if: matrix.resolution == 'lowest-direct'
+        run: uv run --resolution lowest-direct pytest --backend cpu
+
+  # Build the wheel and run the test suite against the installed package.
+  package:
+    needs: arrayfire
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/arrayfire-cpu
+          key: arrayfire-cpu-${{ hashFiles('.github/scripts/install-arrayfire-cpu.sh') }}
+          fail-on-cache-miss: true
+      - run: echo "AF_PATH=$HOME/arrayfire-cpu" >> "$GITHUB_ENV"
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
+      - run: uv build
+      - name: Test the installed wheel
+        working-directory: ${{ runner.temp }}
+        run: |
+          uv venv wheel-test
+          uv pip install --python wheel-test "$GITHUB_WORKSPACE"/dist/*.whl pytest
+          wheel-test/bin/pytest -p cocos.tests.pytest_plugin --pyargs cocos.tests --backend cpu
