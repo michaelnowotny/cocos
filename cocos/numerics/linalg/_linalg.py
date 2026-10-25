@@ -4,9 +4,8 @@ from numbers import Number
 import numpy as np
 import typing as tp
 
-from cocos.numerics._array import ndarray, isvector
+from cocos.numerics._array import ndarray
 from cocos.numerics._array import _unary_function
-from cocos.numerics._data import zeros
 from cocos.scientific.linalg import cholesky as chol_sc
 from cocos.scientific.linalg import qr as qr_sc
 from cocos.scientific.linalg import svd as svd_sc

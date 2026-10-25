@@ -123,7 +123,6 @@ if GPUOptions.use_gpu:
         erf, \
         erfc, \
         log1p, \
-        log1p, \
         log10, \
         log2, \
         cbrt, \

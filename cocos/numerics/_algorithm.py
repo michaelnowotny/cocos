@@ -72,9 +72,11 @@ def sort_by_keys(keys: ndarray,
         raise ValueError(f"Parameter axis must be between -1 and "
                          f"{keys.ndim - 1}")
 
+    # The wrapper returns (sorted values, sorted keys) despite its docstring.
     ordered_values, ordered_keys \
-        = af.sort_by_key(values._af_array,
-                         keys._af_array,
+        = af.sort_by_key(keys._af_array,
+                         values._af_array,
+                         dim=axis,
                          is_ascending=ascending)
 
     return ndarray(ordered_keys), ndarray(ordered_values)

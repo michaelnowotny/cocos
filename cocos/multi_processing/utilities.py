@@ -1,20 +1,11 @@
+import importlib.util
 import math
 import typing as tp
 from enum import Enum
 
 
-try:
-    import pathos
-    _IS_PATHOS_INSTALLED = True
-except:
-    _IS_PATHOS_INSTALLED = False
-
-
-try:
-    import loky
-    _IS_LOKY_INSTALLED = True
-except:
-    _IS_LOKY_INSTALLED = False
+_IS_PATHOS_INSTALLED = importlib.util.find_spec('pathos') is not None
+_IS_LOKY_INSTALLED = importlib.util.find_spec('loky') is not None
 
 
 def is_loky_installed() -> bool:

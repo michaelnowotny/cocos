@@ -9,13 +9,11 @@ from ._arith import \
     exp, \
     log, \
     minimum, \
-    sqrt, \
-    minimum
+    sqrt
 
 from ._array import asscalar, ndarray
 from ._conversion import \
-    convert_numpy_to_af_type, \
-    convert_af_to_numpy_type
+    convert_numpy_to_af_type
 
 from cocos.numerics.linalg import cholesky
 

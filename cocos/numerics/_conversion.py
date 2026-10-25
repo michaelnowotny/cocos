@@ -11,9 +11,7 @@ def convert_numpy_to_af_type(numpy_type):
         return Dtype.f64
     elif numpy_type == np.complex128:
         return Dtype.c64
-    elif numpy_type == np.bool8 or \
-            numpy_type == np.bool or \
-            numpy_type == np.bool_:
+    elif numpy_type == np.bool_ or numpy_type is bool:
         return Dtype.b8
     elif numpy_type == np.int32:
         return Dtype.s32
@@ -25,13 +23,11 @@ def convert_numpy_to_af_type(numpy_type):
         return Dtype.s64
     elif numpy_type == np.uint64:
         return Dtype.u64
-    elif numpy_type == np.int or numpy_type == int:
+    elif numpy_type is int:
         return Dtype.s32
-    elif numpy_type == np.long:
-        return Dtype.s64
-    elif numpy_type == np.float or numpy_type == float:
+    elif numpy_type is float:
         return Dtype.f32
-    elif numpy_type == np.complex or numpy_type == complex:
+    elif numpy_type is complex:
         return Dtype.c32
     elif numpy_type == np.double:
         return Dtype.f64
@@ -49,7 +45,7 @@ def convert_af_to_numpy_type(af_type):
     elif af_type == Dtype.c64:
         return np.complex128
     elif af_type == Dtype.b8:
-        return np.bool8
+        return np.bool_
     # elif (af_type == Dtype.b8):
     #     return bool
     elif af_type == Dtype.s32:

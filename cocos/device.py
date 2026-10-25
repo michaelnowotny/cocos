@@ -1,5 +1,6 @@
 import arrayfire as af
 import typing as tp
+import warnings
 
 
 class DeviceMemoryInfo:
@@ -164,11 +165,22 @@ class ComputeDeviceManager:
 
 
 def init(backend: tp.Optional[str] = None):
+    """
+    Select the ArrayFire backend ('cuda', 'opencl' or 'cpu'). Without an
+    argument, keep the current backend. If the backend cannot be used, fall
+    back to the CPU backend with a warning.
+    """
+
     try:
         if backend:
             af.set_backend(backend)
         af.get_device()
-    except:
+    except Exception as error:
+        warnings.warn(f"Could not initialize the ArrayFire "
+                      f"{backend or 'default'} backend ({error}). "
+                      f"Falling back to the CPU backend.",
+                      RuntimeWarning,
+                      stacklevel=2)
         af.set_backend('cpu')
 
 
