@@ -1,0 +1,73 @@
+[build-system]
+requires = ["uv_build>=0.13.5,<0.14"]
+build-backend = "uv_build"
+
+[project]
+name = "cocos"
+version = "0.3.0"
+description = "Scientific GPU computing in Python: a NumPy-like array library built on ArrayFire"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Michael Christoph Nowotny", email = "nowotnym@gmail.com" }]
+requires-python = ">=3.12"
+keywords = ["gpu", "cuda", "opencl", "arrayfire", "numpy", "monte-carlo", "sympy"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+# The `arrayfire` package is only the Python wrapper; the ArrayFire C/C++
+# library (>= 3.10) must be installed separately (see README.md).
+dependencies = [
+    "arrayfire>=3.8.0,<3.9",
+    "loky>=3.4",
+    "numpy>=2.0",
+    "scipy>=1.13",
+    "sympy>=1.12",
+]
+
+[project.optional-dependencies]
+cupy = ["cupy-cuda12x>=13"]
+pathos = ["pathos>=0.3.2"]
+
+[project.urls]
+Homepage = "https://github.com/michaelnowotny/cocos"
+Changelog = "https://github.com/michaelnowotny/cocos/blob/master/CHANGELOG.md"
+Issues = "https://github.com/michaelnowotny/cocos/issues"
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.17"]
+examples = ["contexttimer>=0.3.3", "matplotlib>=3.8", "pandas>=2.2"]
+notebook = [{ include-group = "examples" }, "jupyterlab>=4", "nbconvert>=7"]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.uv.build-backend]
+module-root = ""
+
+[tool.pytest.ini_options]
+testpaths = ["cocos/tests"]
+addopts = ["-ra", "--strict-markers", "-p", "cocos.tests.pytest_plugin"]
+
+[tool.ruff]
+target-version = "py312"
+extend-exclude = ["examples", "notebooks"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "NPY201"]
+ignore = ["E731"]
+
+[tool.ruff.lint.per-file-ignores]
+# cocos.numerics re-exports NumPy's names when GPU use is switched off.
+"__init__.py" = ["F401", "F403", "F811"]
+"cocos/numerics/linalg/_linalg.py" = ["F403", "F405"]
