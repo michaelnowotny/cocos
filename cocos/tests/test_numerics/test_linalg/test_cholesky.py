@@ -1,5 +1,4 @@
 import numpy as np
-import scipy.linalg as scipy_linalg
 
 import cocos.device
 import cocos.numerics as cn

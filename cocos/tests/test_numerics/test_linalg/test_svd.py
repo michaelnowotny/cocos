@@ -1,24 +1,21 @@
 import cocos.device
 import cocos.numerics as cn
-import cocos.numerics.linalg as linalg
 import numpy as np
-
-# backend = 'cpu'
-# backend = 'cuda'
-# backend = 'opencl'
-backend = None
 
 
 def compare_cocos_numpy(cocos_array, numpy_array):
     return np.allclose(np.array(cocos_array), numpy_array)
 
 
+def equal_up_to_sign(actual_vectors, expected_vectors) -> bool:
+    return all(np.allclose(actual, expected) or np.allclose(actual, -expected)
+               for actual, expected in zip(actual_vectors, expected_vectors))
+
+
 def test_svd():
-    cocos.device.init(backend)
+    cocos.device.init()
     cocos.device.info()
 
-    # selected_backend = device_info['backend'].lower()
-    selected_backend = cocos.device.selected_backend()
     # print("backend lowercase = <{}>".format(selected_backend))
     # print("device = {}".format(device_info['device']))
     # print("backend = {}".format(device_info['backend']))
@@ -76,6 +73,6 @@ def test_svd():
     assert np.allclose(reconstructed_A_cocos, A_cocos)
     assert compare_cocos_numpy(s_cocos, s)
 
-    if cocos.device.is_dbl_supported() and selected_backend != 'cuda' and selected_backend != 'opencl':
-        assert compare_cocos_numpy(U_cocos, U)
-        assert compare_cocos_numpy(V_cocos, V)
+    # Singular vectors are only determined up to their signs.
+    assert equal_up_to_sign(np.array(U_cocos).T, U.T)
+    assert equal_up_to_sign(np.array(V_cocos), V)

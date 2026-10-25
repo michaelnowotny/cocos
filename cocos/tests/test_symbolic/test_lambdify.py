@@ -2,7 +2,6 @@ import numpy as np
 import sympy as sym
 
 import cocos.numerics as cn
-import cocos.symbolic as cs
 import cocos.symbolic._lambdification
 
 

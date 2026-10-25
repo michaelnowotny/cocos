@@ -1,6 +1,5 @@
 import cocos.device
 import cocos.numerics as cn
-import cocos.numerics.linalg as linalg
 import numpy as np
 import pytest
 

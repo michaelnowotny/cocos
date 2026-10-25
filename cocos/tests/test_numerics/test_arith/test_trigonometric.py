@@ -18,8 +18,6 @@ def test_trigonometric(A_numpy):
     cocos.device.init()
     A_cocos = cn.array(A_numpy)
 
-    all_positive = np.all(A_numpy > 0)
-
     all_finite = cn.all(cn.isfinite(A_cocos))
     assert np.allclose(np.isfinite(A_numpy), cn.isfinite(A_cocos))
 

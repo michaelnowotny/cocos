@@ -102,8 +102,10 @@ def test_average_3_axes():
     for axis in range(3):
         print(f'axis = {axis}')
         average_numpy = np.average(A_numpy, axis=axis, weights=weights_numpy)
+        # cocos keeps the reduced axis with length 1 (unless it is the last)
         average_cocos \
-            = np.array(cn.average(A_cocos, axis=axis, weights=weights_cocos))
+            = np.array(cn.average(A_cocos, axis=axis, weights=weights_cocos)) \
+            .reshape(average_numpy.shape)
 
         truth_value = np.allclose(average_numpy, average_cocos)
         if not truth_value:

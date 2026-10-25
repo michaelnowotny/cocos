@@ -1,7 +1,5 @@
 import numpy as np
 import pytest
-import scipy as sp
-import typing as tp
 
 from cocos.scientific.kde import (
     gaussian_kernel_estimate,
@@ -43,7 +41,7 @@ def test_gaussian_kernel_estimate_loop_vs_vectorized_cpu(points: np.ndarray,
                                                                   dtype=np.float64,
                                                                   gpu=False))
 
-    np.allclose(kde_vectorized, kde)
+    assert np.allclose(kde_vectorized, kde[:, 0])  # the loop returns shape (m, 1)
 
 
 def test_gaussian_kernel_estimate_loop_vs_vectorized_gpu(points: np.ndarray,
@@ -58,4 +56,4 @@ def test_gaussian_kernel_estimate_loop_vs_vectorized_gpu(points: np.ndarray,
                                                                   dtype=np.float64,
                                                                   gpu=True))
 
-    np.allclose(kde_vectorized, kde)
+    assert np.allclose(kde_vectorized, kde[:, 0])  # the loop returns shape (m, 1)
