@@ -66,9 +66,10 @@ def sort_by_keys(keys: ndarray,
     elif axis is None:
         keys = keys.flatten()
         values = values.flatten()
+        axis = 0
     elif axis == -1:
         axis = keys.ndim - 1
-    elif axis >= keys.ndim:
+    elif not 0 <= axis < keys.ndim:
         raise ValueError(f"Parameter axis must be between -1 and "
                          f"{keys.ndim - 1}")
 

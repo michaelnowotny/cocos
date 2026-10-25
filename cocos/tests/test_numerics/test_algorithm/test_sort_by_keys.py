@@ -31,3 +31,16 @@ def test_sort_by_keys(keys_numpy, values_numpy, ascending):
 
     assert np.allclose(np.array(out_keys_cocos), keys_numpy[order])
     assert np.allclose(np.array(out_values_cocos), values_numpy[order])
+
+
+def test_sort_by_keys_of_flattened_arrays():
+    cocos.device.init()
+    keys = np.array([[4, 1, 7], [3, 9, 2]], dtype=np.int32)
+    values = 10 * keys
+
+    out_keys, out_values = cn.sort_by_keys(cn.array(keys),
+                                           cn.array(values),
+                                           axis=None)
+
+    assert np.array_equal(np.array(out_keys), np.sort(keys, axis=None))
+    assert np.array_equal(np.array(out_values), 10 * np.sort(keys, axis=None))

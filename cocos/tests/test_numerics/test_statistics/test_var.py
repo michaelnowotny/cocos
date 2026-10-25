@@ -84,3 +84,56 @@ def test_cov_of_a_single_variable():
     assert np.isclose(np.cov(v), cn.cov(cn.array(v)))
     assert np.isclose(np.cov(v, ddof=0), cn.cov(cn.array(v), ddof=0))
     assert np.isclose(np.corrcoef(v), cn.corrcoef(cn.array(v)))
+
+
+def test_var_std_complex():
+    cocos.device.init()
+    dtype = np.complex128 if cocos.device.is_dbl_supported() else np.complex64
+    z = np.array([[1 + 2j, 3 - 1j, -2 + 0.5j],
+                  [0.5, 2j, 1 - 1j]], dtype=dtype)
+    z_cocos = cn.array(z)
+    for ddof in (0, 1):
+        assert np.allclose(np.var(z, ddof=ddof), cn.var(z_cocos, ddof=ddof))
+        assert np.allclose(np.std(z, ddof=ddof), cn.std(z_cocos, ddof=ddof))
+        for axis in (0, 1):
+            assert np.allclose(np.var(z, axis=axis, ddof=ddof),
+                               np.array(cn.var(z_cocos, axis=axis, ddof=ddof)))
+            assert np.allclose(np.std(z, axis=axis, ddof=ddof),
+                               np.array(cn.std(z_cocos, axis=axis, ddof=ddof)))
+
+
+def test_corrcoef_keeps_nan_of_constant_variables():
+    cocos.device.init()
+    m = np.array([[1.0, 1.0, 1.0, 1.0],
+                  [1.0, 2.0, 3.0, 5.0],
+                  [4.0, 3.0, 2.0, 2.0]])
+    with np.errstate(invalid='ignore', divide='ignore'):
+        expected = np.corrcoef(m)
+        assert np.allclose(expected,
+                           np.array(cn.corrcoef(cn.array(m))),
+                           equal_nan=True)
+        assert np.isnan(cn.corrcoef(cn.array(np.ones(4))))
+
+
+def test_cov_corrcoef_of_a_complex_variable():
+    cocos.device.init()
+    dtype = np.complex128 if cocos.device.is_dbl_supported() else np.complex64
+    z = np.array([1 + 1j, 2 - 1j, 3j], dtype=dtype)
+    assert np.isclose(np.cov(z), cn.cov(cn.array(z)))
+    assert np.isclose(np.corrcoef(z), cn.corrcoef(cn.array(z)))
+
+
+@pytest.mark.parametrize("m_dtype, y_dtype", [(np.float32, np.float64),
+                                              (np.int32, np.float32),
+                                              (np.float64, np.complex128)])
+def test_cov_of_mixed_types(m_dtype, y_dtype):
+    cocos.device.init()
+    if not cocos.device.is_dbl_supported() \
+            and np.dtype(np.result_type(m_dtype, y_dtype)).itemsize >= 8:
+        pytest.skip("double precision is not supported by this device")
+    m = x.astype(m_dtype)
+    y_ = (y[0] + 1j * y[0][::-1]).astype(y_dtype) \
+        if np.issubdtype(y_dtype, np.complexfloating) else y.astype(y_dtype)
+    assert np.allclose(np.cov(m, y_),
+                       np.array(cn.cov(cn.array(m), cn.array(y_))),
+                       rtol=1e-4)

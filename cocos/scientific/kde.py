@@ -172,6 +172,8 @@ def gaussian_kernel_estimate_vectorized_whitened(whitening: NumericArray,
                                                                              xi=xi)
     whitened_points, values, xi, whitening = \
         ensure_consistent_numeric_arrays((whitened_points, values, xi, whitening), gpu)
+    # one-dimensional evaluation points are points in one dimension
+    xi = xi.reshape((m, d))
 
     num_pack = select_num_pack(gpu)
 
@@ -265,6 +267,9 @@ def gaussian_kernel_estimate_vectorized(points: NumericArray,
 
     points, values, xi, precision = \
         ensure_consistent_numeric_arrays((points, values, xi, precision), gpu)
+    # one-dimensional data and evaluation points are points in one dimension
+    points = points.reshape((n, d))
+    xi = xi.reshape((m, d))
 
     # Rescale the data
     whitening = num_pack.linalg.cholesky(precision).astype(dtype, copy=False)

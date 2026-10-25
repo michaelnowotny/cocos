@@ -1,5 +1,6 @@
 import array as pyarray
 import arrayfire as af
+import math
 import numbers
 import numpy as np
 import typing as tp
@@ -1225,13 +1226,34 @@ def _variance_bias(ddof: tp.Optional[int]) -> af.VARIANCE:
         raise ValueError(f"ddof must be 0 or 1, ddof={ddof} is not supported")
 
 
+def _variance(af_array: af.Array,
+              ddof: tp.Optional[int],
+              axis: tp.Optional[int]) -> tp.Union[af.Array, numbers.Number]:
+    bias = _variance_bias(ddof)
+    if af_array.is_complex():
+        # As in NumPy, the variance of complex numbers is the mean of the
+        # squared absolute deviations, which ArrayFire does not compute.
+        return af.var(af.real(af_array), bias=bias, dim=axis) \
+            + af.var(af.imag(af_array), bias=bias, dim=axis)
+    else:
+        return af.var(af_array, bias=bias, weights=None, dim=axis)
+
+
 def std(a: ndarray, axis: tp.Optional[int] = None, ddof: int = 0) \
         -> tp.Union[ndarray, numbers.Number]:
     """
     Compute the standard deviation along the specified axis.
     """
 
-    new_af_array = af.stdev(a._af_array, bias=_variance_bias(ddof), dim=axis)
+    if a._af_array.is_complex():
+        variance = _variance(a._af_array, ddof=ddof, axis=axis)
+        new_af_array = af.sqrt(variance) \
+            if isinstance(variance, af.Array) else math.sqrt(variance)
+    else:
+        new_af_array = af.stdev(a._af_array,
+                                bias=_variance_bias(ddof),
+                                dim=axis)
+
     if isinstance(new_af_array, af.Array):
         return ndarray(new_af_array)
     else:
@@ -1248,10 +1270,7 @@ def var(a: ndarray,
     Compute the variance along the specified axis.
     """
 
-    new_af_array = af.var(a._af_array,
-                          bias=_variance_bias(ddof),
-                          weights=None,
-                          dim=axis)
+    new_af_array = _variance(a._af_array, ddof=ddof, axis=axis)
 
     if isinstance(new_af_array, af.Array):
         return ndarray(new_af_array)
@@ -1259,10 +1278,12 @@ def var(a: ndarray,
         return new_af_array
 
 
-def _observations_by_variables(x: ndarray, rowvar: bool) -> af.Array:
+def _observations_by_variables(x: ndarray,
+                               rowvar: bool,
+                               dtype: np.dtype) -> af.Array:
     """
-    Return the data in x as an ArrayFire array with one observation per row
-    and one variable per column.
+    Return the data in x as an ArrayFire array of the given type with one
+    observation per row and one variable per column.
     """
 
     if x.ndim > 2:
@@ -1272,11 +1293,15 @@ def _observations_by_variables(x: ndarray, rowvar: bool) -> af.Array:
     if x.ndim == 2 and rowvar:
         af_array = af.transpose(af_array)
 
-    if not (af_array.is_floating() or af_array.is_complex()):
-        af_array = af_array.as_type(af.Dtype.f64 if af.is_dbl_supported()
-                                    else af.Dtype.f32)
+    return af_array.as_type(convert_numpy_to_af_type(dtype))
 
-    return af_array
+
+def _scalar(af_array: af.Array) -> numbers.Number:
+    """
+    Return the element of an array with one element as a Python number.
+    """
+
+    return af_array.to_ndarray().item()
 
 
 def cov(m: ndarray,
@@ -1298,9 +1323,15 @@ def cov(m: ndarray,
     if ddof is None:
         ddof = 0 if bias else 1
 
-    x = _observations_by_variables(m, rowvar)
+    # Both inputs are converted to their common floating point type. Unlike
+    # NumPy, cocos keeps single precision for single precision inputs.
+    dtype = np.dtype(m.dtype) if y is None else np.result_type(m.dtype, y.dtype)
+    if not np.issubdtype(dtype, np.inexact):
+        dtype = np.dtype(np.float64 if af.is_dbl_supported() else np.float32)
+
+    x = _observations_by_variables(m, rowvar, dtype)
     if y is not None:
-        x = af.join(1, x, _observations_by_variables(y, rowvar))
+        x = af.join(1, x, _observations_by_variables(y, rowvar, dtype))
 
     number_of_observations = x.dims()[0]
     degrees_of_freedom = number_of_observations - ddof
@@ -1315,7 +1346,7 @@ def cov(m: ndarray,
     covariance = af.matmulTN(centered, conjugate) / degrees_of_freedom
 
     if covariance.elements() == 1:
-        return covariance.scalar()
+        return _scalar(covariance)
     else:
         return ndarray(covariance)
 
@@ -1334,7 +1365,8 @@ def corrcoef(x: ndarray,
 
     covariance = cov(x, y, rowvar=rowvar)
     if not isinstance(covariance, ndarray):
-        return covariance / covariance
+        # NumPy division returns nan for a zero variance (with a warning).
+        return (np.asarray(covariance) / np.asarray(covariance)).item()
 
     covariance = covariance._af_array
     standard_deviation = af.sqrt(af.real(af.diag(covariance))
@@ -1344,10 +1376,21 @@ def corrcoef(x: ndarray,
                                            standard_deviation)
 
     if correlation.is_complex():
-        return ndarray(af.cplx(af.clamp(af.real(correlation), -1.0, 1.0),
+        return ndarray(af.cplx(_clip_to_unit_interval(af.real(correlation)),
                                af.imag(correlation)))
     else:
-        return ndarray(af.clamp(correlation, -1.0, 1.0))
+        return ndarray(_clip_to_unit_interval(correlation))
+
+
+def _clip_to_unit_interval(af_array: af.Array) -> af.Array:
+    """
+    Clip the values to [-1, 1] but keep NaNs, which af.clamp replaces by -1
+    on the CUDA and OpenCL backends.
+    """
+
+    return af.select(af.isnan(af_array),
+                     af_array,
+                     af.clamp(af_array, -1.0, 1.0))
 
 
 def _division_with_remainder(dividend: ndarray,

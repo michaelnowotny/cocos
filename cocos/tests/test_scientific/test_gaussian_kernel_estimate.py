@@ -57,3 +57,21 @@ def test_gaussian_kernel_estimate_loop_vs_vectorized_gpu(points: np.ndarray,
                                                                   gpu=True))
 
     assert np.allclose(kde_vectorized, kde[:, 0])  # the loop returns shape (m, 1)
+
+
+@pytest.mark.parametrize("gpu", [False, True])
+def test_gaussian_kernel_estimate_vectorized_with_one_dimensional_arrays(
+        points: np.ndarray,
+        weights: np.ndarray,
+        xi: np.ndarray,
+        precision: np.ndarray,
+        gpu: bool):
+    kde = gaussian_kernel_estimate(points, weights, xi, precision, np.float64)
+    kde_vectorized = np.array(gaussian_kernel_estimate_vectorized(points=points[:, 0],
+                                                                  values=weights,
+                                                                  xi=xi[:, 0],
+                                                                  precision=precision,
+                                                                  dtype=np.float64,
+                                                                  gpu=gpu))
+
+    assert np.allclose(kde_vectorized, kde[:, 0])
