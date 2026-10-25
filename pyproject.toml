@@ -46,7 +46,13 @@ Issues = "https://github.com/michaelnowotny/cocos/issues"
 
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.17"]
-examples = ["contexttimer>=0.3.3", "matplotlib>=3.8", "pandas>=2.2"]
+examples = [
+    "contexttimer>=0.3.3",
+    "line-profiler>=4.1",
+    "matplotlib>=3.8",
+    "numexpr>=2.10; python_version < '3.15'",  # no wheel for Python 3.15 yet
+    "pandas>=2.2",
+]
 notebook = [{ include-group = "examples" }, "jupyterlab>=4", "nbconvert>=7"]
 
 [tool.uv]

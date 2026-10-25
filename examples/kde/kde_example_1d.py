@@ -20,7 +20,7 @@ if __name__ == '__main__':
     grid = np.linspace(-5.0, 5.0, grid_size)
 
     # construct and evaluate scipy gaussian kde object
-    gaussian_kde_scipy = ss.kde.gaussian_kde(points)
+    gaussian_kde_scipy = ss.gaussian_kde(points)
     density_estimate_scipy = gaussian_kde_scipy.evaluate(grid)
 
     # construct and evaluate cocos gaussian kde object using gpu evaluation
