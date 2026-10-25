@@ -16,16 +16,18 @@ results or failed.
     meaning of the flag cocos passed. With the wrapper 3.8.0, which pip
     installed for cocos 0.2.2 since 2022, `var` raised a `TypeError`.
     Independently of the ArrayFire version, `std(..., ddof=1)` ignored `ddof`
-    and returned the population standard deviation. `ndarray.std` now also
-    accepts `ddof`.
+    and returned the population standard deviation. For complex arrays,
+    `var` returned a complex number and `std` raised an error; both now
+    return NumPy's real-valued result. `ndarray.std` now also accepts `ddof`.
 *   `cov` and `corrcoef` never worked: they raised a `TypeError` or crashed
     the Python interpreter. They now follow NumPy, including the parameters
-    `y`, `rowvar`, `bias` and `ddof` (but not `fweights` and `aweights`).
+    `y`, `rowvar`, `bias` and `ddof` (but not `fweights` and `aweights`),
+    except that single-precision inputs give single-precision results.
 *   `sort_by_keys` sorted by the values instead of the keys and returned the
     two arrays swapped.
 *   `cocos.scientific.kde.gaussian_kernel_estimate_vectorized` failed on the
-    GPU with an ArrayFire type error, and for one-dimensional evaluation
-    points. It also no longer prints debugging output.
+    GPU with an ArrayFire type error, and for one-dimensional data or
+    evaluation points. It also no longer prints debugging output.
 
 ### New requirements
 
@@ -35,8 +37,8 @@ results or failed.
     backend needs an NVIDIA GPU of the Maxwell generation or newer and an
     NVIDIA driver 525.60 or newer (528.33 on Windows).
 *   Python 3.12, 3.13, 3.14 or 3.15.
-*   NumPy 2.0, SciPy 1.13, SymPy 1.12, loky 3.4 and the `arrayfire` Python
-    wrapper 3.8 or newer.
+*   NumPy 2.0, SciPy 1.13, SymPy 1.12 and loky 3.4 or newer, and the
+    `arrayfire` Python wrapper 3.8.
 
 ### No longer supported
 

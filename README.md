@@ -41,7 +41,7 @@ which must be installed separately. You can either
 [run cocos in a Docker container](#option-1-docker), which leaves your system untouched, 
 or [install ArrayFire and cocos on your system](#option-2-install-on-your-system).
 
-Upgrading from cocos 0.2? See the [changelog](CHANGELOG.md) for what changed.
+Upgrading from cocos 0.2? See the [changelog](https://github.com/michaelnowotny/cocos/blob/master/CHANGELOG.md) for what changed.
 
 ### Requirements
 
@@ -81,15 +81,15 @@ To build the image yourself instead, run `docker build -t cocos .` in a clone of
 ### Option 2: Install on your system
 
 1.  Install ArrayFire 3.10 from [arrayfire.com/download](https://arrayfire.com/download). 
-    On Linux, download the 
-    [installer](https://arrayfire.gateway.scarf.sh/linux/3.10.0/ArrayFire.sh) (3.9 GB) and run
+    On Linux, download the installer (3.9 GB) and run it:
     <pre>
+    curl -fL -o ArrayFire-v3.10.0_Linux_x86_64.sh https://arrayfire.gateway.scarf.sh/linux/3.10.0/ArrayFire.sh
     sudo mkdir -p /opt/arrayfire
     sudo sh ArrayFire-v3.10.0_Linux_x86_64.sh --skip-license --exclude-subdir --prefix=/opt/arrayfire
     </pre>
     The installation takes 13.8 GB. If you do not need the oneAPI backend for Intel GPUs or the 
     debug symbols, you can delete `/opt/arrayfire/lib64/libafoneapi*` and `/opt/arrayfire/lib64/*.debug` 
-    to free 9.3 GB.
+    to free 8.7 GB.
 2.  Cocos finds ArrayFire in `/opt/arrayfire`. If you installed it elsewhere, set the environment 
     variable `AF_PATH` to the installation directory.
 3.  Install cocos:
@@ -5652,6 +5652,8 @@ Most differences between NumPy and Cocos stem from two sources:
 *   Trailing singleton dimensions are cut off, e.g. there is no difference between an array with shape (2, 2, 1) and an array with shape (2, 2) in Cocos.
 *   Reductions along an axis, such as `sum`, `mean`, `average` and `var`, keep the reduced axis with length 1 unless it is the last axis. For example, averaging an array of shape (3, 4, 5) over axis 1 gives shape (3, 1, 5) rather than (3, 5).
 *   `var` and `std` support `ddof` equal to 0 or 1 only.
+*   Most functions that take an `axis` argument do not accept negative axes.
+*   `cov` and `corrcoef` compute in single precision when their inputs are single precision; NumPy always uses at least double precision.
 *   Matrix multiplication is not supported for integer types.
 
 ## A Note on Hardware Configurations for Multi-GPU Computing
