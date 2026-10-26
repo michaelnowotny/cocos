@@ -12,6 +12,12 @@
     float32 and complex64 arrays in double precision and returns arrays in
     single precision as before.
 
+### Other changes
+
+*   `reshape` and `reshape_without_reorder` accept the new shape as `shape`,
+    the name NumPy uses since 2.1, as well as `newshape`. Code that switches
+    between NumPy and cocos can call `reshape(a, shape=...)` with both.
+
 ## 0.3.0 (2026-10-25)
 
 Cocos 0.3 brings cocos up to date with current GPUs and Python. It requires

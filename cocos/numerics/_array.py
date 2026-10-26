@@ -1025,21 +1025,47 @@ def reorder(a: ndarray, new_order: tp.Tuple[int, ...]):
     return ndarray(output_array)
 
 
+def _shape_argument(shape: tp.Optional[tp.Tuple[int, ...]],
+                    newshape: tp.Optional[tp.Tuple[int, ...]]) \
+        -> tp.Tuple[int, ...]:
+    """
+    NumPy calls the shape argument of reshape "shape" since NumPy 2.1 and
+    removed the older name "newshape"; accept both.
+    """
+    if newshape is not None:
+        if shape is not None:
+            raise TypeError("reshape() got both shape and newshape")
+        return newshape
+    if shape is None:
+        raise TypeError("reshape() missing required argument 'shape'")
+    return shape
+
+
 def reshape_without_reorder(a: ndarray,
-                            newshape: tp.Tuple[int, ...]) -> ndarray:
+                            shape: tp.Optional[tp.Tuple[int, ...]] = None,
+                            *,
+                            newshape: tp.Optional[tp.Tuple[int, ...]] = None) \
+        -> ndarray:
     """
     Gives a new shape to an array without changing its data.
     """
 
-    newshape = _complete_shape(a, newshape)
+    newshape = _complete_shape(a, _shape_argument(shape, newshape))
     input_array = a._af_array
     d0, d1, d2, d3 = _pad_shape_tuple_none(newshape)
     output_array = af.data.moddims(input_array, d0, d1, d2, d3)
     return ndarray(output_array)
 
 
-def reshape(a, newshape):
-    newshape = _complete_shape(a, newshape)
+def reshape(a: ndarray,
+            shape: tp.Optional[tp.Tuple[int, ...]] = None,
+            *,
+            newshape: tp.Optional[tp.Tuple[int, ...]] = None) -> ndarray:
+    """
+    Gives a new shape to an array without changing its data, like
+    numpy.reshape with order='C'.
+    """
+    newshape = _complete_shape(a, _shape_argument(shape, newshape))
     if a.ndim < 1 or a.ndim > 4:
         raise ValueError('a must have between 1 and 4 axes')
     elif a.ndim == 1:
@@ -1051,7 +1077,7 @@ def reshape(a, newshape):
     #     elif a.ndim == 3:
     #         tmp = cn.reorder(a_gpu, (2, 1, 0)).flatten()
 
-    tmp = reshape_without_reorder(tmp, newshape=newshape[::-1])
+    tmp = reshape_without_reorder(tmp, newshape[::-1])
     return reorder(tmp, tuple(range(len(newshape)))[::-1])
 
 

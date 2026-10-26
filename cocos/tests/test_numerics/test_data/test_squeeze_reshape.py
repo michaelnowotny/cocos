@@ -54,3 +54,14 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+def test_reshape_accepts_shape_and_newshape():
+    a = np.arange(6, dtype=np.float32).reshape((2, 3))
+    a_cocos = cn.array(a)
+    expected = np.reshape(a, shape=(3, 2))
+    assert np.array_equal(np.asarray(cn.reshape(a_cocos, (3, 2))), expected)
+    assert np.array_equal(np.asarray(cn.reshape(a_cocos, shape=(3, 2))), expected)
+    assert np.array_equal(np.asarray(cn.reshape(a_cocos, newshape=(3, 2))), expected)
+    with pytest.raises(TypeError):
+        cn.reshape(a_cocos, (3, 2), newshape=(3, 2))
