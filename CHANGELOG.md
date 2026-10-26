@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Fixed: results that change
+
+*   `sum`, `mean`, `average`, `var` and `std` of single precision arrays are
+    now accurate on ArrayFire's CPU backend. The CPU backend accumulates in
+    single precision, so the mean of a million float32 values lost three to
+    four significant digits (relative errors of about 3e-4; the CUDA and
+    OpenCL backends were not affected). On the CPU backend, cocos now reduces
+    float32 and complex64 arrays in double precision and returns arrays in
+    single precision as before.
+
 ## 0.3.0 (2026-10-25)
 
 Cocos 0.3 brings cocos up to date with current GPUs and Python. It requires
