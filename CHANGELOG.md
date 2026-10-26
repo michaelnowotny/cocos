@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 (unreleased)
+## 0.3.0 (2026-10-25)
 
 Cocos 0.3 brings cocos up to date with current GPUs and Python. It requires
 ArrayFire 3.10, which supports current NVIDIA GPUs, as well as Python 3.12 or
