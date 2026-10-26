@@ -178,6 +178,10 @@ class ndarray(object):
                              "requires a copy from device memory.")
 
         np_array = self._af_array.__array__()
+        if self._shape is not None and np_array.shape != self._shape \
+                and np_array.size == math.prod(self._shape):
+            # ArrayFire drops trailing dimensions of length one
+            np_array = np_array.reshape(self._shape)
         if dtype is not None:
             np_array = np_array.astype(dtype, copy=False)
 
@@ -1054,7 +1058,7 @@ def reshape_without_reorder(a: ndarray,
     input_array = a._af_array
     d0, d1, d2, d3 = _pad_shape_tuple_none(newshape)
     output_array = af.data.moddims(input_array, d0, d1, d2, d3)
-    return ndarray(output_array)
+    return ndarray(output_array, shape=tuple(newshape))
 
 
 def reshape(a: ndarray,
@@ -1078,7 +1082,9 @@ def reshape(a: ndarray,
     #         tmp = cn.reorder(a_gpu, (2, 1, 0)).flatten()
 
     tmp = reshape_without_reorder(tmp, newshape[::-1])
-    return reorder(tmp, tuple(range(len(newshape)))[::-1])
+    result = reorder(tmp, tuple(range(len(newshape)))[::-1])
+    # ArrayFire drops trailing dimensions of length one; keep the shape
+    return ndarray(result._af_array, shape=tuple(newshape))
 
 
 def squeeze(a: ndarray,

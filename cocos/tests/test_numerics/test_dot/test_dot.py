@@ -82,6 +82,7 @@ def test_dot():
     assert np.allclose(result_4, result_4_cocos)
     assert np.allclose(result_5, result_5_cocos)
     if GPUOptions.use_gpu:
-        assert np.allclose(result_2.flatten(), result_2_cocos)
+        assert np.allclose(result_2, result_2_cocos)
+        assert np.asarray(result_2_cocos).shape == result_2.shape
     else:
         assert np.allclose(result_2.flatten(), result_2_cocos.flatten())

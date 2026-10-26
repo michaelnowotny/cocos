@@ -12,6 +12,14 @@
     float32 and complex64 arrays in double precision and returns arrays in
     single precision as before.
 
+*   Arrays keep trailing dimensions of length one, which ArrayFire drops:
+    `random.rand` and `random.randn` (for example `randn(n, 1)`), `reshape`
+    and `reshape_without_reorder` return arrays of the requested shape, and
+    converting a cocos array to NumPy (`np.asarray`, `np.array`) returns the
+    array's shape instead of dropping trailing ones. Before, `(n,)` arrays
+    multiplied with `(n, 1)` arrays broadcast to `n x n`. Results that relied
+    on the dropped dimensions change shape.
+
 ### Other changes
 
 *   `reshape` and `reshape_without_reorder` accept the new shape as `shape`,
