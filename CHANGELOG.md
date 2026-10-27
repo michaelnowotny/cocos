@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.3.1 (2026-10-26)
+
+Cocos 0.3.1 makes reductions of single precision arrays accurate on
+ArrayFire's CPU backend and keeps trailing dimensions of length one.
 
 ### Fixed: results that change
 

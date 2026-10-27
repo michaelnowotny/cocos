@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "cocos"
-version = "0.3.0"
+version = "0.3.1"
 description = "Scientific GPU computing in Python: a NumPy-like array library built on ArrayFire"
 readme = "README.md"
 license = "MIT"
