@@ -178,6 +178,10 @@ class ndarray(object):
                              "requires a copy from device memory.")
 
         np_array = self._af_array.__array__()
+        if self._shape is not None and np_array.shape != self._shape \
+                and np_array.size == math.prod(self._shape):
+            # ArrayFire drops trailing dimensions of length one
+            np_array = np_array.reshape(self._shape)
         if dtype is not None:
             np_array = np_array.astype(dtype, copy=False)
 
@@ -1025,21 +1029,47 @@ def reorder(a: ndarray, new_order: tp.Tuple[int, ...]):
     return ndarray(output_array)
 
 
+def _shape_argument(shape: tp.Optional[tp.Tuple[int, ...]],
+                    newshape: tp.Optional[tp.Tuple[int, ...]]) \
+        -> tp.Tuple[int, ...]:
+    """
+    NumPy calls the shape argument of reshape "shape" since NumPy 2.1 and
+    removed the older name "newshape"; accept both.
+    """
+    if newshape is not None:
+        if shape is not None:
+            raise TypeError("reshape() got both shape and newshape")
+        return newshape
+    if shape is None:
+        raise TypeError("reshape() missing required argument 'shape'")
+    return shape
+
+
 def reshape_without_reorder(a: ndarray,
-                            newshape: tp.Tuple[int, ...]) -> ndarray:
+                            shape: tp.Optional[tp.Tuple[int, ...]] = None,
+                            *,
+                            newshape: tp.Optional[tp.Tuple[int, ...]] = None) \
+        -> ndarray:
     """
     Gives a new shape to an array without changing its data.
     """
 
-    newshape = _complete_shape(a, newshape)
+    newshape = _complete_shape(a, _shape_argument(shape, newshape))
     input_array = a._af_array
     d0, d1, d2, d3 = _pad_shape_tuple_none(newshape)
     output_array = af.data.moddims(input_array, d0, d1, d2, d3)
-    return ndarray(output_array)
+    return ndarray(output_array, shape=tuple(newshape))
 
 
-def reshape(a, newshape):
-    newshape = _complete_shape(a, newshape)
+def reshape(a: ndarray,
+            shape: tp.Optional[tp.Tuple[int, ...]] = None,
+            *,
+            newshape: tp.Optional[tp.Tuple[int, ...]] = None) -> ndarray:
+    """
+    Gives a new shape to an array without changing its data, like
+    numpy.reshape with order='C'.
+    """
+    newshape = _complete_shape(a, _shape_argument(shape, newshape))
     if a.ndim < 1 or a.ndim > 4:
         raise ValueError('a must have between 1 and 4 axes')
     elif a.ndim == 1:
@@ -1051,8 +1081,10 @@ def reshape(a, newshape):
     #     elif a.ndim == 3:
     #         tmp = cn.reorder(a_gpu, (2, 1, 0)).flatten()
 
-    tmp = reshape_without_reorder(tmp, newshape=newshape[::-1])
-    return reorder(tmp, tuple(range(len(newshape)))[::-1])
+    tmp = reshape_without_reorder(tmp, newshape[::-1])
+    result = reorder(tmp, tuple(range(len(newshape)))[::-1])
+    # ArrayFire drops trailing dimensions of length one; keep the shape
+    return ndarray(result._af_array, shape=tuple(newshape))
 
 
 def squeeze(a: ndarray,
@@ -1154,6 +1186,40 @@ def divide(x1, x2):
     return x1 / x2
 
 
+def _promote_for_reduction(af_array: af.Array) -> af.Array:
+    """
+    ArrayFire's CPU backend accumulates reductions of single precision arrays
+    in single precision: the mean of a million float32 values loses three to
+    four significant digits, while the CUDA and OpenCL backends sum in a tree
+    and lose almost none. On the CPU backend, reduce single precision arrays
+    in double precision.
+    """
+    if af.get_active_backend() == 'cpu':
+        if af_array.dtype() == af.Dtype.f32:
+            return af_array.as_type(af.Dtype.f64)
+        if af_array.dtype() == af.Dtype.c32:
+            return af_array.as_type(af.Dtype.c64)
+    return af_array
+
+
+def _reduce(reduction: tp.Callable,
+            af_array: af.Array,
+            **kwargs) -> tp.Union[af.Array, numbers.Number]:
+    """
+    Apply an ArrayFire reduction, in double precision for single precision
+    arrays on the CPU backend. Array results are returned in single
+    precision again.
+    """
+    promoted = _promote_for_reduction(af_array)
+    result = reduction(promoted, **kwargs)
+    if promoted is not af_array and isinstance(result, af.Array):
+        if result.dtype() == af.Dtype.f64:
+            result = result.as_type(af.Dtype.f32)
+        elif result.dtype() == af.Dtype.c64:
+            result = result.as_type(af.Dtype.c32)
+    return result
+
+
 def average(a: ndarray,
             axis: tp.Optional[int] = None,
             weights: tp.Optional[ndarray] = None) \
@@ -1179,7 +1245,11 @@ def average(a: ndarray,
         else:
             af_weights = weights._af_array
 
-    new_af_array = af.mean(a._af_array,
+    if af_weights is not None:
+        af_weights = _promote_for_reduction(af_weights)
+
+    new_af_array = _reduce(af.mean,
+                           a._af_array,
                            weights=af_weights,
                            dim=axis)
 
@@ -1229,6 +1299,12 @@ def _variance_bias(ddof: tp.Optional[int]) -> af.VARIANCE:
 def _variance(af_array: af.Array,
               ddof: tp.Optional[int],
               axis: tp.Optional[int]) -> tp.Union[af.Array, numbers.Number]:
+    return _reduce(_variance_internal, af_array, ddof=ddof, axis=axis)
+
+
+def _variance_internal(af_array: af.Array,
+                       ddof: tp.Optional[int],
+                       axis: tp.Optional[int]) -> tp.Union[af.Array, numbers.Number]:
     bias = _variance_bias(ddof)
     if af_array.is_complex():
         # As in NumPy, the variance of complex numbers is the mean of the
@@ -1250,9 +1326,10 @@ def std(a: ndarray, axis: tp.Optional[int] = None, ddof: int = 0) \
         new_af_array = af.sqrt(variance) \
             if isinstance(variance, af.Array) else math.sqrt(variance)
     else:
-        new_af_array = af.stdev(a._af_array,
-                                bias=_variance_bias(ddof),
-                                dim=axis)
+        new_af_array = _reduce(af.stdev,
+                               a._af_array,
+                               bias=_variance_bias(ddof),
+                               dim=axis)
 
     if isinstance(new_af_array, af.Array):
         return ndarray(new_af_array)
@@ -1579,7 +1656,7 @@ def sum(a: ndarray, axis: tp.Optional[int] = None) \
     Sum of array elements over a given axis.
     """
 
-    return _wrap_af_array(af.sum(a._af_array, dim=axis))
+    return _wrap_af_array(_reduce(af.sum, a._af_array, dim=axis))
 
 
 # from ._data

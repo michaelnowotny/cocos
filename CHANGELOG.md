@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.3.1 (2026-10-26)
+
+Cocos 0.3.1 makes reductions of single precision arrays accurate on
+ArrayFire's CPU backend and keeps trailing dimensions of length one.
+
+### Fixed: results that change
+
+*   `sum`, `mean`, `average`, `var` and `std` of single precision arrays are
+    now accurate on ArrayFire's CPU backend. The CPU backend accumulates in
+    single precision, so the mean of a million float32 values lost three to
+    four significant digits (relative errors of about 3e-4; the CUDA and
+    OpenCL backends were not affected). On the CPU backend, cocos now reduces
+    float32 and complex64 arrays in double precision and returns arrays in
+    single precision as before.
+
+*   Arrays keep trailing dimensions of length one, which ArrayFire drops:
+    `random.rand` and `random.randn` (for example `randn(n, 1)`), `reshape`
+    and `reshape_without_reorder` return arrays of the requested shape, and
+    converting a cocos array to NumPy (`np.asarray`, `np.array`) returns the
+    array's shape instead of dropping trailing ones. Before, `(n,)` arrays
+    multiplied with `(n, 1)` arrays broadcast to `n x n`. Results that relied
+    on the dropped dimensions change shape.
+
+### Other changes
+
+*   `reshape` and `reshape_without_reorder` accept the new shape as `shape`,
+    the name NumPy uses since 2.1, as well as `newshape`. Code that switches
+    between NumPy and cocos can call `reshape(a, shape=...)` with both.
+
 ## 0.3.0 (2026-10-25)
 
 Cocos 0.3 brings cocos up to date with current GPUs and Python. It requires

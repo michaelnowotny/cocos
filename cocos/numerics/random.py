@@ -122,6 +122,10 @@ def verify_shape_and_antithetic_dimension(shape: tp.Sequence[int],
 # Basic continuous random number generators
 ################################################################################
 
+def _requested_shape(*dimensions: tp.Optional[int]) -> tp.Tuple[int, ...]:
+    return tuple(int(d) for d in dimensions if d is not None)
+
+
 def rand(d0: int,
          d1: tp.Optional[int] = None,
          d2: tp.Optional[int] = None,
@@ -134,7 +138,8 @@ def rand(d0: int,
     af_type = convert_numpy_to_af_type(dtype)
     af_array = af.data.randu(d0, d1, d2, d3, dtype=af_type)
 
-    return ndarray(af_array)
+    # ArrayFire drops trailing dimensions of length one; keep the shape
+    return ndarray(af_array, shape=_requested_shape(d0, d1, d2, d3))
 
 
 def randn(d0: int,
@@ -148,7 +153,9 @@ def randn(d0: int,
 
     af_type = convert_numpy_to_af_type(dtype)
     af_array = af.data.randn(d0, d1, d2, d3, dtype=af_type)
-    return ndarray(af_array)
+
+    # ArrayFire drops trailing dimensions of length one; keep the shape
+    return ndarray(af_array, shape=_requested_shape(d0, d1, d2, d3))
 
 
 def _random_with_dtype_internal(shape: tp.Sequence[int],
