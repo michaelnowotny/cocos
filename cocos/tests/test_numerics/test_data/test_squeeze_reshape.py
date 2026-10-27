@@ -59,7 +59,7 @@ if __name__ == '__main__':
 def test_reshape_accepts_shape_and_newshape():
     a = np.arange(6, dtype=np.float32).reshape((2, 3))
     a_cocos = cn.array(a)
-    expected = np.reshape(a, shape=(3, 2))
+    expected = np.reshape(a, (3, 2))  # NumPy 2.0 has no shape keyword
     assert np.array_equal(np.asarray(cn.reshape(a_cocos, (3, 2))), expected)
     assert np.array_equal(np.asarray(cn.reshape(a_cocos, shape=(3, 2))), expected)
     assert np.array_equal(np.asarray(cn.reshape(a_cocos, newshape=(3, 2))), expected)
